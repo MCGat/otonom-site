@@ -1,0 +1,17 @@
+{
+  "name": "OTONOM — Mobilité, recharge & énergie",
+  "short_name": "OTONOM",
+  "description": "L'orchestrateur A→Z de la transition mobilité, recharge et énergie des entreprises. Un seul interlocuteur, des résultats chiffrés.",
+  "lang": "fr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#08080a",
+  "theme_color": "#08080a",
+  "icons": [
+    { "src": "favicon.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "any" },
+    { "src": "assets/img/favicon-32.png", "type": "image/png", "sizes": "32x32" },
+    { "src": "assets/img/icon-192.png", "type": "image/png", "sizes": "192x192", "purpose": "any maskable" },
+    { "src": "assets/img/icon-512.png", "type": "image/png", "sizes": "512x512", "purpose": "any maskable" }
+  ]
+}

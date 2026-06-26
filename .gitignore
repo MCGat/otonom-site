@@ -1,0 +1,10 @@
+# OS / éditeurs
+.DS_Store
+Thumbs.db
+__MACOSX/
+*.zip
+.fuse_hidden*
+
+# Outils locaux
+.qodo/
+node_modules/
