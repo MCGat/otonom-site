@@ -147,10 +147,14 @@
           if (node.nodeType !== 3) return; // uniquement les nœuds texte (préserve <br>, etc.)
           var frag = document.createDocumentFragment();
           node.nodeValue.split('').forEach(function (ch) {
-            var s = document.createElement('span');
-            s.className = 'lens-ch';
-            s.textContent = ch;
-            frag.appendChild(s);
+            if (ch === ' ' || ch === ' ') {
+              frag.appendChild(document.createTextNode(ch)); // espace réel : préserve l'espacement et le retour à la ligne
+            } else {
+              var s = document.createElement('span');
+              s.className = 'lens-ch';
+              s.textContent = ch;
+              frag.appendChild(s);
+            }
           });
           el.replaceChild(frag, node);
         });
