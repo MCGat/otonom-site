@@ -90,11 +90,12 @@
   if (!reduce && window.matchMedia('(pointer: fine)').matches) {
     var docEl = document.documentElement;
     var ring = document.createElement('div'); ring.className = 'cursor-ring'; ring.setAttribute('aria-hidden', 'true');
-    document.body.appendChild(ring);
+    var dot = document.createElement('div'); dot.className = 'cursor-dot'; dot.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(ring); document.body.appendChild(dot);
     docEl.classList.add('has-customcursor');
 
     var dx = window.innerWidth / 2, dy = window.innerHeight / 2;
-    var rx = dx, ry = dy, started = false;
+    var rx = dx, ry = dy, px = dx, py = dy, started = false;
     function cursorKind(t) {
       if (!t || !t.closest) return null;
       if (t.closest('.btn,.nav-toggle')) return 'btn';
@@ -110,7 +111,9 @@
 
     (function loop() {
       rx += (dx - rx) * 0.32; ry += (dy - ry) * 0.32;
+      px += (dx - px) * 0.6; py += (dy - py) * 0.6;
       ring.style.transform = 'translate(' + rx + 'px,' + ry + 'px)';
+      dot.style.transform = 'translate(' + px + 'px,' + py + 'px)';
       requestAnimationFrame(loop);
     })();
 

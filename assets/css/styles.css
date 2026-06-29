@@ -361,6 +361,8 @@ a.persona .more svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-
   width:30px;height:30px;margin:-15px 0 0 -15px;background:#fff;
   transition:width .22s ease,height .22s ease,margin .22s ease,opacity .25s}
 .cursor-ready .cursor-ring{opacity:1}
+.cursor-dot{position:fixed;top:0;left:0;pointer-events:none;z-index:2001;border-radius:50%;mix-blend-mode:difference;will-change:transform;opacity:0;width:6px;height:6px;margin:-3px 0 0 -3px;background:#fff;transition:opacity .25s}
+.cursor-ready .cursor-dot{opacity:1}
 .cursor-hover .cursor-ring{width:42px;height:42px;margin:-21px 0 0 -21px}
 .cursor-media .cursor-ring{width:58px;height:58px;margin:-29px 0 0 -29px}
 .cursor-btn .cursor-ring{width:14px;height:14px;margin:-7px 0 0 -7px}
@@ -372,4 +374,4 @@ a.persona .more svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-
 .has-customcursor{cursor:none}
 .has-customcursor a,.has-customcursor button,.has-customcursor label,.has-customcursor .persona{cursor:none}
 .has-customcursor input,.has-customcursor textarea,.has-customcursor select{cursor:auto}
-@media(hover:none),(pointer:coarse){.cursor-ring{display:none}.has-customcursor{cursor:auto}}
+@media(hover:none),(pointer:coarse){.cursor-ring,.cursor-dot{display:none}.has-customcursor{cursor:auto}}
