@@ -193,6 +193,33 @@ a.persona .more svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-
 .foot-bottom{margin-top:46px;padding-top:24px;border-top:1px solid var(--line-soft);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-size:13px;color:var(--muted-2)}
 .todo{color:#c9a227;font-family:var(--ff-mono);font-size:12px}
 
+/* LIGHT SECTIONS (alternance noir / blanc) */
+.section--light{
+  --bg:#f3f3f1; --bg-1:#ffffff; --bg-2:#ececea; --panel:#f6f6f4;
+  --ink:#0b0b0d; --ink-soft:#2a2a2e; --muted:#5b5b62; --muted-2:#86868c;
+  --line:rgba(0,0,0,.16); --line-soft:rgba(0,0,0,.085);
+  --white:#0b0b0d; --halo:rgba(0,0,0,.20);
+  background:var(--bg); color:var(--ink);
+}
+.section--light .btn--primary{background:#0b0b0d;color:#fff}
+.section--light .btn--primary:hover{box-shadow:0 0 30px -8px rgba(0,0,0,.32)}
+.section--light .btn--ghost:hover{background:rgba(0,0,0,.045)}
+.section--light .single,
+.section--light .cta-block{background:radial-gradient(110% 120% at 50% 0%,rgba(0,0,0,.05),transparent 58%),var(--bg-1)}
+
+/* LIGHT FOOTER (logo OTONOM noir sur blanc) */
+.site-footer--light{
+  --ink:#0b0b0d; --muted:#5b5b62; --muted-2:#86868c; --line-soft:rgba(0,0,0,.10);
+  background:#f3f3f1; color:var(--ink); border-top-color:rgba(0,0,0,.10);
+}
+.site-footer--light .foot p{color:var(--muted)}
+.site-footer--light .foot h4{color:var(--muted-2)}
+.site-footer--light .foot ul a{color:var(--muted)}
+.site-footer--light .foot ul a:hover{color:var(--ink)}
+.site-footer--light .foot-bottom{border-top-color:rgba(0,0,0,.10);color:var(--muted-2)}
+.site-footer--light .foot-legal a{color:var(--muted-2)}
+.site-footer--light .foot-legal a:hover{color:var(--ink)}
+
 /* ACCESSIBILITY */
 .skip-link{position:absolute;left:-9999px;top:0;z-index:100;background:var(--white);color:#0a0a0a;font-family:var(--ff-text);font-size:14px;font-weight:600;padding:12px 18px;border-radius:0 0 10px 0}
 .skip-link:focus{left:0}
