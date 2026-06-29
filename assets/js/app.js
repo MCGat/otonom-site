@@ -137,7 +137,7 @@
     document.addEventListener('mouseleave', function () { docEl.classList.remove('cursor-ready'); });
     document.addEventListener('mouseenter', function () { if (started) docEl.classList.add('cursor-ready'); });
 
-    // Loupe par lettre : sur les titres, agrandit les lettres proches du curseur
+    // Loupe : un calque agrandi du titre est révélé dans un petit cercle suivant le curseur
     if (window.matchMedia('(hover: hover)').matches) {
       var LENS_R = 58, LENS_BOOST = 0.45;
       function lensSplit(el) {
@@ -159,28 +159,28 @@
           el.replaceChild(frag, node);
         });
       }
-      document.querySelectorAll('h1,h2,h3').forEach(function (h) {
+      var LENS_RADIUS = 17;
+      document.querySelectorAll('h1,h2').forEach(function (h) {
         if (h.closest('.tx-panel')) return;
-        var chars = null, raf = null;
-        h.addEventListener('pointerenter', function () { lensSplit(h); chars = h.getElementsByClassName('lens-ch'); });
+        var clone = null;
+        h.addEventListener('pointerenter', function () {
+          if (!clone) {
+            h.classList.add('lens-host');
+            clone = document.createElement('span');
+            clone.className = 'lens-clone';
+            clone.setAttribute('aria-hidden', 'true');
+            clone.innerHTML = h.innerHTML;
+            h.appendChild(clone);
+          }
+          clone.style.setProperty('--lr', LENS_RADIUS + 'px');
+        });
         h.addEventListener('pointermove', function (e) {
-          if (!chars || raf) return;
-          var cx = e.clientX, cy = e.clientY;
-          raf = requestAnimationFrame(function () {
-            raf = null;
-            for (var i = 0; i < chars.length; i++) {
-              var r = chars[i].getBoundingClientRect();
-              var dx = r.left + r.width / 2 - cx, dy = r.top + r.height / 2 - cy;
-              var d = Math.sqrt(dx * dx + dy * dy);
-              var sc = d < LENS_R ? 1 + LENS_BOOST * (1 - d / LENS_R) : 1;
-              chars[i].style.transform = sc > 1.002 ? 'scale(' + sc.toFixed(3) + ')' : '';
-            }
-          });
+          if (!clone) return;
+          var r = h.getBoundingClientRect();
+          clone.style.setProperty('--lx', (e.clientX - r.left).toFixed(1) + 'px');
+          clone.style.setProperty('--ly', (e.clientY - r.top).toFixed(1) + 'px');
         });
-        h.addEventListener('pointerleave', function () {
-          if (!chars) return;
-          for (var i = 0; i < chars.length; i++) chars[i].style.transform = '';
-        });
+        h.addEventListener('pointerleave', function () { if (clone) clone.style.setProperty('--lr', '0px'); });
       });
     }
   }

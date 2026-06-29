@@ -41,7 +41,7 @@ p{margin:0}
   --bg-1:var(--l-bg1);--panel:var(--l-panel);
   --ink:var(--l-ink);--ink-soft:var(--l-ink-soft);--muted:var(--l-muted);--muted-2:var(--l-muted2);
   --line:rgba(0,0,0,var(--l-line-a));--line-soft:rgba(0,0,0,var(--l-line-soft-a));--white:var(--l-ink);
-  color:var(--ink);background:rgba(255,255,255,.80);backdrop-filter:saturate(140%) blur(12px);border-bottom:1px solid var(--line-soft)}
+  color:var(--ink);background:var(--l-bg1);backdrop-filter:saturate(140%) blur(12px);border-bottom:1px solid var(--line-soft)}
 .site-header .btn--primary{background:var(--l-ink);color:var(--l-bg1)}
 .site-header .btn--primary:hover{box-shadow:0 0 26px -8px rgba(0,0,0,.30)}
 .site-header .btn--ghost:hover{background:rgba(0,0,0,.05)}
@@ -376,6 +376,11 @@ a.persona .more svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-
 .has-customcursor input,.has-customcursor textarea,.has-customcursor select{cursor:auto}
 @media(hover:none),(pointer:coarse){.cursor-dot,.cursor-ring{display:none}.has-customcursor{cursor:auto}}
 
-/* Loupe par lettre : sur les titres, chaque lettre grandit au passage du curseur (desktop) */
-.lens-ch{display:inline-block;transform-origin:center bottom;transition:transform .13s cubic-bezier(.2,.7,.2,1)}
-@media (hover:none),(pointer:coarse){.lens-ch{transition:none;transform:none!important}}
+/* Loupe : calque agrandi du titre, révélé dans un petit cercle qui suit le curseur (desktop) */
+.lens-host{position:relative}
+.lens-clone{position:absolute;inset:0;margin:0;display:block;pointer-events:none;
+  transform:scale(1.16);transform-origin:var(--lx,50%) var(--ly,50%);
+  clip-path:circle(var(--lr,0px) at var(--lx,-200px) var(--ly,-200px));
+  -webkit-clip-path:circle(var(--lr,0px) at var(--lx,-200px) var(--ly,-200px));
+  transition:clip-path .16s ease,-webkit-clip-path .16s ease}
+@media (hover:none),(pointer:coarse){.lens-clone{display:none}}
