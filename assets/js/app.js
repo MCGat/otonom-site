@@ -137,19 +137,47 @@
     document.addEventListener('mouseleave', function () { docEl.classList.remove('cursor-ready'); });
     document.addEventListener('mouseenter', function () { if (started) docEl.classList.add('cursor-ready'); });
 
-    // Mini « loupe » : zoom léger du texte survolé, ancré vers le curseur
+    // Loupe par lettre : sur les titres, agrandit les lettres proches du curseur
     if (window.matchMedia('(hover: hover)').matches) {
-      var ZOOM = 'h1,h2,h3,p,li,.kicker,.lede,.num,.big';
-      var zEl = null;
-      document.addEventListener('pointermove', function (e) {
-        var el = e.target.closest ? e.target.closest(ZOOM) : null;
-        if (el && el.closest('.tx-panel')) el = null;
-        if (el !== zEl) { if (zEl) zEl.classList.remove('txt-zoom'); zEl = el; if (zEl) zEl.classList.add('txt-zoom'); }
-        if (zEl) {
-          var rz = zEl.getBoundingClientRect();
-          zEl.style.transformOrigin = ((e.clientX - rz.left) / rz.width * 100).toFixed(1) + '% ' + ((e.clientY - rz.top) / rz.height * 100).toFixed(1) + '%';
-        }
-      }, { passive: true });
+      var LENS_R = 58, LENS_BOOST = 0.45;
+      function lensSplit(el) {
+        if (el.dataset.lensReady) return;
+        el.dataset.lensReady = '1';
+        Array.prototype.slice.call(el.childNodes).forEach(function (node) {
+          if (node.nodeType !== 3) return; // uniquement les nœuds texte (préserve <br>, etc.)
+          var frag = document.createDocumentFragment();
+          node.nodeValue.split('').forEach(function (ch) {
+            var s = document.createElement('span');
+            s.className = 'lens-ch';
+            s.textContent = ch;
+            frag.appendChild(s);
+          });
+          el.replaceChild(frag, node);
+        });
+      }
+      document.querySelectorAll('h1,h2,h3').forEach(function (h) {
+        if (h.closest('.tx-panel')) return;
+        var chars = null, raf = null;
+        h.addEventListener('pointerenter', function () { lensSplit(h); chars = h.getElementsByClassName('lens-ch'); });
+        h.addEventListener('pointermove', function (e) {
+          if (!chars || raf) return;
+          var cx = e.clientX, cy = e.clientY;
+          raf = requestAnimationFrame(function () {
+            raf = null;
+            for (var i = 0; i < chars.length; i++) {
+              var r = chars[i].getBoundingClientRect();
+              var dx = r.left + r.width / 2 - cx, dy = r.top + r.height / 2 - cy;
+              var d = Math.sqrt(dx * dx + dy * dy);
+              var sc = d < LENS_R ? 1 + LENS_BOOST * (1 - d / LENS_R) : 1;
+              chars[i].style.transform = sc > 1.002 ? 'scale(' + sc.toFixed(3) + ')' : '';
+            }
+          });
+        });
+        h.addEventListener('pointerleave', function () {
+          if (!chars) return;
+          for (var i = 0; i < chars.length; i++) chars[i].style.transform = '';
+        });
+      });
     }
   }
 })();
