@@ -357,16 +357,14 @@ a.persona .more svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-
    CURSEUR PERSONNALISÉ (desktop) — mix-blend pour rester
    visible sur fond clair comme sur fond sombre.
    ============================================================ */
-.cursor-dot,.cursor-ring{position:fixed;top:0;left:0;pointer-events:none;z-index:2000;border-radius:50%;mix-blend-mode:difference;will-change:transform;opacity:0}
-.cursor-dot{width:7px;height:7px;margin:-3.5px 0 0 -3.5px;background:#fff;transition:opacity .25s}
-.cursor-ring{width:34px;height:34px;margin:-17px 0 0 -17px;border:1.5px solid #fff;
-  transition:width .22s ease,height .22s ease,margin .22s ease,background .22s ease,opacity .25s}
-.cursor-ready .cursor-dot,.cursor-ready .cursor-ring{opacity:1}
-.cursor-hover .cursor-ring{width:50px;height:50px;margin:-25px 0 0 -25px;background:rgba(255,255,255,.10)}
-.cursor-media .cursor-ring{width:76px;height:76px;margin:-38px 0 0 -38px;background:rgba(255,255,255,.06)}
-.cursor-btn .cursor-ring{width:9px;height:9px;margin:-4.5px 0 0 -4.5px;background:#fff;border-color:transparent}
-.cursor-hover .cursor-dot,.cursor-media .cursor-dot,.cursor-btn .cursor-dot{opacity:0}
-.cursor-down .cursor-ring{opacity:.55}
+.cursor-ring{position:fixed;top:0;left:0;pointer-events:none;z-index:2000;border-radius:50%;mix-blend-mode:difference;will-change:transform;opacity:0;
+  width:30px;height:30px;margin:-15px 0 0 -15px;background:#fff;
+  transition:width .22s ease,height .22s ease,margin .22s ease,opacity .25s}
+.cursor-ready .cursor-ring{opacity:1}
+.cursor-hover .cursor-ring{width:42px;height:42px;margin:-21px 0 0 -21px}
+.cursor-media .cursor-ring{width:58px;height:58px;margin:-29px 0 0 -29px}
+.cursor-btn .cursor-ring{width:14px;height:14px;margin:-7px 0 0 -7px}
+.cursor-down .cursor-ring{width:22px;height:22px;margin:-11px 0 0 -11px}
 /* réaction tactile au survol (token-aware, sans décalage de mise en page) */
 .card,.tile,.persona,.lever{transition:background .25s ease,box-shadow .25s ease}
 .card:hover,.persona:hover,.tile:hover,.lever:hover{box-shadow:inset 0 0 0 1px var(--line)}
@@ -374,13 +372,4 @@ a.persona .more svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-
 .has-customcursor{cursor:none}
 .has-customcursor a,.has-customcursor button,.has-customcursor label,.has-customcursor .persona{cursor:none}
 .has-customcursor input,.has-customcursor textarea,.has-customcursor select{cursor:auto}
-@media(hover:none),(pointer:coarse){.cursor-dot,.cursor-ring{display:none}.has-customcursor{cursor:auto}}
-
-/* Loupe : calque agrandi du titre, révélé dans un petit cercle qui suit le curseur (desktop) */
-.lens-host{position:relative}
-.lens-clone{position:absolute;inset:0;margin:0;display:block;pointer-events:none;
-  transform:scale(1.16);transform-origin:var(--lx,50%) var(--ly,50%);
-  clip-path:circle(var(--lr,0px) at var(--lx,-200px) var(--ly,-200px));
-  -webkit-clip-path:circle(var(--lr,0px) at var(--lx,-200px) var(--ly,-200px));
-  transition:clip-path .16s ease,-webkit-clip-path .16s ease}
-@media (hover:none),(pointer:coarse){.lens-clone{display:none}}
+@media(hover:none),(pointer:coarse){.cursor-ring{display:none}.has-customcursor{cursor:auto}}

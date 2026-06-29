@@ -85,12 +85,12 @@
     });
   }
 
-  // --- Curseur personnalisé (desktop) : point + anneau avec inertie, mix-blend ---
+  // --- Curseur négatif (desktop) : un disque en mix-blend difference qui inverse
+  //     fond + texte sous lui (effet « négatif »), avec une légère inertie ---
   if (!reduce && window.matchMedia('(pointer: fine)').matches) {
     var docEl = document.documentElement;
-    var dot = document.createElement('div'); dot.className = 'cursor-dot'; dot.setAttribute('aria-hidden', 'true');
     var ring = document.createElement('div'); ring.className = 'cursor-ring'; ring.setAttribute('aria-hidden', 'true');
-    document.body.appendChild(dot); document.body.appendChild(ring);
+    document.body.appendChild(ring);
     docEl.classList.add('has-customcursor');
 
     var dx = window.innerWidth / 2, dy = window.innerHeight / 2;
@@ -105,12 +105,11 @@
 
     window.addEventListener('pointermove', function (e) {
       dx = e.clientX; dy = e.clientY;
-      dot.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
       if (!started) { started = true; rx = dx; ry = dy; docEl.classList.add('cursor-ready'); }
     }, { passive: true });
 
     (function loop() {
-      rx += (dx - rx) * 0.18; ry += (dy - ry) * 0.18;
+      rx += (dx - rx) * 0.32; ry += (dy - ry) * 0.32;
       ring.style.transform = 'translate(' + rx + 'px,' + ry + 'px)';
       requestAnimationFrame(loop);
     })();
@@ -126,9 +125,9 @@
     document.querySelectorAll('.btn').forEach(function (b) {
       b.addEventListener('pointermove', function (e) {
         var r = b.getBoundingClientRect();
-        var mx = e.clientX - (r.left + r.width / 2);
-        var my = e.clientY - (r.top + r.height / 2);
-        b.style.transform = 'translate(' + (mx * 0.25).toFixed(1) + 'px,' + (my * 0.4).toFixed(1) + 'px)';
+        var bx = e.clientX - (r.left + r.width / 2);
+        var by = e.clientY - (r.top + r.height / 2);
+        b.style.transform = 'translate(' + (bx * 0.25).toFixed(1) + 'px,' + (by * 0.4).toFixed(1) + 'px)';
       });
       b.addEventListener('pointerleave', function () { b.style.transform = ''; });
     });
@@ -136,52 +135,5 @@
     window.addEventListener('pointerup', function () { docEl.classList.remove('cursor-down'); });
     document.addEventListener('mouseleave', function () { docEl.classList.remove('cursor-ready'); });
     document.addEventListener('mouseenter', function () { if (started) docEl.classList.add('cursor-ready'); });
-
-    // Loupe : un calque agrandi du titre est révélé dans un petit cercle suivant le curseur
-    if (window.matchMedia('(hover: hover)').matches) {
-      var LENS_R = 58, LENS_BOOST = 0.45;
-      function lensSplit(el) {
-        if (el.dataset.lensReady) return;
-        el.dataset.lensReady = '1';
-        Array.prototype.slice.call(el.childNodes).forEach(function (node) {
-          if (node.nodeType !== 3) return; // uniquement les nœuds texte (préserve <br>, etc.)
-          var frag = document.createDocumentFragment();
-          node.nodeValue.split('').forEach(function (ch) {
-            if (ch === ' ' || ch === ' ') {
-              frag.appendChild(document.createTextNode(ch)); // espace réel : préserve l'espacement et le retour à la ligne
-            } else {
-              var s = document.createElement('span');
-              s.className = 'lens-ch';
-              s.textContent = ch;
-              frag.appendChild(s);
-            }
-          });
-          el.replaceChild(frag, node);
-        });
-      }
-      var LENS_RADIUS = 17;
-      document.querySelectorAll('h1,h2').forEach(function (h) {
-        if (h.closest('.tx-panel')) return;
-        var clone = null;
-        h.addEventListener('pointerenter', function () {
-          if (!clone) {
-            h.classList.add('lens-host');
-            clone = document.createElement('span');
-            clone.className = 'lens-clone';
-            clone.setAttribute('aria-hidden', 'true');
-            clone.innerHTML = h.innerHTML;
-            h.appendChild(clone);
-          }
-          clone.style.setProperty('--lr', LENS_RADIUS + 'px');
-        });
-        h.addEventListener('pointermove', function (e) {
-          if (!clone) return;
-          var r = h.getBoundingClientRect();
-          clone.style.setProperty('--lx', (e.clientX - r.left).toFixed(1) + 'px');
-          clone.style.setProperty('--ly', (e.clientY - r.top).toFixed(1) + 'px');
-        });
-        h.addEventListener('pointerleave', function () { if (clone) clone.style.setProperty('--lr', '0px'); });
-      });
-    }
   }
 })();
