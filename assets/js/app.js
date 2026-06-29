@@ -84,4 +84,43 @@
       hero.style.setProperty('--my', '6%');
     });
   }
+
+  // --- Curseur personnalisé (desktop) : point + anneau avec inertie, mix-blend ---
+  if (!reduce && window.matchMedia('(pointer: fine)').matches) {
+    var docEl = document.documentElement;
+    var dot = document.createElement('div'); dot.className = 'cursor-dot'; dot.setAttribute('aria-hidden', 'true');
+    var ring = document.createElement('div'); ring.className = 'cursor-ring'; ring.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(dot); document.body.appendChild(ring);
+    docEl.classList.add('has-customcursor');
+
+    var dx = window.innerWidth / 2, dy = window.innerHeight / 2;
+    var rx = dx, ry = dy, started = false;
+    var INTERACTIVE = 'a,button,input,textarea,select,label,summary,.persona,.card,.tile,.lever,.nav-toggle';
+
+    window.addEventListener('pointermove', function (e) {
+      dx = e.clientX; dy = e.clientY;
+      dot.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
+      if (!started) { started = true; rx = dx; ry = dy; docEl.classList.add('cursor-ready'); }
+    }, { passive: true });
+
+    (function loop() {
+      rx += (dx - rx) * 0.18; ry += (dy - ry) * 0.18;
+      ring.style.transform = 'translate(' + rx + 'px,' + ry + 'px)';
+      requestAnimationFrame(loop);
+    })();
+
+    document.addEventListener('pointerover', function (e) {
+      if (e.target.closest && e.target.closest(INTERACTIVE)) docEl.classList.add('cursor-hover');
+    });
+    document.addEventListener('pointerout', function (e) {
+      if (e.target.closest && e.target.closest(INTERACTIVE)) {
+        var to = e.relatedTarget;
+        if (!(to && to.closest && to.closest(INTERACTIVE))) docEl.classList.remove('cursor-hover');
+      }
+    });
+    window.addEventListener('pointerdown', function () { docEl.classList.add('cursor-down'); });
+    window.addEventListener('pointerup', function () { docEl.classList.remove('cursor-down'); });
+    document.addEventListener('mouseleave', function () { docEl.classList.remove('cursor-ready'); });
+    document.addEventListener('mouseenter', function () { if (started) docEl.classList.add('cursor-ready'); });
+  }
 })();
