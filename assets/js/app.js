@@ -64,4 +64,24 @@
     }, { threshold: 0.5 });
     counters.forEach(function (el) { io2.observe(el); });
   }
+
+  // --- Hero : quadrillage "spotlight" qui suit le curseur ---
+  var hero = document.querySelector('.hero');
+  if (hero && !reduce && window.matchMedia('(pointer: fine)').matches) {
+    var raf = null, mx = 60, my = 6;
+    hero.addEventListener('pointermove', function (e) {
+      var r = hero.getBoundingClientRect();
+      mx = (e.clientX - r.left) / r.width * 100;
+      my = (e.clientY - r.top) / r.height * 100;
+      if (!raf) raf = requestAnimationFrame(function () {
+        raf = null;
+        hero.style.setProperty('--mx', mx.toFixed(1) + '%');
+        hero.style.setProperty('--my', my.toFixed(1) + '%');
+      });
+    });
+    hero.addEventListener('pointerleave', function () {
+      hero.style.setProperty('--mx', '60%');
+      hero.style.setProperty('--my', '6%');
+    });
+  }
 })();
