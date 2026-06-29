@@ -95,7 +95,13 @@
 
     var dx = window.innerWidth / 2, dy = window.innerHeight / 2;
     var rx = dx, ry = dy, started = false;
-    var INTERACTIVE = 'a,button,input,textarea,select,label,summary,.persona,.card,.tile,.lever,.nav-toggle';
+    function cursorKind(t) {
+      if (!t || !t.closest) return null;
+      if (t.closest('.btn,.nav-toggle')) return 'btn';
+      if (t.closest('.persona,.card,.tile,.lever')) return 'media';
+      if (t.closest('a,button,label,summary,input,select,textarea')) return 'link';
+      return null;
+    }
 
     window.addEventListener('pointermove', function (e) {
       dx = e.clientX; dy = e.clientY;
@@ -110,13 +116,21 @@
     })();
 
     document.addEventListener('pointerover', function (e) {
-      if (e.target.closest && e.target.closest(INTERACTIVE)) docEl.classList.add('cursor-hover');
+      var k = cursorKind(e.target);
+      docEl.classList.toggle('cursor-btn', k === 'btn');
+      docEl.classList.toggle('cursor-media', k === 'media');
+      docEl.classList.toggle('cursor-hover', k === 'link');
     });
-    document.addEventListener('pointerout', function (e) {
-      if (e.target.closest && e.target.closest(INTERACTIVE)) {
-        var to = e.relatedTarget;
-        if (!(to && to.closest && to.closest(INTERACTIVE))) docEl.classList.remove('cursor-hover');
-      }
+
+    // Boutons magnétiques : ils glissent légèrement vers le curseur au survol
+    document.querySelectorAll('.btn').forEach(function (b) {
+      b.addEventListener('pointermove', function (e) {
+        var r = b.getBoundingClientRect();
+        var mx = e.clientX - (r.left + r.width / 2);
+        var my = e.clientY - (r.top + r.height / 2);
+        b.style.transform = 'translate(' + (mx * 0.25).toFixed(1) + 'px,' + (my * 0.4).toFixed(1) + 'px)';
+      });
+      b.addEventListener('pointerleave', function () { b.style.transform = ''; });
     });
     window.addEventListener('pointerdown', function () { docEl.classList.add('cursor-down'); });
     window.addEventListener('pointerup', function () { docEl.classList.remove('cursor-down'); });
