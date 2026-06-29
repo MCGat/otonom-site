@@ -7,4 +7,5 @@ __MACOSX/
 
 # Outils locaux
 .qodo/
+.claude/
 node_modules/
