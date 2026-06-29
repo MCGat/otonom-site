@@ -136,5 +136,20 @@
     window.addEventListener('pointerup', function () { docEl.classList.remove('cursor-down'); });
     document.addEventListener('mouseleave', function () { docEl.classList.remove('cursor-ready'); });
     document.addEventListener('mouseenter', function () { if (started) docEl.classList.add('cursor-ready'); });
+
+    // Mini « loupe » : zoom léger du texte survolé, ancré vers le curseur
+    if (window.matchMedia('(hover: hover)').matches) {
+      var ZOOM = 'h1,h2,h3,p,li,.kicker,.lede,.num,.big';
+      var zEl = null;
+      document.addEventListener('pointermove', function (e) {
+        var el = e.target.closest ? e.target.closest(ZOOM) : null;
+        if (el && el.closest('.tx-panel')) el = null;
+        if (el !== zEl) { if (zEl) zEl.classList.remove('txt-zoom'); zEl = el; if (zEl) zEl.classList.add('txt-zoom'); }
+        if (zEl) {
+          var rz = zEl.getBoundingClientRect();
+          zEl.style.transformOrigin = ((e.clientX - rz.left) / rz.width * 100).toFixed(1) + '% ' + ((e.clientY - rz.top) / rz.height * 100).toFixed(1) + '%';
+        }
+      }, { passive: true });
+    }
   }
 })();

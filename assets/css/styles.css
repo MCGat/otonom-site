@@ -368,3 +368,9 @@ a.persona .more svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-
 .has-customcursor a,.has-customcursor button,.has-customcursor label,.has-customcursor .persona{cursor:none}
 .has-customcursor input,.has-customcursor textarea,.has-customcursor select{cursor:auto}
 @media(hover:none),(pointer:coarse){.cursor-dot,.cursor-ring{display:none}.has-customcursor{cursor:auto}}
+
+/* Mini « loupe » : le texte survolé zoome légèrement vers le curseur (desktop) */
+@media (hover:hover) and (pointer:fine){
+  h1,h2,h3,p,li,.kicker,.lede,.num,.big{transition:transform .22s cubic-bezier(.2,.7,.2,1)}
+  .txt-zoom{transform:scale(1.035)!important;transition:transform .2s cubic-bezier(.2,.7,.2,1)!important}
+}
