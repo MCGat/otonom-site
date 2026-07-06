@@ -131,6 +131,28 @@ p{margin:0}
 .single .mark{font-family:var(--ff-display);font-size:30px;letter-spacing:.04em;color:var(--white)}
 .single .sub{font-size:14px;color:var(--muted);margin-top:8px}
 
+/* PHOTO COLLAGE — une seule image révélée à travers plusieurs panneaux (effet masque).
+   Chaque .frag affiche la portion de l'image qui se trouve « sous » lui : background-size
+   et background-position sont calculés pour que les fragments reconstituent la même image,
+   avec des gouttières entre eux. 100% CSS, responsive, sans JS. */
+.photo-collage{position:relative;width:100%;max-width:440px;margin-inline:auto;aspect-ratio:764/955;
+  --img:url("../img/charge-ve.png")}
+.photo-collage .frag.reveal{position:absolute;border-radius:var(--radius);overflow:hidden;
+  background-image:var(--img);background-repeat:no-repeat;
+  border:1px solid var(--line);box-shadow:0 26px 60px -32px rgba(0,0,0,.85);
+  filter:grayscale(.22) contrast(1.04);
+  transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1),filter .5s ease}
+.photo-collage:hover .frag{filter:grayscale(0) contrast(1)}
+.photo-collage .f1{left:0;top:0;width:46%;height:46%;background-size:217.4% 217.4%;background-position:0% 0%}
+.photo-collage .f2{left:50%;top:10%;width:50%;height:52%;background-size:200% 192.3%;background-position:100% 20.8%}
+.photo-collage .f3{left:0;top:52%;width:46%;height:48%;background-size:217.4% 208.3%;background-position:0% 100%}
+.photo-collage .f4{left:54.5%;top:68%;width:45.5%;height:32%;background-size:219.8% 312.5%;background-position:100% 100%}
+/* entrée en cascade des fragments (si JS actif) */
+.js .photo-collage .frag:nth-child(1){transition-delay:.04s}
+.js .photo-collage .frag:nth-child(2){transition-delay:.12s}
+.js .photo-collage .frag:nth-child(3){transition-delay:.20s}
+.js .photo-collage .frag:nth-child(4){transition-delay:.28s}
+
 /* STEPS */
 .steps{display:grid;gap:1px;background:var(--line-soft);border:1px solid var(--line-soft);border-radius:var(--radius);overflow:hidden;margin-top:48px}
 .step{background:var(--bg-1);padding:30px 32px;display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:start}
