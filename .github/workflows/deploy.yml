@@ -1,0 +1,52 @@
+name: Deploy vers PlanetHoster (FTP)
+
+# Déploie le site statique sur PlanetHoster à chaque push sur main.
+# Peut aussi être lancé manuellement depuis l'onglet Actions (avec option "tout réuploader").
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      clean_slate:
+        description: "Tout réuploader de force (efface le contenu distant puis renvoie tout)"
+        type: boolean
+        default: false
+
+concurrency:
+  group: deploy-ftp
+  cancel-in-progress: true
+
+jobs:
+  ftp-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Déploiement FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          # Dossier distant. Adapte-le via la variable de repo FTP_SERVER_DIR :
+          #  - compte FTP limité à public_html      -> ./
+          #  - compte FTP à la racine du compte     -> ./public_html/
+          server-dir: ${{ vars.FTP_SERVER_DIR || './public_html/' }}
+          local-dir: ./
+          # Efface tout le distant avant de renvoyer (uniquement si lancé à la main avec la case cochée)
+          dangerous-clean-slate: ${{ github.event.inputs.clean_slate == 'true' }}
+          # Fichiers de dev à ne PAS publier
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.github/**
+            **/.claude/**
+            **/.qodo/**
+            **/node_modules/**
+            **/.DS_Store
+            **/Thumbs.db
+            CLAUDE.md
+            README.md
