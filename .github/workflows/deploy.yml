@@ -50,3 +50,5 @@ jobs:
             **/Thumbs.db
             CLAUDE.md
             README.md
+            secret.config.php
+            secret.config.example.php

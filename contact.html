@@ -66,15 +66,10 @@
     <div class="form-panel">
     <h3 style="margin-bottom:8px">Parlez-nous de votre projet</h3>
     <p class="muted" style="font-size:14.5px;margin-bottom:22px">Nous revenons vers vous sous 48&nbsp;h ouvrées.</p>
-    <!-- FormSubmit : envoie à a.thomas@mc-groupe.com, copie à gregory@otonom.fr.
-         IMPORTANT : au 1er envoi, FormSubmit envoie un email d'activation à a.thomas@mc-groupe.com → cliquer le lien une fois.
-         _next doit pointer vers l'URL finale de la page merci (à ajuster si le domaine change). -->
-    <form class="form" action="https://formsubmit.co/a.thomas@mc-groupe.com" method="POST">
-      <input type="hidden" name="_subject" value="Nouvelle demande d'audit — site OTONOM">
-      <input type="hidden" name="_cc" value="gregory@otonom.fr">
-      <input type="hidden" name="_template" value="table">
-      <input type="hidden" name="_captcha" value="false">
-      <input type="hidden" name="_next" value="https://otonom.fr/merci.html">
+    <!-- Formulaire → contact.php (PHP, PlanetHoster) : envoie un email stylisé (DA)
+         à e.barlet@mc-groupe.com puis redirige vers merci.html. Honeypot anti-spam conservé. -->
+    <p id="formError" style="display:none;margin-bottom:18px;padding:12px 16px;border:1px solid rgba(201,162,39,.45);background:rgba(201,162,39,.09);border-radius:10px;font-size:14px;color:#d9b13a;line-height:1.55">Une erreur est survenue lors de l'envoi. Vérifiez vos informations et réessayez, ou écrivez-nous à <a href="mailto:e.barlet@mc-groupe.com" style="color:#e2c04a;text-decoration:underline">e.barlet@mc-groupe.com</a>.</p>
+    <form class="form" action="contact.php" method="POST">
       <input type="text" name="_honey" class="hp" tabindex="-1" autocomplete="off">
       <div class="form-row">
         <div class="field"><label for="nom">Nom <span class="req">*</span></label><input id="nom" type="text" name="Nom" required></div>
@@ -163,5 +158,6 @@
 
 <script src="assets/js/app.js?v=34"></script>
 <script src="assets/js/theme-editor.js?v=1"></script>
+<script>if(location.search.indexOf('erreur=1')>-1){var e=document.getElementById('formError');if(e){e.style.display='block';}}</script>
 </body>
 </html>

@@ -9,3 +9,6 @@ __MACOSX/
 .qodo/
 .claude/
 node_modules/
+
+# Secrets (JAMAIS sur GitHub) — identifiants SMTP du formulaire de contact
+secret.config.php
