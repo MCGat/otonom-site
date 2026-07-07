@@ -24,8 +24,9 @@ return [
     'smtp_pass'   => 'METTRE_LE_MOT_DE_PASSE_ICI',
 
     // --- Expéditeur / destinataires ---
+    // to_mail et cc_mail acceptent PLUSIEURS adresses séparées par des virgules.
     'from_mail'   => 'no-reply@otonom.fr',      // doit = smtp_user (alignement SPF/DKIM)
     'from_name'   => 'OTONOM — Site',
-    'to_mail'     => 'e.barlet@mc-groupe.com',  // qui reçoit les demandes
+    'to_mail'     => 'e.barlet@mc-groupe.com, a.thomas@mc-groupe.com', // destinataires principaux
     'cc_mail'     => '',                         // ex. 'gregory@otonom.fr' pour une copie
 ];

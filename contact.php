@@ -157,9 +157,17 @@ try {
   $mail->Timeout = 15;
 
   // --- Enveloppe ---
+  // to_mail et cc_mail acceptent plusieurs adresses séparées par des virgules
+  //   ex. 'e.barlet@mc-groupe.com, a.thomas@mc-groupe.com'
+  $ajouter = function ($liste, $methode) use ($mail) {
+    foreach (explode(',', (string) $liste) as $adr) {
+      $adr = trim($adr);
+      if ($adr !== '' && filter_var($adr, FILTER_VALIDATE_EMAIL)) $mail->$methode($adr);
+    }
+  };
   $mail->setFrom($cfg['from_mail'], $cfg['from_name']);     // = no-reply@otonom.fr
-  $mail->addAddress($cfg['to_mail']);                        // e.barlet@mc-groupe.com
-  if (!empty($cfg['cc_mail'])) $mail->addCC($cfg['cc_mail']);
+  $ajouter($cfg['to_mail'], 'addAddress');                  // destinataire(s) principal(aux)
+  if (!empty($cfg['cc_mail'])) $ajouter($cfg['cc_mail'], 'addCC'); // copie(s)
   $mail->addReplyTo($email, $nom);                           // « Répondre » va au prospect
 
   // --- Contenu ---

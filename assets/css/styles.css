@@ -469,50 +469,6 @@ a.persona .more svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-
 }
 
 /* ============================================================
-   THEME EDITOR — panneau de réglage d'apparence (outil interne)
-   Couleurs codées en dur : reste lisible quel que soit le thème.
-   ============================================================ */
-.tx-tab{position:fixed;top:50%;right:0;transform:translateY(-50%);z-index:1200;
-  display:flex;align-items:center;gap:7px;padding:10px 11px;border:0;cursor:pointer;
-  background:#16161a;color:#f1f1ef;border:1px solid rgba(255,255,255,.16);border-right:0;
-  border-radius:10px 0 0 10px;font-family:"Space Mono",ui-monospace,monospace;font-size:11px;
-  letter-spacing:.12em;text-transform:uppercase;writing-mode:vertical-rl;
-  box-shadow:0 8px 30px -10px rgba(0,0,0,.6);transition:background .2s,color .2s}
-.tx-tab:hover{background:#202026}
-.tx-tab svg{width:15px;height:15px;writing-mode:horizontal-tb}
-.tx-backdrop{position:fixed;inset:0;z-index:1199;background:rgba(0,0,0,.35);opacity:0;visibility:hidden;transition:opacity .25s}
-.tx-backdrop.open{opacity:1;visibility:visible}
-.tx-panel{position:fixed;top:0;right:0;height:100vh;height:100dvh;width:330px;max-width:88vw;z-index:1201;
-  background:#0d0d10;color:#f1f1ef;border-left:1px solid rgba(255,255,255,.14);
-  display:flex;flex-direction:column;transform:translateX(102%);transition:transform .32s cubic-bezier(.4,0,.2,1);
-  font-family:"Inter",system-ui,sans-serif;box-shadow:-20px 0 60px -20px rgba(0,0,0,.7)}
-.tx-panel.open{transform:none}
-.tx-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.1)}
-.tx-head h3{font-family:"Space Grotesk",sans-serif;font-size:16px;margin:0;color:#fff}
-.tx-head .tx-sub{font-size:11px;color:#8a8a90;margin-top:2px;font-family:"Space Mono",monospace;letter-spacing:.04em}
-.tx-close{background:none;border:0;color:#9a9aa1;font-size:20px;cursor:pointer;line-height:1;padding:4px}
-.tx-close:hover{color:#fff}
-.tx-body{padding:14px 20px 22px;overflow-y:auto;flex:1}
-.tx-group{margin-top:18px}
-.tx-group:first-child{margin-top:4px}
-.tx-gtitle{display:block;font-family:"Space Mono",monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#6e6e76;margin-bottom:10px}
-.tx-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:7px 0}
-.tx-row>span{font-size:13.5px;color:#d6d6d4}
-.tx-row input[type=color]{inline-size:38px;block-size:26px;padding:0;border:1px solid rgba(255,255,255,.2);border-radius:6px;background:none;cursor:pointer}
-.tx-row input[type=color]::-webkit-color-swatch{border:none;border-radius:4px}
-.tx-row input[type=color]::-webkit-color-swatch-wrapper{padding:2px}
-.tx-row input[type=range]{flex:1;max-width:150px;accent-color:#fff;cursor:pointer}
-.tx-row .tx-val{font-family:"Space Mono",monospace;font-size:11px;color:#8a8a90;min-width:42px;text-align:right}
-.tx-row--switch{cursor:pointer}
-.tx-actions{display:flex;gap:10px;margin-top:24px}
-.tx-actions button{flex:1;padding:11px;border-radius:9px;font-family:"Inter",sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:1px solid rgba(255,255,255,.2);background:transparent;color:#f1f1ef;transition:background .18s,color .18s}
-.tx-actions .tx-copy{background:#fff;color:#0a0a0a;border-color:#fff}
-.tx-actions button:hover{background:rgba(255,255,255,.1)}
-.tx-actions .tx-copy:hover{background:#e6e6e3}
-.tx-note{margin-top:14px;font-size:11.5px;line-height:1.5;color:#6e6e76}
-@media print{.tx-tab,.tx-panel,.tx-backdrop{display:none!important}}
-
-/* ============================================================
    CURSEUR PERSONNALISÉ (desktop) — mix-blend pour rester
    visible sur fond clair comme sur fond sombre.
    ============================================================ */
