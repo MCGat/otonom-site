@@ -153,12 +153,145 @@ p{margin:0}
 .js .photo-collage .frag:nth-child(3){transition-delay:.20s}
 .js .photo-collage .frag:nth-child(4){transition-delay:.28s}
 
+/* Cartes comparatives « L'orchestration » — grille 2 colonnes (1 sur mobile).
+   Base partagée par le schéma animé ci-dessous (.compare--v4). */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:48px}
+.compare-panel{position:relative;margin:0;border:1px solid var(--line);border-radius:var(--radius);background:var(--bg-1);padding:24px 22px 20px}
+.compare-panel--after{background:radial-gradient(120% 130% at 50% 0%,rgba(255,255,255,.07),transparent 60%),var(--bg-1)}
+.compare-panel:nth-child(2){transition-delay:.12s}
+.compare-tag{display:inline-flex;align-items:center;font-family:var(--ff-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:6px 13px}
+.compare-panel--after .compare-tag{background:var(--white);border-color:var(--white);color:#0a0a0a}
+.compare--v4 .compare-panel:not(.compare-panel--after) .compare-tag{background:var(--white);border-color:var(--white);color:#0a0a0a}
+@media(max-width:880px){.compare{grid-template-columns:1fr}}
+
+/* ============================================================
+   SCHÉMA « L'orchestration » — 6 échanges continus (gauche) vs 1 seul interlocuteur (droite).
+   Classes préfixées o4-. Réutilise la grille .compare, les cartes .compare-panel(--after),
+   l'observer .reveal (.in) et le count-up [data-count] d'app.js — aucun JS dédié.
+   Impulsion « courant » : segment lumineux qui court le long du trait (stroke-dashoffset)
+   + léger halo ; suit droites et courbes. Repli prefers-reduced-motion géré plus bas.
+   ============================================================ */
+.compare--v4 .o4-schema{width:100%;height:auto;margin-top:16px}
+.compare--v4 .o4-schema text{font-family:var(--ff-mono);font-size:10px;letter-spacing:.06em;fill:var(--muted);text-anchor:middle}
+/* .o4-schema dans le sélecteur = spécificité > `.o4-schema text` (sinon fill/anchor de base l'emporteraient) */
+.compare--v4 .o4-schema .o4-lbl--r{text-anchor:start;font-size:11px;fill:var(--white)}
+.compare--v4 .o4-schema .o4-chiplbl{fill:var(--white);font-size:15px;letter-spacing:.02em}
+.compare--v4 .o4-chip{fill:var(--bg-2);stroke:var(--line)}
+.compare--v4 .o4-node{fill:var(--white);stroke:var(--white)}
+.compare--v4 .o4-line{fill:none;stroke:rgba(255,255,255,.4);stroke-width:1.2}
+.compare--v4 .o4-line--main{stroke:rgba(255,255,255,.7);stroke-width:1.2}
+.compare--v4 .o4-line--branch{fill:none;stroke:rgba(255,255,255,.4);stroke-width:1.2}
+.compare--v4 .o4-obox{fill:var(--white);stroke:var(--white)}
+.compare--v4 .o4-schema .o4-otonom{font-family:var(--ff-display);font-size:15px;font-weight:600;letter-spacing:.06em;fill:#0a0a0a;text-anchor:middle}
+/* impulsion « courant électrique » : un court segment lumineux court le long du trait
+   (stroke-dashoffset animé → suit droites ET courbes), avec un léger halo. */
+.compare--v4 .o4-pulse{fill:none;stroke:var(--white);stroke-width:1.7;stroke-linecap:round;
+  stroke-dasharray:.14 3;opacity:0;filter:drop-shadow(0 0 2.5px rgba(255,255,255,.85))}
+/* bloc de conclusion — hiérarchie renforcée */
+.compare--v4 .o4-concl{margin-top:22px;padding-top:22px;border-top:1px solid var(--line)}
+.compare--v4 .o4-big{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.compare--v4 .o4-bignum{font-family:var(--ff-mono);font-size:46px;line-height:.9;color:var(--white);font-variant-numeric:tabular-nums}
+.compare--v4 .o4-bigtxt{font-family:var(--ff-display);font-size:clamp(20px,2.4vw,26px);font-weight:600;letter-spacing:-.01em;color:var(--ink)}
+.compare--v4 .o4-sub2{margin-top:8px;font-family:var(--ff-mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted-2)}
+.compare--v4 .o4-recap{list-style:none;margin:18px 0 0;padding:0;display:flex;flex-wrap:wrap;font-family:var(--ff-mono);font-size:12.5px;color:var(--ink-soft);row-gap:8px}
+.compare--v4 .o4-recap li{display:flex;align-items:center;white-space:nowrap}
+.compare--v4 .o4-recap li:not(:last-child)::after{content:"·";margin:0 12px;color:var(--muted-2)}
+.compare--v4 .o4-recap-line{margin-top:16px;font-size:14px;color:var(--ink-soft);line-height:1.6}
+.compare--v4 .o4-cap{margin-top:10px;font-size:13px;color:var(--muted);line-height:1.6}
+
+/* CARTE « AVEC OTONOM » — couleurs inversées (fond clair, éléments sombres).
+   On rebascule les tokens vers le thème clair du site (comme .section--light) : tout ce qui
+   utilise var(--white)/var(--ink)/var(--bg-*)/var(--line) s'inverse tout seul. On corrige
+   ensuite les rares couleurs codées en dur (texte OTONOM, traits, halo, tag). */
+.compare--v4 .compare-panel--after{
+  --bg-1:var(--l-bg1); --bg-2:var(--l-bg2);
+  --ink:var(--l-ink); --ink-soft:var(--l-ink-soft); --muted:var(--l-muted); --muted-2:var(--l-muted2);
+  --line:rgba(0,0,0,var(--l-line-a)); --line-soft:rgba(0,0,0,var(--l-line-soft-a));
+  --white:var(--l-ink);
+  background:var(--l-bg1); color:var(--l-ink);
+}
+.compare--v4 .compare-panel--after .compare-tag{color:var(--l-bg1)}          /* pastille sombre, texte clair */
+.compare--v4 .compare-panel--after .o4-schema .o4-otonom{fill:var(--l-bg1)}  /* OTONOM : texte clair sur bloc sombre */
+.compare--v4 .compare-panel--after .o4-line--main{stroke:rgba(0,0,0,.32)}     /* liaison active, sombre */
+.compare--v4 .compare-panel--after .o4-line--branch{stroke:rgba(0,0,0,.32)}  /* branches grises (sombre) */
+.compare--v4 .compare-panel--after .o4-pulse{filter:drop-shadow(0 0 2.5px rgba(0,0,0,.5))}  /* halo sombre */
+
+/* animations (démarrent quand la carte entre à l'écran, .in).
+   o4sweep : impulsion qui balaie le trait de bout en bout (aller-retour via `alternate`).
+   o4branch : impulsion à sens unique OTONOM→service, qui ne se déclenche qu'à mi-cycle
+              (quand l'impulsion entreprise↔OTONOM vient de toucher OTONOM). */
+@keyframes o4sweep{from{stroke-dashoffset:.14}to{stroke-dashoffset:-1.14}}
+@keyframes o4branch{
+  0%,48%{stroke-dashoffset:.14;opacity:0}
+  54%{opacity:1}
+  88%{stroke-dashoffset:-1.14;opacity:1}
+  94%,100%{stroke-dashoffset:-1.14;opacity:0}
+}
+.js .compare--v4 .compare-panel.in .o4-pulse{opacity:1}
+.js .compare--v4 .compare-panel.in .o4-pulse--ar{animation:o4sweep 1.6s ease-in-out infinite alternate}
+.js .compare--v4 .compare-panel.in .o4-pulse--branch{animation:o4branch 3.2s ease-out infinite}
+/* repli prefers-reduced-motion : pas d'animation continue → impulsions masquées, traits statiques */
+@media(prefers-reduced-motion:reduce){
+  .js .compare--v4 .o4-pulse{animation:none;opacity:0}
+}
+
 /* STEPS */
 .steps{display:grid;gap:1px;background:var(--line-soft);border:1px solid var(--line-soft);border-radius:var(--radius);overflow:hidden;margin-top:48px}
 .step{background:var(--bg-1);padding:30px 32px;display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:start}
 .step .n{font-family:var(--ff-mono);font-size:13px;color:var(--muted-2);padding-top:5px;min-width:34px}
 .step h3{font-size:19px;margin-bottom:8px}
 .step p{color:var(--muted);font-size:15px}
+
+/* FRISE MÉTHODE — les 5 étapes sur une ligne continue, de A à Z (Version B, à valider)
+   Ligne de progression qui se remplit au reveal, nœuds qui s'allument au passage.
+   Bascule en frise verticale sur mobile. */
+.tl{list-style:none;margin:64px 0 0;padding:0;display:grid;grid-template-columns:repeat(5,1fr);gap:0 18px;position:relative}
+.tl::before,.tl::after{content:"";position:absolute;top:17px;left:10%;right:10%;height:1px}
+.tl::before{background:var(--line)}
+.tl::after{background:var(--ink);transform-origin:left center;transition:transform 1.5s cubic-bezier(.2,.7,.2,1) .2s}
+.js .tl::after{transform:scaleX(0)}
+.js .tl.in::after{transform:scaleX(1)}
+.tl-step{position:relative;text-align:center}
+.tl-node{position:relative;z-index:1;width:35px;height:35px;margin-inline:auto;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:50%;background:var(--bg);font-family:var(--ff-mono);font-size:12px;color:var(--ink);transition:border-color .45s ease}
+.js .tl.in .tl-node{border-color:var(--ink)}
+.tl-step:last-child .tl-node{border-style:dashed}
+.tl-step h3{font-size:17.5px;margin-top:20px}
+.tl-step p{color:var(--muted);font-size:13.5px;line-height:1.55;margin-top:8px}
+.tl-tag{position:absolute;top:-34px;left:50%;transform:translateX(-50%);font-family:var(--ff-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap;padding:4px 11px;border-radius:999px}
+.tl-tag--free{background:var(--ink);color:var(--bg-1)}
+.tl-tag--loop{border:1px solid var(--line);color:var(--muted)}
+/* cascade d'apparition : le conteneur .tl porte .reveal, les étapes se dévoilent une à une */
+.js .tl.reveal{opacity:1;transform:none;transition:none}
+.js .tl .tl-step{opacity:0;transform:translateY(14px);transition:opacity .6s ease,transform .6s cubic-bezier(.2,.7,.2,1)}
+.js .tl.in .tl-step{opacity:1;transform:none}
+.js .tl.in .tl-step:nth-child(1){transition-delay:.05s}
+.js .tl.in .tl-step:nth-child(2){transition-delay:.21s}
+.js .tl.in .tl-step:nth-child(3){transition-delay:.37s}
+.js .tl.in .tl-step:nth-child(4){transition-delay:.53s}
+.js .tl.in .tl-step:nth-child(5){transition-delay:.69s}
+/* les nœuds s'allument au rythme du remplissage de la ligne */
+.js .tl.in .tl-step:nth-child(1) .tl-node{transition-delay:.25s}
+.js .tl.in .tl-step:nth-child(2) .tl-node{transition-delay:.55s}
+.js .tl.in .tl-step:nth-child(3) .tl-node{transition-delay:.85s}
+.js .tl.in .tl-step:nth-child(4) .tl-node{transition-delay:1.15s}
+.js .tl.in .tl-step:nth-child(5) .tl-node{transition-delay:1.45s}
+@media(max-width:880px){
+  .tl{grid-template-columns:1fr;gap:28px;margin-top:44px}
+  .tl::before,.tl::after{left:17px;right:auto;width:1px;height:auto;top:6px;bottom:6px}
+  .tl::after{transform-origin:top center}
+  .js .tl::after{transform:scaleY(0)}
+  .js .tl.in::after{transform:scaleY(1)}
+  .tl-step{display:grid;grid-template-columns:35px 1fr;column-gap:18px;text-align:left;align-items:start}
+  .tl-node{margin:0;grid-column:1;grid-row:1 / span 3}
+  .tl-step h3{grid-column:2;grid-row:1;margin-top:6px}
+  .tl-step p{grid-column:2;grid-row:2;margin-top:6px}
+  .tl-tag{position:static;transform:none;grid-column:2;grid-row:3;justify-self:start;margin-top:10px}
+}
+@media(prefers-reduced-motion:reduce){
+  .js .tl::after,.js .tl.in::after{transform:none;transition:none}
+  .js .tl .tl-step{opacity:1;transform:none;transition:none}
+  .js .tl .tl-node{transition:none;border-color:var(--ink)}
+}
 
 /* LEVERS */
 .levers{margin-top:48px;border:1px solid var(--line-soft);border-radius:var(--radius);overflow:hidden}
@@ -307,7 +440,7 @@ a.persona .more svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-
 .back-link::after{content:"";position:absolute;left:0;bottom:-4px;width:100%;height:1px;background:currentColor;opacity:.4;transition:opacity .2s ease}
 .back-link:hover{color:var(--ink)}
 .back-link:hover::after{opacity:1}
-.back-link svg{transition:transform .2s ease}
+.back-link svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;transition:transform .2s ease}
 .back-link:hover svg{transform:translateX(3px)}
 .center-min{min-height:54vh;display:flex;align-items:center}
 .center-min .inner{max-width:60ch}

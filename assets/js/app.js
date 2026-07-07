@@ -65,6 +65,31 @@
     counters.forEach(function (el) { io2.observe(el); });
   }
 
+  // --- Schéma facturation : le panneau « avec OTONOM » n'anime sa séquence
+  //     qu'une fois celle de « aujourd'hui » terminée (et lui-même visible). ---
+  var BEFORE_DUR = 5600; // durée de la séquence « aujourd'hui » (doit coller aux delays CSS)
+  document.querySelectorAll('.compare').forEach(function (cmp) {
+    var before = cmp.querySelector('.compare-panel:not(.compare-panel--after)');
+    var after = cmp.querySelector('.compare-panel--after');
+    if (!before || !after) return;
+    if (reduce || !('IntersectionObserver' in window)) { after.classList.add('seq-go'); return; }
+    var beforeDone = false, afterVisible = false;
+    function maybeGo() { if (beforeDone && afterVisible) after.classList.add('seq-go'); }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        if (e.target === before) {
+          io.unobserve(before);
+          setTimeout(function () { beforeDone = true; maybeGo(); }, BEFORE_DUR);
+        } else if (e.target === after) {
+          io.unobserve(after);
+          afterVisible = true; maybeGo();
+        }
+      });
+    }, { threshold: 0.12 });
+    io.observe(before); io.observe(after);
+  });
+
   // --- Hero : quadrillage "spotlight" qui suit le curseur ---
   var hero = document.querySelector('.hero');
   if (hero && !reduce && window.matchMedia('(pointer: fine)').matches) {
