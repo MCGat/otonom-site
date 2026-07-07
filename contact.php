@@ -11,6 +11,15 @@
 
 date_default_timezone_set('Europe/Paris');
 
+// ╔══════════════════════════════════════════════════════════════════════╗
+// ║  DESTINATAIRES — modifiable ICI (versionné sur GitHub, pas de secret) ║
+// ║  Plusieurs adresses = séparées par des virgules.                     ║
+// ╚══════════════════════════════════════════════════════════════════════╝
+$TO        = 'e.barlet@mc-groupe.com, a.thomas@mc-groupe.com'; // destinataires
+$CC        = '';                                               // copie(s), ex. 'gregory@otonom.fr'
+$FROM_MAIL = 'no-reply@otonom.fr';   // doit rester = compte SMTP (alignement SPF/DKIM)
+$FROM_NAME = 'OTONOM — Site';
+
 // ---- Garde-fous requête ----
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: contact.html'); exit; }
 if (!empty($_POST['_honey'])) { header('Location: merci.html'); exit; } // pot de miel : on fait comme si tout allait bien
@@ -90,14 +99,9 @@ $html = '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="
     . '</td></tr>'
 
     // --- Message ---
-    . '<tr><td style="padding:16px 34px 6px;">'
+    . '<tr><td style="padding:16px 34px 34px;">'
       . '<div style="font-family:\'Space Mono\',\'Courier New\',monospace;font-size:10.5px;letter-spacing:2px;text-transform:uppercase;color:#86868c;margin-bottom:10px;">Message</div>'
       . '<div style="border:1px solid #e2e2de;border-radius:12px;padding:16px 18px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.65;color:#2a2a2e;background:#fafaf8;">' . $messageHtml . '</div>'
-    . '</td></tr>'
-
-    // --- CTA répondre ---
-    . '<tr><td style="padding:22px 34px 32px;">'
-      . '<a href="mailto:' . esc($email) . '?subject=' . rawurlencode('Votre demande d\'audit — OTONOM') . '" style="display:inline-block;background:#0b0b0d;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:600;text-decoration:none;padding:13px 26px;border-radius:999px;">Répondre à ' . esc($nom) . ' &rarr;</a>'
     . '</td></tr>'
 
     // --- Pied ---
@@ -165,9 +169,9 @@ try {
       if ($adr !== '' && filter_var($adr, FILTER_VALIDATE_EMAIL)) $mail->$methode($adr);
     }
   };
-  $mail->setFrom($cfg['from_mail'], $cfg['from_name']);     // = no-reply@otonom.fr
-  $ajouter($cfg['to_mail'], 'addAddress');                  // destinataire(s) principal(aux)
-  if (!empty($cfg['cc_mail'])) $ajouter($cfg['cc_mail'], 'addCC'); // copie(s)
+  $mail->setFrom($FROM_MAIL, $FROM_NAME);                  // = no-reply@otonom.fr
+  $ajouter($TO, 'addAddress');                              // destinataire(s) principal(aux)
+  if ($CC !== '') $ajouter($CC, 'addCC');                   // copie(s)
   $mail->addReplyTo($email, $nom);                           // « Répondre » va au prospect
 
   // --- Contenu ---
