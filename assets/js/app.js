@@ -168,6 +168,32 @@
     window.addEventListener('resize', function () { if (played) measure(); });
   });
 
+  // --- Bande(s) photo : parallaxe. L'image est plus haute que la bande ; on la
+  //     translate en fonction de la position de scroll → on découvre l'image du haut
+  //     vers le bas. rAF throttlé, transform composité GPU. ---
+  if (!reduce) {
+    document.querySelectorAll('.photoband').forEach(function (band) {
+      var img = band.querySelector('img');
+      if (!img) return;
+      var ticking = false;
+      function update() {
+        ticking = false;
+        var rect = band.getBoundingClientRect();
+        var vh = window.innerHeight || document.documentElement.clientHeight;
+        if (rect.bottom < -40 || rect.top > vh + 40) return; // hors écran : on ne touche pas
+        var overflow = img.offsetHeight - band.offsetHeight; // marge de défilement de l'image
+        if (overflow <= 0) return;
+        var p = (vh - rect.top) / (vh + rect.height);         // 0 quand la bande entre, 1 quand elle sort
+        p = p < 0 ? 0 : p > 1 ? 1 : p;
+        img.style.transform = 'translate3d(0,' + (-overflow * p).toFixed(1) + 'px,0)';
+      }
+      function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(update); } }
+      window.addEventListener('scroll', onScroll, { passive: true });
+      window.addEventListener('resize', onScroll);
+      update();
+    });
+  }
+
   // --- Hero : quadrillage "spotlight" qui suit le curseur ---
   var hero = document.querySelector('.hero');
   if (hero && !reduce && window.matchMedia('(pointer: fine)').matches) {
