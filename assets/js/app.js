@@ -90,6 +90,84 @@
     io.observe(before); io.observe(after);
   });
 
+  // --- Frise méthode « De A à Z » : le trait se dessine et s'arrête pile sur chaque nœud.
+  //     Les positions des nœuds sont MESURÉES (pas de % en dur) → parfaitement aligné
+  //     en desktop (trait horizontal) comme en mobile (trait vertical), à toute largeur. ---
+  document.querySelectorAll('.tl').forEach(function (tl) {
+    var nodes = [].slice.call(tl.querySelectorAll('.tl-node'));
+    var steps = [].slice.call(tl.querySelectorAll('.tl-step'));
+    if (nodes.length < 2) return;
+    var fracs = [];
+
+    // pose le trait exactement entre le 1er et le dernier nœud + relève la fraction de chaque nœud
+    function measure() {
+      var vertical = window.matchMedia('(max-width: 880px)').matches;
+      var tr = tl.getBoundingClientRect();
+      var pos = nodes.map(function (n) {
+        var r = n.getBoundingClientRect();
+        return vertical ? (r.top + r.height / 2) : (r.left + r.width / 2);
+      });
+      var a = pos[0], b = pos[pos.length - 1], len = (b - a) || 1;
+      fracs = pos.map(function (p) { return (p - a) / len; });
+      if (vertical) {
+        var n0 = nodes[0].getBoundingClientRect();
+        tl.style.setProperty('--tl-x', (n0.left + n0.width / 2 - tr.left) + 'px');
+        tl.style.setProperty('--tl-top', (a - tr.top) + 'px');
+        tl.style.setProperty('--tl-bottom', (tr.bottom - b) + 'px');
+      } else {
+        tl.style.setProperty('--tl-left', (a - tr.left) + 'px');
+        tl.style.setProperty('--tl-right', (tr.right - b) + 'px');
+      }
+    }
+
+    if (reduce || !('IntersectionObserver' in window)) {
+      measure(); tl.style.setProperty('--tlp', '1');
+      steps.forEach(function (s) { s.classList.add('on'); });
+      return;
+    }
+
+    var played = false;
+    function play() {
+      played = true;
+      measure();
+      steps[0].classList.add('on');                 // 01 apparaît d'abord
+      var SEG = 520, PAUSE = 280, START = 350;        // dessin par segment, courte pause à chaque nœud
+      var segs = [], t = START;
+      for (var k = 1; k < nodes.length; k++) {
+        segs.push({ s: t, e: t + SEG, from: fracs[k - 1], to: fracs[k], idx: k });
+        t += SEG + PAUSE;
+      }
+      var total = t, t0 = performance.now();
+      function ease(x) { return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2; }
+      function frame(now) {
+        var el = now - t0, p = fracs[0];
+        for (var i = 0; i < segs.length; i++) {
+          var g = segs[i];
+          if (el < g.s) { p = g.from; break; }           // en pause sur le nœud précédent
+          if (el <= g.e) {                                // segment en cours de tracé
+            var lt = (el - g.s) / SEG;
+            p = g.from + (g.to - g.from) * ease(lt);
+            if (lt > 0.7) steps[g.idx].classList.add('on'); // l'étape surgit quand le trait arrive
+            break;
+          }
+          p = g.to; steps[g.idx].classList.add('on');      // segment passé
+        }
+        tl.style.setProperty('--tlp', p.toFixed(4));
+        if (el < total) requestAnimationFrame(frame);
+        else { tl.style.setProperty('--tlp', '1'); steps.forEach(function (s) { s.classList.add('on'); }); }
+      }
+      requestAnimationFrame(frame);
+    }
+
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) { io.unobserve(tl); play(); } });
+    }, { threshold: 0.25 });
+    io.observe(tl);
+
+    // garde le trait aligné si on redimensionne / tourne l'écran après coup
+    window.addEventListener('resize', function () { if (played) measure(); });
+  });
+
   // --- Hero : quadrillage "spotlight" qui suit le curseur ---
   var hero = document.querySelector('.hero');
   if (hero && !reduce && window.matchMedia('(pointer: fine)').matches) {

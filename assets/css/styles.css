@@ -246,14 +246,17 @@ p{margin:0}
    Ligne de progression qui se remplit au reveal, nœuds qui s'allument au passage.
    Bascule en frise verticale sur mobile. */
 .tl{list-style:none;margin:64px 0 0;padding:0;display:grid;grid-template-columns:repeat(5,1fr);gap:0 18px;position:relative}
-.tl::before,.tl::after{content:"";position:absolute;top:17px;left:10%;right:10%;height:1px}
+/* trait posé exactement entre le 1er et le dernier nœud (offsets mesurés par app.js).
+   z-index:0 → toujours derrière les étapes et les nœuds. */
+.tl::before,.tl::after{content:"";position:absolute;z-index:0;top:17px;left:var(--tl-left,10%);right:var(--tl-right,10%);height:1px}
 .tl::before{background:var(--line)}
-.tl::after{background:var(--ink);transform-origin:left center;transition:transform 1.5s cubic-bezier(.2,.7,.2,1) .2s}
-.js .tl::after{transform:scaleX(0)}
-.js .tl.in::after{transform:scaleX(1)}
-.tl-step{position:relative;text-align:center}
+.js .tl::before{opacity:0}                          /* pas de trait « déjà là » : seul le tracé guide */
+.tl::after{background:var(--ink);transform-origin:left center}
+/* le tracé est piloté par app.js : --tlp (0→1) avance et s'arrête sur chaque nœud (positions réelles mesurées) */
+.js .tl::after{transform:scaleX(var(--tlp,0))}
+.tl-step{position:relative;z-index:1;text-align:center}
 .tl-node{position:relative;z-index:1;width:35px;height:35px;margin-inline:auto;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:50%;background:var(--bg);font-family:var(--ff-mono);font-size:12px;color:var(--ink);transition:border-color .45s ease}
-.js .tl.in .tl-node{border-color:var(--ink)}
+.js .tl .tl-step.on .tl-node{border-color:var(--ink)}
 .tl-step:last-child .tl-node{border-style:dashed}
 .tl-step h3{font-size:17.5px;margin-top:20px}
 .tl-step p{color:var(--muted);font-size:13.5px;line-height:1.55;margin-top:8px}
@@ -262,25 +265,14 @@ p{margin:0}
 .tl-tag--loop{border:1px solid var(--line);color:var(--muted)}
 /* cascade d'apparition : le conteneur .tl porte .reveal, les étapes se dévoilent une à une */
 .js .tl.reveal{opacity:1;transform:none;transition:none}
-.js .tl .tl-step{opacity:0;transform:translateY(14px);transition:opacity .6s ease,transform .6s cubic-bezier(.2,.7,.2,1)}
-.js .tl.in .tl-step{opacity:1;transform:none}
-.js .tl.in .tl-step:nth-child(1){transition-delay:.05s}
-.js .tl.in .tl-step:nth-child(2){transition-delay:.21s}
-.js .tl.in .tl-step:nth-child(3){transition-delay:.37s}
-.js .tl.in .tl-step:nth-child(4){transition-delay:.53s}
-.js .tl.in .tl-step:nth-child(5){transition-delay:.69s}
-/* les nœuds s'allument au rythme du remplissage de la ligne */
-.js .tl.in .tl-step:nth-child(1) .tl-node{transition-delay:.25s}
-.js .tl.in .tl-step:nth-child(2) .tl-node{transition-delay:.55s}
-.js .tl.in .tl-step:nth-child(3) .tl-node{transition-delay:.85s}
-.js .tl.in .tl-step:nth-child(4) .tl-node{transition-delay:1.15s}
-.js .tl.in .tl-step:nth-child(5) .tl-node{transition-delay:1.45s}
+/* chaque étape surgit quand le tracé atteint son nœud : app.js pose .on au bon instant */
+.js .tl .tl-step{opacity:0;transform:translateY(14px);transition:opacity .55s ease,transform .55s cubic-bezier(.2,.7,.2,1)}
+.js .tl .tl-step.on{opacity:1;transform:none}
 @media(max-width:880px){
   .tl{grid-template-columns:1fr;gap:28px;margin-top:44px}
-  .tl::before,.tl::after{left:17px;right:auto;width:1px;height:auto;top:6px;bottom:6px}
+  .tl::before,.tl::after{left:var(--tl-x,17px);right:auto;width:1px;height:auto;top:var(--tl-top,6px);bottom:var(--tl-bottom,6px)}
   .tl::after{transform-origin:top center}
-  .js .tl::after{transform:scaleY(0)}
-  .js .tl.in::after{transform:scaleY(1)}
+  .js .tl::after{transform:scaleY(var(--tlp,0))}
   .tl-step{display:grid;grid-template-columns:35px 1fr;column-gap:18px;text-align:left;align-items:start}
   .tl-node{margin:0;grid-column:1;grid-row:1 / span 3}
   .tl-step h3{grid-column:2;grid-row:1;margin-top:6px}
@@ -288,7 +280,8 @@ p{margin:0}
   .tl-tag{position:static;transform:none;grid-column:2;grid-row:3;justify-self:start;margin-top:10px}
 }
 @media(prefers-reduced-motion:reduce){
-  .js .tl::after,.js .tl.in::after{transform:none;transition:none}
+  .js .tl::before{opacity:1}
+  .js .tl::after{transform:none;transition:none}
   .js .tl .tl-step{opacity:1;transform:none;transition:none}
   .js .tl .tl-node{transition:none;border-color:var(--ink)}
 }
