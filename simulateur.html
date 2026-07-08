@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/styles.css?v=37" />
+<link rel="stylesheet" href="assets/css/styles.css?v=39" />
 <link rel="canonical" href="https://otonom.fr/simulateur.html" />
 <link rel="icon" href="favicon.ico" sizes="any" />
 <link rel="icon" type="image/svg+xml" href="favicon.svg" />
@@ -76,12 +76,12 @@
           <input id="nbVehicules" name="nbVehicules" type="number" min="0" step="1" inputmode="numeric" placeholder="ex. 100" required>
         </div>
         <div class="field">
-          <label for="kmAn">Kilométrage annuel moyen</label>
+          <label for="kmAn">Kilométrage annuel moyen <small>(par véhicule)</small></label>
           <input id="kmAn" name="kmAn" type="number" min="0" step="1000" inputmode="numeric" placeholder="25 000 km">
         </div>
       </div>
       <div class="sim-subgrid">
-        <span class="sim-sublabel">Répartition de la flotte</span>
+        <span class="sim-sublabel">Répartition de la flotte <small>(en&nbsp;%)</small></span>
         <div class="sim-mix">
           <div class="field sim-mixin"><label for="mixVP">VP <small>%</small></label><input id="mixVP" type="number" min="0" max="100" step="5" placeholder="60"></div>
           <div class="field sim-mixin"><label for="mixVUL">VUL <small>%</small></label><input id="mixVUL" type="number" min="0" max="100" step="5" placeholder="30"></div>
@@ -109,7 +109,11 @@
       <button type="button" class="sim-more-toggle" aria-expanded="false" aria-controls="simMore">Affiner (optionnel) <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 9l6 6 6-6"/></svg></button>
       <div id="simMore" class="sim-more" hidden>
         <div class="sim-grid">
-          <div class="field"><label for="partDejaElec">Part déjà électrifiée <small>(%)</small></label><input id="partDejaElec" type="number" min="0" max="100" step="5" placeholder="0"></div>
+          <div class="field">
+            <label for="partDejaElec">Part déjà électrifiée <small>(%)</small></label>
+            <input id="partDejaElec" type="number" min="0" max="100" step="5" placeholder="0">
+            <span class="sim-field-help">Part de votre flotte roulant déjà en 100&nbsp;% électrique aujourd'hui — laissez 0 si aucune.</span>
+          </div>
         </div>
       </div>
     </fieldset>

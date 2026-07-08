@@ -503,15 +503,19 @@ a.persona .more svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-
   background:linear-gradient(180deg,var(--bg-1),var(--bg-2))}
 .sim-legend{float:none;width:100%;padding:0;margin-bottom:22px;display:flex;align-items:center;gap:13px;
   font-family:var(--ff-mono);font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink)}
-.sim-legend-n{font-family:var(--ff-mono);font-size:12px;color:var(--muted-2);
+.sim-legend-n{font-family:var(--ff-mono);font-size:12px;color:var(--ink);
   border:1px solid var(--line);border-radius:7px;padding:3px 8px;letter-spacing:.06em}
 .sim-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
 .sim-span-2{grid-column:1 / -1}
 .sim-subgrid{margin-top:20px}
-.sim-sublabel{display:block;font-family:var(--ff-mono);font-size:13px;letter-spacing:.04em;color:var(--muted);margin-bottom:10px}
+.sim-sublabel{display:block;font-family:var(--ff-mono);font-size:13px;letter-spacing:.04em;color:var(--ink);margin-bottom:10px}
+/* Titres de champ du formulaire simulateur en blanc (lisibilité sur fond sombre) */
+.sim-form .field label{color:var(--ink)}
+.sim-form .field label small{color:var(--ink-soft)}
+.sim-field-help{display:block;font-size:12px;color:var(--muted);line-height:1.45;margin-top:2px}
 .sim-mix{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .sim-mixin label{display:flex;justify-content:space-between;align-items:baseline}
-.sim-mixin label small{color:var(--muted-2)}
+.sim-form .sim-mixin label small{color:var(--ink);font-weight:700;font-size:12.5px}
 .field label small{color:var(--muted-2);font-size:11.5px;letter-spacing:.02em}
 
 .sim-more-toggle{margin-top:22px;display:inline-flex;align-items:center;gap:9px;background:none;border:0;cursor:pointer;
