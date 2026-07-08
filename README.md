@@ -1,38 +1,50 @@
-# Site OTONOM
+# Site OTONOM — App Nuxt
 
-Site vitrine statique d'**OTONOM** — orchestrateur de la transition mobilité, recharge et énergie des entreprises. Une marque du groupe MC Groupe.
+Site + simulateur d'**OTONOM**, orchestrateur de la transition mobilité, recharge et énergie des entreprises
+(marque du groupe MC Groupe). Design **noir & blanc premium**.
 
-Design noir & blanc premium, sans framework (HTML + CSS + JS vanilla, aucune étape de build).
+Application **Nuxt 4** (Vue 3 + Vite, SSR + routes serveur Nitro), avec back-office admin et BDD des leads.
 
-## Démarrer en local
-
-Aucune installation. Ouvrez `index.html` dans un navigateur, ou servez le dossier :
+## Démarrer
 
 ```bash
-python3 -m http.server 8000   # puis http://localhost:8000
+npm install
+npm run dev            # http://localhost:3000
 ```
+
+Pour tester l'envoi réel des emails de lead, copier la config serveur et remplir le SMTP :
+
+```bash
+cp .env.example .env   # puis renseigner NUXT_SMTP_* (boîte no-reply@otonom.fr)
+```
+
+Scripts : `npm run dev` · `npm run build` · `npm run preview` · `npm run generate`.
 
 ## Structure
 
-- **Pages** : `index`, `expertises`, `methode`, `a-propos`, `contact`, `merci`, pages personas (`dirigeants`, `daf`, `drh`, `services-generaux`), pages légales (`mentions-legales`, `confidentialite`).
-- `assets/css/styles.css` — design system (variables CSS dans `:root`). Versionné via `?v=N` sur les liens CSS/JS : **incrémenter à chaque changement de style**.
-- `assets/js/app.js` — interactions légères (nav mobile, reveal au scroll, count-up).
-- `assets/img/` — logos SVG + favicons + image Open Graph.
-- `favicon.svg` / `favicon.ico`, `site.webmanifest`, `robots.txt`, `sitemap.xml`.
+- `app/` — front : `layouts/default.vue` (header/footer uniques), `pages/` (routes), `assets/css/main.css` (design system), `components/`.
+- `server/` — back : `api/lead.post.ts` (réception des leads), `utils/db.ts` (BDD, **seule couche data**), `utils/mailer.ts` (email DA).
+- `public/` — favicons, manifest, image Open Graph, robots.txt.
+- `nuxt.config.ts` — CSS global, `<head>` (polices/favicons), `runtimeConfig` (SMTP / BDD / destinataires).
+- `data/` — base SQLite locale (gitignorée).
 
-## SEO & social
+## Formulaires & leads
 
-Chaque page porte : `<title>` + meta description, lien canonique vers `https://otonom.fr/…`, balises Open Graph + Twitter Card, favicons multi-formats. Image de partage : `assets/img/og-image.png` (1200×630).
+Les formulaires postent en JSON vers **`POST /api/lead`** (`_form` = `contact` | `simulateur`, honeypot `_honey`,
+`meta` optionnel). Chaque lead est **enregistré en base** (jamais perdu), puis un email stylisé part vers les
+destinataires configurés pour ce formulaire (table `form_settings`, repli sur `NUXT_DEFAULT_RECIPIENTS`).
 
-## Contexte & règles de marque
+## Base de données
 
-Voir **CLAUDE.md** (brief de reprise détaillé) : positionnement, personas, règles de marque (N&B strict), feuille de route.
+SQLite via `node:sqlite` (intégré à Node, zéro dépendance). Tout l'accès est **isolé dans `server/utils/db.ts`** :
+passer à MySQL (PlanetHoster N0C) plus tard ne touchera que ce fichier. Tables : `leads`, `form_settings`.
 
 ## Déploiement
 
-Statique : **GitHub Pages**, **Netlify** ou **Vercel** (racine = ce dossier, aucun build). Chaque `git push` met le site à jour.
+Cible : **PlanetHoster N0C** (app Node.js + BDD MySQL). Build de prod : `npm run build` → `.output/server/index.mjs`.
+Procédure complète (base MySQL, app Node, variables d'environnement, domaine) dans **[`DEPLOY.md`](DEPLOY.md)**.
 
-## À compléter
+## Contexte & règles de marque
 
-- Données légales dans `mentions-legales.html` et `confidentialite.html` (placeholders `[À COMPLÉTER]` : raison sociale, SIREN/RCS, adresse, capital, directeur de publication, hébergeur).
-- Activation FormSubmit (cliquer le mail de validation reçu au 1er envoi du formulaire de contact).
+Voir **CLAUDE.md** : positionnement OTONOM, personas, règles de marque (N&B strict, pas de vert, pas de dashboard),
+config serveur et feuille de route.

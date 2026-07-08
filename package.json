@@ -1,0 +1,22 @@
+{
+  "name": "otonom-site",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "start": "node app.js",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "mysql2": "^3.22.6",
+    "nodemailer": "^9.0.3",
+    "nuxt": "^4.4.8",
+    "nuxt-auth-utils": "^0.5.29",
+    "vue": "^3.5.39",
+    "vue-router": "^5.1.0"
+  }
+}

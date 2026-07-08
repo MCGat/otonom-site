@@ -1,54 +1,57 @@
-name: Deploy vers PlanetHoster (FTP)
+name: Deploy OTONOM (Nuxt) → PlanetHoster N0C
 
-# Déploie le site statique sur PlanetHoster à chaque push sur main.
-# Peut aussi être lancé manuellement depuis l'onglet Actions (avec option "tout réuploader").
+# À chaque push sur main : build de l'app Nuxt, puis envoi FTP du dossier compilé
+# (.output) vers l'application Node N0C, et redémarrage (Passenger via tmp/restart.txt).
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
-    inputs:
-      clean_slate:
-        description: "Tout réuploader de force (efface le contenu distant puis renvoie tout)"
-        type: boolean
-        default: false
 
 concurrency:
-  group: deploy-ftp
+  group: deploy-otonom
   cancel-in-progress: true
 
 jobs:
-  ftp-deploy:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Déploiement FTP
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build (.output autonome)
+        run: npm run build
+
+      - name: Préparer le dossier à envoyer
+        run: |
+          rm -rf deploy && mkdir -p deploy/tmp
+          cp -r .output deploy/.output
+          cp app.js deploy/app.js
+          # package.json minimal (métadonnées + démarrage) pour l'app Node
+          printf '{\n  "type": "module",\n  "scripts": { "start": "node app.js" }\n}\n' > deploy/package.json
+          # déclenche le redémarrage Passenger (contenu qui change à chaque déploiement)
+          echo "restart ${{ github.sha }} ${{ github.run_id }}" > deploy/tmp/restart.txt
+
+      - name: Envoi FTP vers l'app Node
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftps
-          # Dossier distant. Adapte-le via la variable de repo FTP_SERVER_DIR :
-          #  - compte FTP limité à public_html      -> ./
-          #  - compte FTP à la racine du compte     -> ./public_html/
-          server-dir: ${{ vars.FTP_SERVER_DIR || './public_html/' }}
-          local-dir: ./
-          # Efface tout le distant avant de renvoyer (uniquement si lancé à la main avec la case cochée)
-          dangerous-clean-slate: ${{ github.event.inputs.clean_slate == 'true' }}
-          # Fichiers de dev à ne PAS publier
+          # Racine de l'application Node sur le serveur (défini en variable de repo FTP_APP_DIR).
+          # Exemple : ./nodeapps/otonom/  — À ADAPTER à ton app N0C.
+          server-dir: ${{ vars.FTP_APP_DIR || './otonom/' }}
+          local-dir: ./deploy/
           exclude: |
             **/.git*
             **/.git*/**
-            **/.github/**
-            **/.claude/**
-            **/.qodo/**
-            **/node_modules/**
-            **/.DS_Store
-            **/Thumbs.db
-            CLAUDE.md
-            README.md
-            secret.config.php
-            secret.config.example.php

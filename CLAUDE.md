@@ -2,91 +2,91 @@
 
 > Point d'entrée du projet. **Lis ce fichier en entier avant toute modification.**
 
-## 🎯 Mission (par où commencer)
-Tu reprends le **site vitrine statique d'OTONOM**. Objectif business : présence en ligne crédible +
-**génération de leads** (réserver un audit gratuit). Le socle (10 pages) est déjà en place et fonctionnel.
-Ta mission : **finaliser, fiabiliser, puis faire évoluer** le site en respectant scrupuleusement la marque.
+## 🎯 Mission
+Site d'**OTONOM** — orchestrateur de la transition mobilité, recharge & énergie des entreprises.
+Objectif business : présence crédible + **génération de leads** (réserver un audit gratuit) + un simulateur d'économies/ROI.
 
-**Avant de coder :**
-1. Lis ce fichier, puis `../OTONOM_Dossier_Strategie_Web.md` (stratégie, copy, chiffres) et `../OTONOM_Brief_Claude_Design.md` (DA).
-2. Respecte les **règles de marque** ci-dessous (N&B strict, orchestrateur, pas de vert, pas de cockpit).
-3. Travaille par petites étapes, garde le site **statique et sans build** tant que les simulateurs/hero 3D ne sont pas demandés.
-
-## ✅ Feuille de route priorisée
-**P1 — Finaliser (rapide, pour mise en prod / validation Dir)**
-- [~] **Mentions légales, SIREN, adresse** : pages créées avec footer légal sur toutes les pages. ⏳ **Reste à fournir** les données d'entreprise (placeholders `[À COMPLÉTER]` balisés dans `mentions-legales.html` + `confidentialite.html` : raison sociale, forme juridique, capital, SIREN/RCS, TVA, siège, directeur de publication, hébergeur).
-- [x] ~~Calendly~~ → décision : on garde le **formulaire FormSubmit classique** tant qu'il n'y a pas de Calendly. (Domaine final branché : `_next` → `https://otonom.fr/merci.html`.)
-- [ ] Confirmer l'**activation FormSubmit** (action humaine : 1er envoi réel → cliquer le mail de validation reçu à a.thomas@mc-groupe.com).
-- [x] **Favicon** (favicon.svg/.ico + PNG 16/32/48/180/192/512, `site.webmanifest`), **Open Graph/Twitter** (image `assets/img/og-image.png` 1200×630), `sitemap.xml`, `robots.txt`. Domaine prod = `https://otonom.fr`.
-- [x] Pages **mentions légales** + **politique de confidentialité** (RGPD) créées au gabarit du site, liées au footer et au consentement du formulaire.
-- [x] Revue **accessibilité** : skip-link + `#main`, `:focus-visible` visibles (WCAG), `aria-hidden` sur SVG décoratifs, `lang`, labels formulaire, `aria-current`. ⏳ Reste : audit fin des contrastes `--muted-2` (petits textes secondaires) si viser AA strict.
-
-**P2 — Évolution lead-gen (cf. dossier stratégie §6)**
-- [ ] **3 simulateurs** (calcul 100% client, résultat avant capture email, config fiscale datée `fiscal-config`) :
-      AEN thermique vs électrique (DRH) · TCO + fiscalité (DAF) · Audit recharge/supervision (Services généraux).
-- [ ] **Hero 3D « explorez votre site »** (Three.js, îlot client + fallback statique) — pièce maîtresse du dossier.
-- [ ] **8 pages SEO** (TCO VE, fiscalité VE 2026, AEN, ROI borne, smart charging, supervision, autoconsommation, ESG).
-
-**P3 — Industrialisation**
-- [ ] Envisager une migration **Astro + Tailwind + TypeScript** si le volume de pages/simulateurs le justifie.
-- [ ] Déploiement continu (GitHub → Vercel/Netlify).
-
----
-
-## Ce qu'est OTONOM
-Orchestrateur **A→Z** de la transition **mobilité + recharge + énergie** des entreprises.
-Il **conseille, coordonne** tous les prestataires (installateurs, énergéticiens, financeurs, mainteneurs)
-et **optimise** le coût financier, fiscal et énergétique. Bénéfice : **un seul interlocuteur, des résultats
-chiffrés, zéro complexité.** Une marque du groupe **MC Groupe**. But du site : **réserver un audit gratuit**.
-OTONOM **n'est PAS** un éditeur de logiciel, un installateur, ni un vendeur de bornes.
+**Migration en cours** : on passe du site statique (HTML/CSS/JS) à une app **Nuxt 4** (full-stack), pour supporter
+un **back-office admin**, une **BDD des leads**, et le **routage configurable des emails par formulaire**.
+La migration est terminée (Phases 0→3) ; reste la mise en ligne N0C (Phase 4, cf. `DEPLOY.md`).
 
 ## Règles de marque (NON négociables)
-- **Noir & Blanc premium strict.** Aucune couleur saturée. **Jamais de vert écolo.** Accent = blanc lumineux
-  réservé aux CTA et chiffres clés. Espace négatif, filets 1px, chiffres en mono tabulaire.
-- **Interdits** : faux dashboard SaaS, « temps réel », le mot « cockpit », jargon technique en titre, stock-photos.
+- **Noir & Blanc premium strict.** Aucune couleur saturée. **Jamais de vert écolo** (même pour le CO₂ ou les gains).
+  Accent = blanc lumineux réservé aux CTA et chiffres clés. Espace négatif, filets 1px, chiffres en **mono tabulaire**.
+- **Interdits** : faux dashboard SaaS, jauges colorées, « temps réel », le mot « cockpit », jargon technique en titre, stock-photos.
 - **Lexique** : « un seul interlocuteur », « de A à Z », « on s'occupe de tout », « optimisez » ; parler de **gains**.
 - Tout chiffre fiscal = **daté (01/01/2026)** + disclaimer « indicatif, à confirmer », formulé en « jusqu'à ».
 
-## Personas (4)
-Dirigeants (vision/ROI/délégation) · DAF (TCO, fiscalité, risque) · DRH (avantage en nature) · Services généraux (exploitation, recharge, supervision).
+## Ce qu'est OTONOM
+Orchestrateur **A→Z** de la transition **mobilité + recharge + énergie** des entreprises. Il **conseille, coordonne**
+tous les prestataires (installateurs, énergéticiens, financeurs, mainteneurs) et **optimise** le coût financier, fiscal
+et énergétique. Bénéfice : **un seul interlocuteur, des résultats chiffrés, zéro complexité.** Une marque du groupe
+**MC Groupe**. OTONOM **n'est PAS** un éditeur de logiciel, un installateur, ni un vendeur de bornes.
 
-## Stack actuelle
-Site **statique** : HTML + CSS + JS vanilla. **Aucun framework**, aucune étape de build.
-Polices Google Fonts (Space Grotesk / Inter / Space Mono). Logo SVG inline (`assets/img/`).
-Cache des assets versionné via `?v=N` sur les liens CSS/JS → **incrémenter à chaque changement de style**
-(évite le cache navigateur ; ne jamais oublier sinon les modifs CSS ne s'affichent pas).
+**Personas (4)** : Dirigeants (vision/ROI/délégation) · DAF (TCO, fiscalité, risque) · DRH (avantage en nature) ·
+Services généraux (exploitation, recharge, supervision).
+
+## Stack
+- **Nuxt 4** (Vue 3, Vite) — SSR + routes serveur **Nitro**. TypeScript.
+- **CSS simple + variables** (pas de SCSS/Tailwind) : design system dans `app/assets/css/main.css` (repris tel quel du statique).
+- **BDD** : SQLite via `node:sqlite` (intégré à Node) — **tout l'accès data est isolé dans `server/utils/db.ts`**
+  (pour basculer vers MySQL N0C plus tard, on ne change QUE ce fichier). Fichier local dans `data/` (gitignoré).
+- **Email** : `nodemailer` (SMTP `no-reply@otonom.fr`), template DA dans `server/utils/mailer.ts`.
+- Polices Google Fonts (Space Grotesk / Inter / Space Mono) chargées via `nuxt.config.ts`.
+- ⚠️ Plus de cache-busting `?v=N` manuel : Vite gère le hachage des assets.
 
 ## Structure
 ```
-index.html            Accueil (hero, orchestration, 3 piliers, pour qui, méthode, CTA)
-expertises.html       Leviers : ex-TVS/TAI, AEN 70%, amortissement 30 000 €, TCO, IRVE/recharge, énergie
-methode.html          Méthode A→Z (5 étapes)
-a-propos.html         Réassurance + rattachement MC Groupe
-contact.html          Formulaire (FormSubmit) + coordonnées
-merci.html            Confirmation post-formulaire
-dirigeants/daf/drh/services-generaux.html   Pages personas
-assets/css/styles.css Design system (variables CSS en :root)
-assets/js/app.js      Nav mobile, reveal au scroll (gate .js), count-up
-assets/img/           Logos SVG (blanc / noir)
+app/
+  app.vue                  Racine (NuxtLayout > NuxtPage)
+  layouts/default.vue      Header + footer uniques (fini la duplication)
+  components/OtonomLogo.vue Logo SVG réutilisable
+  pages/                   Une page = une route (index.vue = accueil ; à compléter en Phase 1)
+  assets/css/main.css      Design system (variables :root + composants) — DA OTONOM
+server/
+  api/lead.post.ts         POST /api/lead : valide → enregistre en BDD → envoie l'email
+  utils/db.ts              SEULE couche BDD (leads + form_settings). node:sqlite.
+  utils/mailer.ts          Email de lead stylisé (DA N&B), SMTP via runtimeConfig
+public/                    Favicons, manifest, og-image, robots.txt
+nuxt.config.ts             css, head (fonts/favicons), runtimeConfig (SMTP/BDD/destinataires)
+.env.example               Modèle des variables serveur (copier en .env, jamais commité)
+DEPLOY.md                  Runbook de mise en ligne PlanetHoster N0C (Node + MySQL)
 ```
+(L'ancien site statique `legacy/` a été supprimé une fois le portage terminé.)
 
-## Design system (voir :root dans styles.css)
-Fonds `--bg #08080a` / `--bg-1` / `--bg-2`. Texte `--ink`, `--muted`. Filets `--line`.
-Composants : `.btn--primary/.btn--ghost`, `.statbar/.stat`, `.grid .card`, `.tile`, `.steps .step`,
-`.levers .lever`, `.persona`, `.cta-block`, `.form/.field/.form-panel`, `.reveal` (animations gated par `.js`
-→ sans JS, le contenu reste visible : ne jamais masquer du contenu sans cette garde).
+## Config serveur (runtimeConfig / env)
+Surchargée en prod par des variables `NUXT_*` (jamais commitées ; voir `.env.example`) :
+`NUXT_DB_FILE`, `NUXT_DEFAULT_RECIPIENTS`, `NUXT_SMTP_HOST/PORT/SECURE/USER/PASS/FROM/FROM_NAME`.
+Serveur SMTP PlanetHoster : `node251-eu.n0c.com` (465 SSL). Boîte : `no-reply@otonom.fr`.
 
-## Formulaire de contact (important)
-`contact.html` poste vers **FormSubmit** : action `https://formsubmit.co/a.thomas@mc-groupe.com`,
-copie (`_cc`) `gregory@otonom.fr`, honeypot anti-spam, redirection `_next` → `merci.html`.
-⚠️ Activation unique au 1er envoi (mail de validation). Adapter `_next` si le domaine final change.
+## Leads & formulaires
+- Les formulaires (contact, simulateur) postent en JSON vers **`POST /api/lead`** avec un champ `_form`
+  (`contact` | `simulateur`), un honeypot `_honey`, et éventuellement `meta` (résumé simulateur).
+- Le lead est **toujours enregistré en BDD** (même si l'email échoue → aucun lead perdu), puis l'email part
+  vers les **destinataires du formulaire** (table `form_settings`, repli sur `NUXT_DEFAULT_RECIPIENTS`).
+- Destinataires par défaut : `e.barlet@mc-groupe.com, a.thomas@mc-groupe.com`.
 
-## Sources de contexte (à lire au besoin)
+## Démarrer en local
+```bash
+npm install
+npm run dev          # http://localhost:3000
+```
+Copier `.env.example` → `.env` et remplir le SMTP pour tester l'envoi réel des emails.
+
+## Feuille de route de la migration
+- **Phase 0 — Fondations** ✅ Nuxt + DA + layout + accueil.
+- **Phase 1 — Portage** ✅ toutes les pages + interactions (`.reveal`, count-up, schéma, frise, parallaxe, curseur).
+- **Phase 2 — Backend** ✅ `/api/lead` → BDD leads + email + table destinataires.
+- **Phase 3 — Admin** ✅ login (nuxt-auth-utils) + tableau des leads (filtre/tri par formulaire) + destinataires par formulaire.
+- **Phase 4 — Mise en ligne** ⏳ app Node + MySQL sur **PlanetHoster N0C** → voir **`DEPLOY.md`** (actions dans le panneau N0C).
+
+Le build de prod (`npm run build` → `.output/server/index.mjs`) est vérifié fonctionnel.
+
+## À compléter
+- Données légales dans `app/pages/mentions-legales.vue` + `app/pages/confidentialite.vue` (placeholders `[À COMPLÉTER]` :
+  raison sociale, SIREN/RCS, adresse, capital, directeur de publication, hébergeur).
+- **Recalibrer les coefficients du simulateur** (`SIM_CONFIG` dans `app/utils/simulateur.ts`) avec OTONOM (ROI un peu agressif).
+
+## Sources de contexte
 - Notion « Otonom — Bump complet » (positionnement, personas, fiscalité, benchmark).
-- `../OTONOM_Dossier_Strategie_Web.md` (copy, chiffres fiscaux datés, hero 3D, specs des 3 simulateurs).
-- `../OTONOM_Brief_Claude_Design.md` (direction artistique détaillée).
 - Contact projet : Antoine — a.thomas@mc-groupe.com · Commercial : Grégory — gregory@otonom.fr / 06 68 28 09 08.
-
-## Déploiement
-Statique → GitHub puis **Vercel** ou **Netlify** (aucun build, racine = ce dossier) : chaque `git push` met le site à jour.
-Alternative : GitHub Pages (branche `main`, racine).

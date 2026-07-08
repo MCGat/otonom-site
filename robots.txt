@@ -1,5 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /merci.html
-
-Sitemap: https://otonom.fr/sitemap.xml
