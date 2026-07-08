@@ -490,3 +490,158 @@ a.persona .more svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-
 .has-customcursor a,.has-customcursor button,.has-customcursor label,.has-customcursor .persona{cursor:none}
 .has-customcursor input,.has-customcursor textarea,.has-customcursor select{cursor:auto}
 @media(hover:none),(pointer:coarse){.cursor-ring,.cursor-dot{display:none}.has-customcursor{cursor:auto}}
+
+/* ============================================================
+   SIMULATEUR — formulaire premium + livrable de conseil (N&B)
+   ============================================================ */
+.sim-note{margin-top:18px;font-size:13.5px;color:var(--muted);max-width:60ch;line-height:1.6}
+.sim-note strong{color:var(--ink);font-weight:600}
+
+/* --- Formulaire --- */
+.sim-form{display:grid;gap:clamp(18px,2.6vw,26px);max-width:880px;margin-inline:auto}
+.sim-fieldset{border:1px solid var(--line);border-radius:var(--radius);padding:clamp(22px,3.4vw,34px);margin:0;
+  background:linear-gradient(180deg,var(--bg-1),var(--bg-2))}
+.sim-legend{float:none;width:100%;padding:0;margin-bottom:22px;display:flex;align-items:center;gap:13px;
+  font-family:var(--ff-mono);font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink)}
+.sim-legend-n{font-family:var(--ff-mono);font-size:12px;color:var(--muted-2);
+  border:1px solid var(--line);border-radius:7px;padding:3px 8px;letter-spacing:.06em}
+.sim-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.sim-span-2{grid-column:1 / -1}
+.sim-subgrid{margin-top:20px}
+.sim-sublabel{display:block;font-family:var(--ff-mono);font-size:13px;letter-spacing:.04em;color:var(--muted);margin-bottom:10px}
+.sim-mix{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.sim-mixin label{display:flex;justify-content:space-between;align-items:baseline}
+.sim-mixin label small{color:var(--muted-2)}
+.field label small{color:var(--muted-2);font-size:11.5px;letter-spacing:.02em}
+
+.sim-more-toggle{margin-top:22px;display:inline-flex;align-items:center;gap:9px;background:none;border:0;cursor:pointer;
+  font-family:var(--ff-mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:6px 0;transition:color .2s}
+.sim-more-toggle:hover{color:var(--ink)}
+.sim-more-toggle svg{width:14px;height:14px;transition:transform .25s}
+.sim-more-toggle[aria-expanded="true"] svg{transform:rotate(180deg)}
+.sim-more{margin-top:18px;border-top:1px dashed var(--line);padding-top:20px}
+
+.sim-actions{display:grid;justify-items:center;gap:16px;margin-top:4px;text-align:center}
+.sim-hint{font-family:var(--ff-mono);font-size:12px;letter-spacing:.03em;color:var(--muted-2)}
+
+/* --- Synthèse (livrable) --- */
+.sim-synth{margin-top:8px}
+.sim-hero-metric{border-top:1px solid var(--line);padding-top:clamp(28px,4vw,44px)}
+.sim-hero-label{display:block;font-family:var(--ff-mono);font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.sim-hero-label em{display:block;font-style:normal;color:var(--muted-2);font-size:12px;margin-top:4px}
+.sim-hero-num{font-family:var(--ff-mono);font-variant-numeric:tabular-nums;font-weight:700;
+  font-size:clamp(46px,10vw,108px);line-height:.94;letter-spacing:-.03em;color:var(--ink);margin:14px 0 16px}
+.sim-hero-sub{color:var(--muted);font-size:15px;max-width:64ch;line-height:1.6}
+
+.sim-metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--line-soft);
+  border:1px solid var(--line-soft);border-radius:var(--radius);overflow:hidden;margin-top:clamp(28px,4vw,40px)}
+.sim-metric{background:var(--bg-1);padding:24px 22px;display:grid;gap:10px;align-content:start}
+.sim-metric-l{font-family:var(--ff-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted-2);line-height:1.4}
+.sim-metric-v{font-family:var(--ff-mono);font-variant-numeric:tabular-nums;font-size:clamp(20px,2.5vw,29px);color:var(--ink);letter-spacing:-.01em}
+
+/* Score OTONOM — indicateur premium, filet fin (pas une jauge) */
+.sim-score{margin-top:24px;border:1px solid var(--line);border-radius:var(--radius);padding:clamp(22px,3.2vw,32px);background:var(--bg-1)}
+.sim-score-head{display:flex;justify-content:space-between;align-items:baseline;gap:16px}
+.sim-score-now{font-family:var(--ff-mono);font-variant-numeric:tabular-nums;font-weight:700;font-size:clamp(30px,5.5vw,52px);letter-spacing:-.02em;color:var(--ink)}
+.sim-score-now em{font-style:normal;font-size:.42em;color:var(--muted-2);font-weight:400}
+.sim-score-rail{position:relative;height:2px;background:var(--line);margin-top:24px}
+.sim-score-fill{position:absolute;left:0;top:0;height:2px;background:var(--ink)}
+.sim-score-target{position:absolute;top:-6px;width:1px;height:14px;background:var(--ink);opacity:.55}
+.sim-score-legend{display:flex;justify-content:space-between;margin-top:12px;
+  font-family:var(--ff-mono);font-size:11.5px;letter-spacing:.03em;color:var(--muted)}
+
+.sim-extra{margin-top:20px;font-size:14.5px;color:var(--muted);line-height:1.6}
+.sim-extra b{color:var(--ink)}
+
+/* --- Détail des 10 blocs --- */
+.sim-blocks-head{margin-top:clamp(52px,7vw,84px)}
+.sim-blocks{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-top:26px}
+.sim-block{border:1px solid var(--line);border-radius:var(--radius);padding:clamp(22px,3vw,30px);background:var(--bg-1)}
+.sim-block-h{display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.sim-block-n{font-family:var(--ff-mono);font-size:13px;color:var(--muted-2);letter-spacing:.06em}
+.sim-block-h h3{font-size:18.5px;margin-right:auto}
+.sim-tag{font-family:var(--ff-mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;
+  padding:4px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.sim-tag--calc{color:var(--ink);border-color:var(--ink)}
+.sim-tag--hyp{border-style:dashed;color:var(--ink-soft)}
+.sim-tag--ind{border-style:dotted}
+.sim-tag--audit{border-style:dashed;color:var(--muted-2)}
+.sim-lead{color:var(--ink-soft);font-size:15.5px;line-height:1.55;margin-bottom:14px}
+.sim-lead b{font-family:var(--ff-mono);color:var(--ink)}
+.sim-muted{color:var(--muted)}
+.sim-kv{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:10px 0;border-top:1px solid var(--line-soft)}
+.sim-kv span{color:var(--muted);font-size:14px}
+.sim-kv b{font-family:var(--ff-mono);font-variant-numeric:tabular-nums;font-size:15px;color:var(--ink);font-weight:400;text-align:right;white-space:nowrap}
+.sim-kv b.is-strong{font-size:17px;font-weight:700}
+.sim-disclaimer{margin-top:clamp(40px,5vw,60px)}
+
+@media(max-width:760px){
+  .sim-grid{grid-template-columns:1fr}
+  .sim-metrics{grid-template-columns:repeat(2,1fr)}
+  .sim-metrics .sim-metric:last-child:nth-child(odd){grid-column:1 / -1} /* évite la cellule fantôme */
+  .sim-blocks{grid-template-columns:1fr}
+}
+@media(max-width:440px){
+  .sim-metrics{grid-template-columns:1fr}
+}
+
+/* --- Gate email (déblocage du détail) --- */
+.sim-gate{margin-top:clamp(40px,6vw,72px);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
+  display:grid;grid-template-columns:1.05fr .95fr;background:var(--bg-1)}
+.sim-gate-copy{padding:clamp(28px,4vw,44px);border-right:1px solid var(--line)}
+.sim-gate-copy h3{font-size:clamp(21px,2.6vw,27px);margin:6px 0 12px}
+.sim-gate-copy p{color:var(--muted);font-size:15px;line-height:1.6}
+.sim-gate-copy p strong{color:var(--ink);font-weight:600}
+.sim-gate-list{list-style:none;margin:22px 0 0;padding:0;display:grid;gap:11px}
+.sim-gate-list li{position:relative;padding-left:24px;font-size:14.5px;color:var(--ink-soft);line-height:1.45}
+.sim-gate-list li::before{content:"";position:absolute;left:0;top:.62em;width:12px;height:1px;background:var(--ink)}
+.sim-gate-form{padding:clamp(28px,4vw,44px);display:grid;gap:15px;align-content:center;background:var(--bg-2)}
+.sim-gate-form .btn{margin-top:6px}
+.sim-gate-msg{font-size:13px;color:var(--ink-soft);border-left:2px solid var(--ink);padding-left:12px;line-height:1.5}
+.sim-gate-msg a{text-decoration:underline}
+.sim-gate-consent{font-size:12px;color:var(--muted-2);line-height:1.5}
+.sim-gate-consent a{text-decoration:underline}
+
+/* --- Barre détail + bouton PDF --- */
+.sim-detail-top{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;
+  margin-top:clamp(52px,7vw,84px)}
+.sim-detail-top .sim-blocks-head{margin-top:0}
+.sim-print-btn{white-space:nowrap}
+.sim-print-btn svg{width:16px;height:16px}
+
+/* En-tête réservé à l'impression */
+.print-only{display:none}
+
+@media(max-width:760px){
+  .sim-gate{grid-template-columns:1fr}
+  .sim-gate-copy{border-right:0;border-bottom:1px solid var(--line)}
+}
+
+/* ============================================================
+   IMPRESSION — rapport livrable N&B (window.print)
+   ============================================================ */
+@media print{
+  @page{margin:16mm 14mm}
+  html,body{background:#fff!important;color:#000!important}
+  body::before{display:none!important}
+  .site-header,.site-footer,.skip-link,#simFormSection,#simGate,
+  .sim-print-btn,.sim-more-toggle,.sim-disclaimer + .cta-block,.cursor-ring,.cursor-dot{display:none!important}
+  /* on n'imprime que le diagnostic */
+  #main.page-intro{display:none!important}
+  #simResults{display:block!important;padding:0!important;background:#fff!important}
+  #simResults *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  #simDetail{display:block!important}
+  .sim-print-head{display:flex!important;justify-content:space-between;align-items:baseline;
+    border-bottom:1px solid #000;padding-bottom:10px;margin-bottom:22px}
+  .sim-print-brand{font-family:var(--ff-display);font-weight:700;letter-spacing:.18em;font-size:15px}
+  .sim-print-meta{font-family:var(--ff-mono);font-size:9.5px;letter-spacing:.08em;color:#555}
+  .sim-hero-num{color:#000!important}
+  .sim-metrics,.sim-score,.sim-block{border-color:#000!important;background:#fff!important;break-inside:avoid}
+  .sim-metrics{background:#000!important}
+  .sim-metric{background:#fff!important}
+  .sim-blocks{grid-template-columns:repeat(2,1fr)!important}
+  .sim-block{border:1px solid #999!important}
+  .sim-tag{border-color:#000!important;color:#000!important}
+  .sec-head h2{font-size:24px}
+  a{color:#000!important;text-decoration:none}
+}

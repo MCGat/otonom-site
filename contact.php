@@ -20,15 +20,29 @@ $CC        = '';                                               // copie(s), ex. 
 $FROM_MAIL = 'no-reply@otonom.fr';   // doit rester = compte SMTP (alignement SPF/DKIM)
 $FROM_NAME = 'OTONOM — Site';
 
+// Mode AJAX (simulateur) : on répond en JSON et on reste sur la page,
+// au lieu de rediriger. Le formulaire classique (contact.html) redirige comme avant.
+$ajax = !empty($_POST['_ajax']);
+function repondre($ok) {
+  global $ajax;
+  if ($ajax) {
+    header('Content-Type: application/json; charset=UTF-8');
+    echo json_encode(['ok' => (bool) $ok]);
+  } else {
+    header('Location: ' . ($ok ? 'merci.html' : 'contact.html?erreur=1#form'));
+  }
+  exit;
+}
+
 // ---- Garde-fous requête ----
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') { header('Location: contact.html'); exit; }
-if (!empty($_POST['_honey'])) { header('Location: merci.html'); exit; } // pot de miel : on fait comme si tout allait bien
+if (!empty($_POST['_honey'])) { repondre(true); } // pot de miel : on fait comme si tout allait bien
 
 // ---- Configuration (identifiants hors dépôt) ----
 $cfgPath = __DIR__ . '/secret.config.php';
 if (!is_file($cfgPath)) {
   error_log('OTONOM contact: secret.config.php introuvable');
-  header('Location: contact.html?erreur=1#form'); exit;
+  repondre(false);
 }
 $cfg = require $cfgPath;
 
@@ -43,11 +57,12 @@ $entreprise = champ('Entreprise');
 $email      = champ('Email');
 $tel        = champ('Téléphone');
 $flotte     = champ('Taille de flotte');
+$contexte   = champ('_contexte');   // 'simulateur' pour un lead issu du simulateur
 $message    = isset($_POST['Message']) ? trim((string) $_POST['Message']) : '';
 
 // ---- Validation minimale ----
 if ($nom === '' || $email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-  header('Location: contact.html?erreur=1#form'); exit;
+  repondre(false);
 }
 
 function esc($s) { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8'); }
@@ -176,7 +191,8 @@ try {
 
   // --- Contenu ---
   $mail->isHTML(true);
-  $mail->Subject = 'Nouvelle demande d\'audit — ' . $nom . ($entreprise !== '' ? ' (' . $entreprise . ')' : '');
+  $sujetBase = ($contexte === 'simulateur') ? 'Simulateur — lead qualifié' : 'Nouvelle demande d\'audit';
+  $mail->Subject = $sujetBase . ' — ' . $nom . ($entreprise !== '' ? ' (' . $entreprise . ')' : '');
   $mail->Body    = $html;
   $mail->AltBody = $texte;
 
@@ -187,5 +203,4 @@ try {
   $ok = false;
 }
 
-header('Location: ' . ($ok ? 'merci.html' : 'contact.html?erreur=1#form'));
-exit;
+repondre($ok);
