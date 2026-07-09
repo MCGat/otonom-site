@@ -95,8 +95,24 @@ async function ensureReady() {
     else sqlite!.exec(ddl)
   }
 
+  // 2b) Migrations additives (colonnes ajoutées après la 1re mise en prod)
+  await ensureColumn('form_settings', 'pages', 'TEXT')
+
   // 3) Données par défaut
   await seedDefaults(cfg)
+}
+
+/** Ajoute une colonne si elle n'existe pas encore (idempotent, 2 moteurs). */
+async function ensureColumn(table: string, column: string, ddl: string) {
+  if (engine === 'mysql') {
+    const rows = await all(
+      `SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?`,
+      [table, column])
+    if (!rows.length) await pool!.query(`ALTER TABLE \`${table}\` ADD COLUMN \`${column}\` ${ddl}`)
+  } else {
+    const cols = sqlite!.prepare(`PRAGMA table_info(${table})`).all() as any[]
+    if (!cols.some((c) => c.name === column)) sqlite!.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${ddl}`)
+  }
 }
 
 /** Requête d'écriture — renvoie l'id inséré si dispo. */
@@ -126,6 +142,9 @@ async function seedDefaults(cfg: any) {
     : `INSERT OR IGNORE INTO form_settings (form_key, label, recipients, updated_at) VALUES (?, ?, ?, ?)`
   await run(ins, ['contact', 'Formulaire de contact', def, now])
   await run(ins, ['simulateur', 'Simulateur (lead qualifié)', def, now])
+  // Pages connues par défaut (uniquement si pas encore renseignées)
+  await run(`UPDATE form_settings SET pages = ? WHERE form_key = ? AND (pages IS NULL OR pages = '')`, ['/contact', 'contact'])
+  await run(`UPDATE form_settings SET pages = ? WHERE form_key = ? AND (pages IS NULL OR pages = '')`, ['/simulateur', 'simulateur'])
 }
 
 /** Insère un lead, renvoie son id. */
@@ -168,12 +187,13 @@ export async function listFormSettings() {
 /** Formulaires + destinataires + nombre de leads (filtre & panneau réglages admin). */
 export async function listForms() {
   await ensureReady()
-  const settings = await all(`SELECT form_key, label, recipients, updated_at FROM form_settings ORDER BY form_key`)
+  const settings = await all(`SELECT form_key, label, recipients, pages, updated_at FROM form_settings ORDER BY form_key`)
   const counts = await all(`SELECT form_key, COUNT(*) AS n FROM leads GROUP BY form_key`)
   const byKey: Record<string, number> = {}
   counts.forEach((c: any) => { byKey[c.form_key] = Number(c.n) })
   return settings.map((s: any) => ({
-    formKey: s.form_key, label: s.label, recipients: s.recipients || '', updatedAt: s.updated_at, count: byKey[s.form_key] || 0
+    formKey: s.form_key, label: s.label, recipients: s.recipients || '',
+    pages: s.pages || '', updatedAt: s.updated_at, count: byKey[s.form_key] || 0
   }))
 }
 
@@ -197,19 +217,31 @@ export async function ensureFormSettings(formKey: string, label?: string) {
   await run(sql, [formKey, label || formKey, cfg.defaultRecipients || '', now])
 }
 
-/** Modifie les destinataires d'un formulaire (admin, Phase 3). */
-export async function setRecipients(formKey: string, recipients: string, label?: string) {
+/** Modifie le nom (label) et les destinataires d'un formulaire (admin). */
+export async function setFormSettings(formKey: string, label: string, recipients: string) {
   await ensureReady()
   const now = new Date().toISOString()
   if (engine === 'mysql') {
     await run(
       `INSERT INTO form_settings (form_key, label, recipients, updated_at) VALUES (?, ?, ?, ?)
-       ON DUPLICATE KEY UPDATE recipients = VALUES(recipients), updated_at = VALUES(updated_at)`,
+       ON DUPLICATE KEY UPDATE label = VALUES(label), recipients = VALUES(recipients), updated_at = VALUES(updated_at)`,
       [formKey, label || formKey, recipients, now])
   } else {
     await run(
       `INSERT INTO form_settings (form_key, label, recipients, updated_at) VALUES (?, ?, ?, ?)
-       ON CONFLICT(form_key) DO UPDATE SET recipients = excluded.recipients, updated_at = excluded.updated_at`,
+       ON CONFLICT(form_key) DO UPDATE SET label = excluded.label, recipients = excluded.recipients, updated_at = excluded.updated_at`,
       [formKey, label || formKey, recipients, now])
   }
+}
+
+/** Enregistre une page où le formulaire est utilisé (auto, à chaque lead). */
+export async function recordFormPage(formKey: string, page: string) {
+  await ensureReady()
+  const clean = String(page || '').split('?')[0].split('#')[0].trim()
+  if (!clean.startsWith('/')) return
+  const row = await get(`SELECT pages FROM form_settings WHERE form_key = ?`, [formKey])
+  const set = new Set(String(row?.pages || '').split(',').map((s) => s.trim()).filter(Boolean))
+  if (set.has(clean)) return
+  set.add(clean)
+  await run(`UPDATE form_settings SET pages = ? WHERE form_key = ?`, [Array.from(set).join(','), formKey])
 }

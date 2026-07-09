@@ -1,8 +1,8 @@
-/** OTONOM admin — modifie les destinataires d'UN formulaire (protégée, indépendant par formulaire). */
+/** OTONOM admin — modifie le nom + les destinataires d'UN formulaire (protégée). */
 export default defineEventHandler(async (event) => {
   await requireUserSession(event)
-  const { formKey, recipients, label } = (await readBody(event)) || {}
+  const { formKey, label, recipients } = (await readBody(event)) || {}
   if (!formKey) throw createError({ statusCode: 400, statusMessage: 'formKey requis' })
-  await setRecipients(String(formKey), String(recipients ?? ''), label ? String(label) : undefined)
+  await setFormSettings(String(formKey), String(label ?? ''), String(recipients ?? ''))
   return { ok: true }
 })

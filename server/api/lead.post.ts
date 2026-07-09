@@ -43,10 +43,20 @@ export default defineEventHandler(async (event) => {
     return { ok: false, error: 'store' }
   }
 
-  // 2) Email (best effort — l'échec n'empêche pas la capture)
-  let emailed = false
+  // 2) Réglages du formulaire : enregistrement + page d'origine (best effort)
   try {
     await ensureFormSettings(formKey)                 // enregistre le formulaire s'il est nouveau
+    const referer = getRequestHeader(event, 'referer') || ''
+    let page = ''
+    try { page = new URL(referer).pathname } catch { /* referer absent/invalide */ }
+    if (page) await recordFormPage(formKey, page)     // mémorise la page où le formulaire est utilisé
+  } catch (e) {
+    console.error('OTONOM lead: maj réglages formulaire', e)
+  }
+
+  // 3) Email (best effort — l'échec n'empêche pas la capture)
+  let emailed = false
+  try {
     emailed = await sendLeadEmail(lead, await getRecipients(formKey))
   } catch (e) {
     console.error('OTONOM lead: échec envoi email', e)
