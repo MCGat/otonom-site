@@ -1,7 +1,9 @@
 name: Deploy OTONOM (Nuxt) → PlanetHoster N0C
 
-# À chaque push sur main : build de l'app Nuxt, puis envoi FTP du dossier compilé
-# (.output) vers l'application Node N0C, et redémarrage (Passenger via tmp/restart.txt).
+# À chaque push sur main : build de l'app Nuxt, puis envoi SFTP (SSH, port 5022) du
+# dossier compilé (.output) vers l'application Node N0C, et redémarrage
+# (Passenger via tmp/restart.txt). N0C bloque le FTP/FTPS depuis l'extérieur → on passe
+# par SSH/SFTP, qui fonctionne. Réutilise les secrets FTP_SERVER / FTP_USERNAME / FTP_PASSWORD.
 
 on:
   push:
@@ -41,17 +43,24 @@ jobs:
           # déclenche le redémarrage Passenger (contenu qui change à chaque déploiement)
           echo "restart ${{ github.sha }} ${{ github.run_id }}" > deploy/tmp/restart.txt
 
-      - name: Envoi FTP vers l'app Node
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftps
-          # Racine de l'application Node sur le serveur (défini en variable de repo FTP_APP_DIR).
-          # Exemple : ./nodeapps/otonom/  — À ADAPTER à ton app N0C.
-          server-dir: ${{ vars.FTP_APP_DIR || './otonom/' }}
-          local-dir: ./deploy/
-          exclude: |
-            **/.git*
-            **/.git*/**
+      - name: Archiver le build
+        run: tar -czf deploy.tar.gz -C deploy .
+
+      - name: Déploiement SFTP (SSH) vers l'app Node N0C
+        env:
+          SSHPASS: ${{ secrets.FTP_PASSWORD }}
+          SSH_SERVER: ${{ secrets.FTP_SERVER }}
+          SSH_USER: ${{ secrets.FTP_USERNAME }}
+          # Port SSH N0C (5022 par défaut ; surchargeable via la variable de repo SSH_PORT).
+          SSH_PORT: ${{ vars.SSH_PORT || '5022' }}
+          # Racine de l'application Node sur le serveur (variable de repo FTP_APP_DIR).
+          APP_DIR: ${{ vars.FTP_APP_DIR || './otonom/' }}
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq sshpass
+          SSHOPTS="-p $SSH_PORT -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+          SCPOPTS="-P $SSH_PORT -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+          # 1) Envoi de l'archive
+          sshpass -e scp $SCPOPTS deploy.tar.gz "$SSH_USER@$SSH_SERVER:$APP_DIR"
+          # 2) Extraction (remplace .output proprement) + redémarrage Passenger
+          sshpass -e ssh $SSHOPTS "$SSH_USER@$SSH_SERVER" \
+            "cd '$APP_DIR' && rm -rf .output && tar -xzf deploy.tar.gz && rm -f deploy.tar.gz && mkdir -p tmp && touch tmp/restart.txt"

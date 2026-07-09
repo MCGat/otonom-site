@@ -2,10 +2,10 @@
 const BASE = 'https://otonom.fr'
 const LASTMOD = '2026-07-08'
 
+// NB : /simulateur et /blog (+ articles) sont volontairement EXCLUS du sitemap
+// et passés en noindex — accessibles par URL directe uniquement, non indexés.
 const ROUTES: Array<{ loc: string; priority: string; freq: string }> = [
   { loc: '/', priority: '1.0', freq: 'weekly' },
-  { loc: '/simulateur', priority: '0.9', freq: 'monthly' },
-  { loc: '/blog', priority: '0.8', freq: 'weekly' },
   { loc: '/expertises', priority: '0.8', freq: 'monthly' },
   { loc: '/methode', priority: '0.8', freq: 'monthly' },
   { loc: '/a-propos', priority: '0.6', freq: 'yearly' },
@@ -21,13 +21,7 @@ const ROUTES: Array<{ loc: string; priority: string; freq: string }> = [
 export default defineEventHandler(async (event) => {
   const all: Array<{ loc: string; priority: string; freq: string; lastmod: string }> =
     ROUTES.map((r) => ({ ...r, lastmod: LASTMOD }))
-  // Articles publiés (dynamiques)
-  try {
-    const articles = await listPublishedArticles()
-    for (const a of articles) {
-      all.push({ loc: `/blog/${a.slug}`, priority: '0.6', freq: 'monthly', lastmod: (a.publishedAt || a.updatedAt || LASTMOD).slice(0, 10) })
-    }
-  } catch { /* base indisponible : sitemap statique seul */ }
+  // Articles de blog volontairement non listés (noindex, hors nav).
 
   const urls = all.map((r) =>
     `  <url>\n    <loc>${BASE}${r.loc}</loc>\n    <lastmod>${r.lastmod}</lastmod>\n    <changefreq>${r.freq}</changefreq>\n    <priority>${r.priority}</priority>\n  </url>`

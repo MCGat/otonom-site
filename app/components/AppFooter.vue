@@ -11,8 +11,6 @@
           <ul>
             <li><NuxtLink to="/expertises">Expertises</NuxtLink></li>
             <li><NuxtLink to="/methode">Méthode</NuxtLink></li>
-            <li><NuxtLink to="/simulateur">Simulateur</NuxtLink></li>
-            <li><NuxtLink to="/blog">Blog</NuxtLink></li>
             <li><NuxtLink to="/a-propos">À propos</NuxtLink></li>
             <li><NuxtLink to="/contact">Contact</NuxtLink></li>
           </ul>
