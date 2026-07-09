@@ -87,6 +87,11 @@ Le build de prod (`npm run build` → `.output/server/index.mjs`) est vérifié 
   raison sociale, SIREN/RCS, adresse, capital, directeur de publication, hébergeur).
 - **Recalibrer les coefficients du simulateur** (`SIM_CONFIG` dans `app/utils/simulateur.ts`) avec OTONOM (ROI un peu agressif).
 
+## Rédaction d'articles de blog
+**Avant de rédiger ou modifier un article, lire `REDACTION-ARTICLES.md`** (méthode SEO/GEO OTONOM : cocons
+sémantiques, maillage interne, liens externes officiels dosés, vérification factuelle des chiffres, blocs de style,
+checklist). Un article ne passe **jamais** en prod sans validation explicite du patron.
+
 ## Sources de contexte
 - Notion « Otonom — Bump complet » (positionnement, personas, fiscalité, benchmark).
 - Contact projet : Antoine — a.thomas@mc-groupe.com · Commercial : Grégory — gregory@otonom.fr / 06 68 28 09 08.

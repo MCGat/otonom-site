@@ -58,13 +58,23 @@ const SCHEMA: Array<{ sqlite: string; mysql?: string }> = [
     mysql: `CREATE TABLE IF NOT EXISTS form_settings (
       form_key VARCHAR(40) PRIMARY KEY, label VARCHAR(255), recipients TEXT, updated_at VARCHAR(40)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`
+  },
+  {
+    sqlite: `CREATE TABLE IF NOT EXISTS articles (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      slug TEXT UNIQUE NOT NULL, title TEXT NOT NULL,
+      excerpt TEXT, cover TEXT, body TEXT,
+      status TEXT NOT NULL DEFAULT 'draft',
+      created_at TEXT, updated_at TEXT, published_at TEXT
+    )`,
+    mysql: `CREATE TABLE IF NOT EXISTS articles (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      slug VARCHAR(200) UNIQUE NOT NULL, title VARCHAR(300) NOT NULL,
+      excerpt TEXT, cover VARCHAR(500), body MEDIUMTEXT,
+      status VARCHAR(20) NOT NULL DEFAULT 'draft',
+      created_at VARCHAR(40), updated_at VARCHAR(40), published_at VARCHAR(40)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`
   }
-  // Exemple future table :
-  // { sqlite: `CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT,
-  //     email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, role TEXT, created_at TEXT)`,
-  //   mysql:  `CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY,
-  //     email VARCHAR(255) UNIQUE NOT NULL, password_hash TEXT NOT NULL, role VARCHAR(40),
-  //     created_at VARCHAR(40)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4` },
 ]
 
 async function ensureReady() {
@@ -253,4 +263,81 @@ export async function recordFormPage(formKey: string, page: string) {
   if (set.has(clean)) return
   set.add(clean)
   await run(`UPDATE form_settings SET pages = ? WHERE form_key = ?`, [Array.from(set).join(','), formKey])
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ARTICLES (blog) — corps stocké en HTML (stylé via les classes .article*)
+   ══════════════════════════════════════════════════════════════════════════ */
+export interface Article {
+  id?: number
+  slug: string
+  title: string
+  excerpt?: string
+  cover?: string
+  body?: string
+  status?: 'draft' | 'published'
+  createdAt?: string
+  updatedAt?: string
+  publishedAt?: string
+}
+
+const mapArticle = (r: any): Article => ({
+  id: r.id, slug: r.slug, title: r.title, excerpt: r.excerpt, cover: r.cover, body: r.body,
+  status: r.status, createdAt: r.created_at, updatedAt: r.updated_at, publishedAt: r.published_at
+})
+
+/** Tous les articles (admin), plus récents d'abord. */
+export async function listArticles(): Promise<Article[]> {
+  await ensureReady()
+  const rows = await all(`SELECT * FROM articles ORDER BY COALESCE(updated_at, created_at) DESC, id DESC`)
+  return rows.map(mapArticle)
+}
+
+/** Articles publiés (public /blog). */
+export async function listPublishedArticles(): Promise<Article[]> {
+  await ensureReady()
+  const rows = await all(`SELECT * FROM articles WHERE status = 'published' ORDER BY COALESCE(published_at, created_at) DESC, id DESC`)
+  return rows.map(mapArticle)
+}
+
+/** Un article par id (admin, tout statut). */
+export async function getArticle(id: number): Promise<Article | null> {
+  await ensureReady()
+  const r = await get(`SELECT * FROM articles WHERE id = ?`, [id])
+  return r ? mapArticle(r) : null
+}
+
+/** Un article par slug (public = publié uniquement). */
+export async function getArticleBySlug(slug: string, publishedOnly = true): Promise<Article | null> {
+  await ensureReady()
+  const r = publishedOnly
+    ? await get(`SELECT * FROM articles WHERE slug = ? AND status = 'published'`, [slug])
+    : await get(`SELECT * FROM articles WHERE slug = ?`, [slug])
+  return r ? mapArticle(r) : null
+}
+
+/** Crée ou met à jour un article. Renvoie l'id. */
+export async function upsertArticle(a: Article): Promise<number | null> {
+  await ensureReady()
+  const now = new Date().toISOString()
+  const status = a.status === 'published' ? 'published' : 'draft'
+  if (a.id) {
+    const prev = await get(`SELECT published_at FROM articles WHERE id = ?`, [a.id])
+    const publishedAt = status === 'published' ? (prev?.published_at || now) : null
+    await run(
+      `UPDATE articles SET slug = ?, title = ?, excerpt = ?, cover = ?, body = ?, status = ?, updated_at = ?, published_at = ? WHERE id = ?`,
+      [a.slug, a.title, a.excerpt || null, a.cover || null, a.body || null, status, now, publishedAt, a.id])
+    return a.id
+  }
+  const publishedAt = status === 'published' ? now : null
+  return run(
+    `INSERT INTO articles (slug, title, excerpt, cover, body, status, created_at, updated_at, published_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [a.slug, a.title, a.excerpt || null, a.cover || null, a.body || null, status, now, now, publishedAt])
+}
+
+/** Supprime un article. */
+export async function deleteArticle(id: number) {
+  await ensureReady()
+  await run(`DELETE FROM articles WHERE id = ?`, [id])
 }

@@ -5,6 +5,7 @@ const LASTMOD = '2026-07-08'
 const ROUTES: Array<{ loc: string; priority: string; freq: string }> = [
   { loc: '/', priority: '1.0', freq: 'weekly' },
   { loc: '/simulateur', priority: '0.9', freq: 'monthly' },
+  { loc: '/blog', priority: '0.8', freq: 'weekly' },
   { loc: '/expertises', priority: '0.8', freq: 'monthly' },
   { loc: '/methode', priority: '0.8', freq: 'monthly' },
   { loc: '/a-propos', priority: '0.6', freq: 'yearly' },
@@ -17,9 +18,19 @@ const ROUTES: Array<{ loc: string; priority: string; freq: string }> = [
   { loc: '/confidentialite', priority: '0.2', freq: 'yearly' }
 ]
 
-export default defineEventHandler((event) => {
-  const urls = ROUTES.map((r) =>
-    `  <url>\n    <loc>${BASE}${r.loc}</loc>\n    <lastmod>${LASTMOD}</lastmod>\n    <changefreq>${r.freq}</changefreq>\n    <priority>${r.priority}</priority>\n  </url>`
+export default defineEventHandler(async (event) => {
+  const all: Array<{ loc: string; priority: string; freq: string; lastmod: string }> =
+    ROUTES.map((r) => ({ ...r, lastmod: LASTMOD }))
+  // Articles publiés (dynamiques)
+  try {
+    const articles = await listPublishedArticles()
+    for (const a of articles) {
+      all.push({ loc: `/blog/${a.slug}`, priority: '0.6', freq: 'monthly', lastmod: (a.publishedAt || a.updatedAt || LASTMOD).slice(0, 10) })
+    }
+  } catch { /* base indisponible : sitemap statique seul */ }
+
+  const urls = all.map((r) =>
+    `  <url>\n    <loc>${BASE}${r.loc}</loc>\n    <lastmod>${r.lastmod}</lastmod>\n    <changefreq>${r.freq}</changefreq>\n    <priority>${r.priority}</priority>\n  </url>`
   ).join('\n')
   setHeader(event, 'content-type', 'application/xml; charset=UTF-8')
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`

@@ -6,6 +6,7 @@
         <NuxtLink to="/expertises">Expertises</NuxtLink>
         <NuxtLink to="/methode">Méthode</NuxtLink>
         <NuxtLink to="/simulateur">Simulateur</NuxtLink>
+        <NuxtLink to="/blog">Blog</NuxtLink>
         <NuxtLink to="/a-propos">À propos</NuxtLink>
         <NuxtLink to="/contact">Contact</NuxtLink>
       </nav>
