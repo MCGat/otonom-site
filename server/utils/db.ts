@@ -23,6 +23,7 @@ export interface Lead {
   meta?: string
   ip?: string
   userAgent?: string
+  isTest?: boolean
 }
 
 let engine: 'sqlite' | 'mysql' | null = null
@@ -97,6 +98,7 @@ async function ensureReady() {
 
   // 2b) Migrations additives (colonnes ajoutées après la 1re mise en prod)
   await ensureColumn('form_settings', 'pages', 'TEXT')
+  await ensureColumn('leads', 'is_test', 'INTEGER NOT NULL DEFAULT 0')
 
   // 3) Données par défaut
   await seedDefaults(cfg)
@@ -165,8 +167,15 @@ export async function insertLead(lead: Lead): Promise<number | null> {
 
 const mapLead = (r: any): Lead => ({
   id: r.id, createdAt: r.created_at, formKey: r.form_key, nom: r.nom, email: r.email,
-  entreprise: r.entreprise, telephone: r.telephone, message: r.message, meta: r.meta, ip: r.ip, userAgent: r.user_agent
+  entreprise: r.entreprise, telephone: r.telephone, message: r.message, meta: r.meta,
+  ip: r.ip, userAgent: r.user_agent, isTest: !!r.is_test
 })
+
+/** Marque (ou démarque) un lead comme test. */
+export async function setLeadTest(id: number, isTest: boolean) {
+  await ensureReady()
+  await run(`UPDATE leads SET is_test = ? WHERE id = ?`, [isTest ? 1 : 0, id])
+}
 
 /** Liste les leads (les plus récents d'abord), filtrable par formulaire. */
 export async function listLeads(opts: { form?: string; limit?: number } = {}): Promise<Lead[]> {

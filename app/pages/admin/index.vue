@@ -65,6 +65,7 @@
         <table class="leads">
           <thead>
             <tr>
+              <th class="th-test" title="Cocher les leads qui étaient des tests">Test</th>
               <th class="sortable" @click="toggleSort('createdAt')">Date <SortCaret :active="sortKey === 'createdAt'" :dir="sortDir" /></th>
               <th class="sortable" @click="toggleSort('formKey')">Formulaire <SortCaret :active="sortKey === 'formKey'" :dir="sortDir" /></th>
               <th class="sortable" @click="toggleSort('nom')">Nom <SortCaret :active="sortKey === 'nom'" :dir="sortDir" /></th>
@@ -75,7 +76,8 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="lead in sortedLeads" :key="lead.id">
+            <tr v-for="lead in sortedLeads" :key="lead.id" :class="{ 'row-test': lead.isTest }">
+              <td class="td-test"><input type="checkbox" :checked="lead.isTest" aria-label="Marquer comme test" @change="toggleTest(lead)"></td>
               <td class="nowrap muted-c">{{ formatDate(lead.createdAt) }}</td>
               <td><span class="badge">{{ labelFor(lead.formKey) }}</span></td>
               <td>{{ lead.nom }}</td>
@@ -84,7 +86,7 @@
               <td class="nowrap">{{ lead.telephone || '—' }}</td>
               <td class="msg" :title="lead.message || ''">{{ lead.message || '—' }}</td>
             </tr>
-            <tr v-if="!sortedLeads.length"><td colspan="7" class="empty">Aucun lead pour l'instant.</td></tr>
+            <tr v-if="!sortedLeads.length"><td colspan="8" class="empty">Aucun lead pour l'instant.</td></tr>
           </tbody>
         </table>
       </div>
@@ -97,7 +99,7 @@ definePageMeta({ layout: 'admin', middleware: 'admin' })
 useSeoMeta({ title: 'Tableau de bord — OTONOM Admin', robots: 'noindex, nofollow' })
 
 interface FormRow { formKey: string; label: string; recipients: string; pages: string; count: number; updatedAt: string }
-interface Lead { id: number; createdAt: string; formKey: string; nom: string; email: string; entreprise?: string; telephone?: string; message?: string }
+interface Lead { id: number; createdAt: string; formKey: string; nom: string; email: string; entreprise?: string; telephone?: string; message?: string; meta?: string; isTest?: boolean }
 
 const { data: formsData, refresh: refreshForms } = await useFetch<{ forms: FormRow[] }>('/api/admin/forms')
 const forms = computed(() => formsData.value?.forms || [])
@@ -150,15 +152,27 @@ const formatDate = (iso: string) => {
   try { return new Date(iso).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' }) } catch { return iso }
 }
 
+// --- Marquer un lead comme test (optimiste) ---
+async function toggleTest(lead: Lead) {
+  const next = !lead.isTest
+  lead.isTest = next
+  try {
+    await $fetch('/api/admin/lead-test', { method: 'POST', body: { id: lead.id, test: next } })
+  } catch {
+    lead.isTest = !next   // rollback si échec
+  }
+}
+
 // --- Export CSV (leads du formulaire filtré) ---
 const csvCell = (v: unknown) => '"' + String(v ?? '').replace(/"/g, '""') + '"'
 function exportCsv() {
   const rows = sortedLeads.value
   if (!rows.length) return
-  const headers = ['Date', 'Formulaire', 'Nom', 'Email', 'Entreprise', 'Téléphone', 'Message', 'Détails']
+  const headers = ['Test', 'Date', 'Formulaire', 'Nom', 'Email', 'Entreprise', 'Téléphone', 'Message', 'Détails']
   const lines = [headers.map(csvCell).join(';')]
   for (const l of rows) {
     lines.push([
+      l.isTest ? 'Oui' : 'Non',
       formatDate(l.createdAt), labelFor(l.formKey), l.nom, l.email,
       l.entreprise || '', l.telephone || '', l.message || '', l.meta || ''
     ].map(csvCell).join(';'))
@@ -218,6 +232,10 @@ function exportCsv() {
 .leads th.sortable:hover { color: var(--ink); }
 .leads tbody tr:hover { background: var(--bg-1); }
 .leads td { color: var(--ink-soft); }
+.th-test, .td-test { text-align: center; width: 1%; white-space: nowrap; }
+.td-test input { cursor: pointer; width: 16px; height: 16px; accent-color: var(--ink); }
+.leads tbody tr.row-test { opacity: .5; }
+.leads tbody tr.row-test:hover { opacity: .8; }
 .nowrap { white-space: nowrap; }
 .muted-c { color: var(--muted); }
 .badge { font-family: var(--ff-mono); font-size: 11px; letter-spacing: .04em; border: 1px solid var(--line); border-radius: 999px; padding: 3px 9px; color: var(--ink); white-space: nowrap; }
