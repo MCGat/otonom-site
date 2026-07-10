@@ -51,6 +51,18 @@ export default defineNuxtConfig({
       ],
       meta: [
         { name: 'theme-color', content: '#f3f3f1' }
+      ],
+      script: [
+        // Décide AVANT le paint si le loader de 1re visite doit jouer (une fois par session,
+        // hors reduced-motion). Pose html.has-loader → le CSS masque le hero et affiche le rideau.
+        {
+          innerHTML:
+            ';(function(){try{if(sessionStorage.getItem("otonom_seen"))return;' +
+            'if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;' +
+            'document.documentElement.classList.add("has-loader");' +
+            'sessionStorage.setItem("otonom_seen","1")}catch(e){}})();',
+          tagPosition: 'head'
+        }
       ]
     }
   }
