@@ -12,8 +12,9 @@
 </template>
 
 <script setup lang="ts">
-// Loader de première visite. Piloté par la classe html.has-loader posée par le
-// script inline (nuxt.config) uniquement au 1er chargement de la session.
+// Loader de chargement. Piloté par la classe html.has-loader posée par le script
+// inline (nuxt.config) à chaque chargement/rechargement complet de la page — mais
+// pas en navigation interne SPA (ce composant ne se remonte alors pas).
 const visible = ref(true)
 const leaving = ref(false)
 const progress = ref(0)
@@ -37,12 +38,17 @@ onMounted(() => {
   }
   raf = requestAnimationFrame(tick)
 
+  const CURTAIN = 800 // durée de la levée du rideau (doit matcher le CSS .page-loader.is-out)
   function reveal() {
     if (done) return
     done = true
-    docEl.classList.add('intro-in') // déclenche l'entrée du hero…
-    leaving.value = true            // …pendant que le rideau se lève
-    setTimeout(cleanup, 900)
+    leaving.value = true                  // le rideau se lève (vers le haut)
+    // Le hero n'entre qu'UNE FOIS le rideau parti — sinon sa cascade se joue
+    // cachée derrière le rideau (le hero, en haut, est découvert en dernier).
+    setTimeout(() => {
+      docEl.classList.add('intro-in')     // entrée en cascade du hero, désormais visible
+      setTimeout(cleanup, 280)            // retire l'overlay + restaure le scroll
+    }, CURTAIN)
   }
   function cleanup() {
     docEl.classList.remove('has-loader')

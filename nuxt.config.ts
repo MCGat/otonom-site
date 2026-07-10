@@ -53,14 +53,13 @@ export default defineNuxtConfig({
         { name: 'theme-color', content: '#f3f3f1' }
       ],
       script: [
-        // Décide AVANT le paint si le loader de 1re visite doit jouer (une fois par session,
-        // hors reduced-motion). Pose html.has-loader → le CSS masque le hero et affiche le rideau.
+        // Décide AVANT le paint si le loader doit jouer. Il joue à CHAQUE chargement/rechargement
+        // complet de la page (ce script inline ne s'exécute qu'au full load), mais PAS en navigation
+        // interne SPA (le layout + PageLoader ne se remontent pas). Respecte prefers-reduced-motion.
         {
           innerHTML:
-            ';(function(){try{if(sessionStorage.getItem("otonom_seen"))return;' +
-            'if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;' +
-            'document.documentElement.classList.add("has-loader");' +
-            'sessionStorage.setItem("otonom_seen","1")}catch(e){}})();',
+            ';(function(){try{if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;' +
+            'document.documentElement.classList.add("has-loader")}catch(e){}})();',
           tagPosition: 'head'
         }
       ]
