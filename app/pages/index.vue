@@ -3,7 +3,10 @@
   <div class="grid-faint" aria-hidden="true"></div>
   <div class="wrap">
     <span class="kicker reveal">Mobilité · Recharge · Énergie</span>
-    <h1 class="reveal">Toute votre transition mobilité&nbsp;&amp; énergie.<br>Un seul partenaire.</h1>
+    <h1 class="reveal hero-title">
+      <span class="hl"><span class="hl-i">Toute votre transition mobilité&nbsp;&amp; énergie.</span></span>
+      <span class="hl"><span class="hl-i">Un seul partenaire.</span></span>
+    </h1>
     <p class="lede reveal">OTONOM orchestre, de A à Z, vos véhicules, votre recharge et votre énergie. Des résultats chiffrés — sans y passer votre temps.</p>
     <div class="hero-cta reveal">
       <a class="btn btn--primary btn--lg" href="/contact">Réserver mon audit gratuit <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>

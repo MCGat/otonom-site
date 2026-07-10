@@ -773,13 +773,30 @@ html.has-loader .hero .wrap>.kicker.reveal::before{transform:scaleX(0);transform
 /* révélation en cascade, easing premium (easeOutExpo) */
 html.intro-in .hero .wrap>.reveal{opacity:1;transform:none;transition:opacity .9s cubic-bezier(.16,1,.3,1),transform 1.05s cubic-bezier(.16,1,.3,1)}
 html.intro-in .hero .wrap>.kicker.reveal::before{transform:scaleX(1);transition:transform .8s cubic-bezier(.16,1,.3,1) .18s}
-html.intro-in .hero .wrap>.reveal:nth-child(1){transition-delay:.02s}
-html.intro-in .hero .wrap>.reveal:nth-child(2){transition-delay:.14s}
-html.intro-in .hero .wrap>.reveal:nth-child(3){transition-delay:.30s}
-html.intro-in .hero .wrap>.reveal:nth-child(4){transition-delay:.44s}
-html.intro-in .hero .wrap>.reveal:nth-child(5){transition-delay:.56s}
+html.intro-in .hero .wrap>.reveal:nth-child(1){transition-delay:.00s}
+html.intro-in .hero .wrap>.reveal:nth-child(2){transition-delay:.16s}
+html.intro-in .hero .wrap>.reveal:nth-child(3){transition-delay:.38s}
+html.intro-in .hero .wrap>.reveal:nth-child(4){transition-delay:.56s}
+html.intro-in .hero .wrap>.reveal:nth-child(5){transition-delay:.72s}
+
+/* Titre : révélation LIGNE PAR LIGNE (chaque ligne monte de derrière un masque).
+   Le titre remplace ainsi sa montée globale par ce dévoilement plus premium. */
+.hero-title .hl{display:block;overflow:hidden;padding-bottom:.16em;margin-bottom:-.16em}
+.hero-title .hl-i{display:block;will-change:transform}
+/* pendant le loader : le bloc titre est en place mais ses lignes sont glissées sous le masque */
+html.has-loader .hero .wrap>.hero-title{opacity:1;transform:none}
+html.has-loader .hero .wrap>.hero-title .hl-i{transform:translateY(112%);transition:none}
+/* à l'entrée : les lignes montent l'une après l'autre */
+html.intro-in .hero .wrap>.hero-title .hl-i{transform:translateY(0);transition:transform 1s cubic-bezier(.16,1,.3,1)}
+html.intro-in .hero .wrap>.hero-title .hl:nth-child(1) .hl-i{transition-delay:.14s}
+html.intro-in .hero .wrap>.hero-title .hl:nth-child(2) .hl-i{transition-delay:.34s}
+/* Quadrillage de fond : léger fondu d'apparition juste après le hero */
+html.has-loader .hero .grid-faint{opacity:0}
+html.intro-in .hero .grid-faint{opacity:.5;transition:opacity 1.2s ease .25s}
 
 @media (prefers-reduced-motion:reduce){
   .page-loader{display:none!important}
   html.has-loader .hero .wrap>.reveal,html.intro-in .hero .wrap>.reveal{opacity:1;transform:none;transition:none}
+  .hero-title .hl-i{transform:none!important}
+  html.has-loader .hero .grid-faint{opacity:.5}
 }
