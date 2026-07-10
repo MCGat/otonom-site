@@ -60,18 +60,44 @@ const formatDate = (iso?: string) => {
 const slugify = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80)
 function processBody(html: string) {
   const toc: { id: string; text: string }[] = []
-  const out = (html || '').replace(/<h2([^>]*)>([\s\S]*?)<\/h2>/g, (m, attrs, inner) => {
+  let out = (html || '').replace(/<h2([^>]*)>([\s\S]*?)<\/h2>/g, (m, attrs, inner) => {
     const text = inner.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim()
     if (!text) return m
     const id = slugify(text)
     toc.push({ id, text })
     return /\bid=/.test(attrs) ? m : `<h2${attrs} id="${id}">${inner}</h2>`
   })
+  // Enveloppe chaque tableau pour un défilement horizontal (évite le débordement sur mobile)
+  out = out.replace(/<table\b[\s\S]*?<\/table>/g, (t) =>
+    `<div class="table-x"><div class="table-x-scroll" tabindex="0" role="region" aria-label="Tableau (défilement horizontal)">${t}</div></div>`)
   return { html: out, toc }
 }
 const processed = computed(() => processBody(article.value.body || ''))
 const processedHtml = computed(() => processed.value.html)
 const toc = computed(() => processed.value.toc)
+
+// Indicateurs de défilement des tableaux (fondu + pastille), pilotés selon la position
+function setEnds(wrap: HTMLElement, sc: HTMLElement) {
+  wrap.classList.toggle('at-end', sc.scrollLeft + sc.clientWidth >= sc.scrollWidth - 2)
+  wrap.classList.toggle('at-start', sc.scrollLeft <= 2)
+}
+function updateTables() {
+  document.querySelectorAll<HTMLElement>('.article-body .table-x').forEach((wrap) => {
+    const sc = wrap.querySelector<HTMLElement>('.table-x-scroll')
+    if (!sc) return
+    wrap.classList.toggle('can-scroll', sc.scrollWidth - sc.clientWidth > 2)
+    if (!sc.dataset.bound) {
+      sc.dataset.bound = '1'
+      sc.addEventListener('scroll', () => setEnds(wrap, sc), { passive: true })
+    }
+    setEnds(wrap, sc)
+  })
+}
+onMounted(() => {
+  updateTables()
+  window.addEventListener('resize', updateTables, { passive: true })
+})
+onBeforeUnmount(() => window.removeEventListener('resize', updateTables))
 </script>
 
 <style scoped>

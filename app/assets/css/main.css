@@ -724,6 +724,16 @@ a.persona .more svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-
 .article-body tbody td{padding:15px 18px;border-bottom:1px solid var(--line-soft);color:var(--ink-soft);vertical-align:top}
 .article-body tbody tr:last-child td{border-bottom:0}
 .article-body tbody td:first-child{color:var(--ink);font-weight:500}
+/* Tableau : défilement horizontal (évite le débordement de page sur mobile) + indication */
+.article-body .table-x{position:relative}
+.article-body .table-x-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--radius)}
+.article-body .table-x-scroll>table{margin:0}
+.article-body .table-x-scroll:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+/* fondu à droite : n'apparaît que si scrollable et pas encore au bout */
+.article-body .table-x::after{content:"";position:absolute;top:1px;right:1px;bottom:1px;width:46px;border-radius:0 var(--radius) var(--radius) 0;background:linear-gradient(90deg,rgba(0,0,0,0),var(--bg-1));pointer-events:none;opacity:0;transition:opacity .25s ease}
+.article-body .table-x.can-scroll:not(.at-end)::after{opacity:1}
+/* pastille repère « glisser → », masquée une fois arrivé au bout */
+.article-body .table-x.can-scroll:not(.at-end)::before{content:"glisser →";position:absolute;z-index:2;bottom:10px;right:10px;font-family:var(--ff-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:var(--bg-1);border:1px solid var(--line);border-radius:999px;padding:3px 9px;pointer-events:none}
 
 /* FAQ (accordéon en cartes) */
 .article-faq{display:flex;flex-direction:column;gap:12px}
