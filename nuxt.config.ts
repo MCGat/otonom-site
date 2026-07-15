@@ -61,6 +61,41 @@ export default defineNuxtConfig({
             ';(function(){try{if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;' +
             'document.documentElement.classList.add("has-loader")}catch(e){}})();',
           tagPosition: 'head'
+        },
+        // Données structurées (schema.org) : aident Google à comprendre la marque
+        // (nom, logo, rattachement MC Groupe) → meilleure présentation du résultat.
+        {
+          type: 'application/ld+json',
+          innerHTML: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@graph': [
+              {
+                '@type': 'Organization',
+                '@id': 'https://otonom.fr/#organization',
+                name: 'OTONOM',
+                url: 'https://otonom.fr',
+                logo: 'https://otonom.fr/assets/img/icon-512.png',
+                description: "OTONOM orchestre de A à Z la transition mobilité, recharge et énergie des entreprises : un seul interlocuteur, des résultats chiffrés.",
+                parentOrganization: { '@type': 'Organization', name: 'MC Groupe' },
+                contactPoint: {
+                  '@type': 'ContactPoint',
+                  contactType: 'sales',
+                  telephone: '+33668280908',
+                  email: 'gregory@otonom.fr',
+                  areaServed: 'FR',
+                  availableLanguage: 'fr'
+                }
+              },
+              {
+                '@type': 'WebSite',
+                '@id': 'https://otonom.fr/#website',
+                name: 'OTONOM',
+                url: 'https://otonom.fr',
+                inLanguage: 'fr',
+                publisher: { '@id': 'https://otonom.fr/#organization' }
+              }
+            ]
+          })
         }
       ]
     }
