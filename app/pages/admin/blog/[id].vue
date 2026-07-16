@@ -3,9 +3,9 @@
     <div class="editor-head">
       <NuxtLink to="/admin/blog" class="back">← Articles</NuxtLink>
       <div class="editor-actions">
-        <a v-if="form.status === 'published' && !isNew" :href="`/blog/${form.slug}`" target="_blank" rel="noopener" class="ed-view">Voir ↗</a>
-        <button type="button" class="btn btn--ghost" :disabled="saving" @click="save('draft')">Brouillon</button>
-        <button type="button" class="btn btn--primary" :disabled="saving" @click="save('published')">{{ form.status === 'published' ? 'Mettre à jour' : 'Publier' }}</button>
+        <a v-if="isLive && !isNew" :href="`/blog/${form.slug}`" target="_blank" rel="noopener" class="ed-view">Voir ↗</a>
+        <span class="ed-state" :class="`ed-state--${form.status}`">{{ stateLabel }}</span>
+        <button type="button" class="btn btn--primary" :disabled="saving" @click="save()">{{ saveLabel }}</button>
       </div>
     </div>
 
@@ -33,10 +33,18 @@
 
       <aside class="editor-side">
         <label class="ed-label">Statut</label>
-        <select v-model="form.status" class="ed-input" @change="markDirty">
+        <select v-model="form.status" class="ed-input" @change="onStatus">
           <option value="draft">Brouillon</option>
+          <option value="scheduled">Programmé</option>
           <option value="published">Publié</option>
         </select>
+        <p class="ed-help">{{ statusHelp }}</p>
+
+        <template v-if="form.status === 'scheduled'">
+          <label class="ed-label" for="ed-when">Date de mise en ligne</label>
+          <input id="ed-when" v-model="form.publishedAtLocal" type="datetime-local" class="ed-input" @input="markDirty">
+          <p v-if="scheduleInfo" class="ed-help" :class="{ 'ed-help--warn': schedulePast }">{{ scheduleInfo }}</p>
+        </template>
 
         <label class="ed-label">Slug (URL) <small>/blog/…</small></label>
         <input v-model="form.slug" class="ed-input" @input="onSlugInput">
@@ -62,18 +70,83 @@ useSeoMeta({ title: 'Éditeur — OTONOM Admin', robots: 'noindex, nofollow' })
 const route = useRoute()
 const isNew = route.params.id === 'new'
 
-const form = reactive({ id: null as number | null, title: '', slug: '', excerpt: '', cover: '', status: 'draft', body: '' })
+type Status = 'draft' | 'scheduled' | 'published'
+
+const form = reactive({
+  id: null as number | null, title: '', slug: '', excerpt: '', cover: '',
+  status: 'draft' as Status, body: '',
+  publishedAtLocal: '' // valeur du champ datetime-local (heure locale, pas UTC)
+})
 const slugTouched = ref(false)
 const dirty = ref(false)
 const markDirty = () => { dirty.value = true }
 const onSlugInput = () => { slugTouched.value = true; markDirty() }
 
+/* Le champ datetime-local travaille en heure LOCALE alors qu'on stocke en ISO/UTC :
+   il faut convertir dans les deux sens, sinon la date dérive du décalage horaire. */
+const isoToLocalInput = (iso?: string | null) => {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (isNaN(d.getTime())) return ''
+  const p = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`
+}
+const localInputToIso = (v: string) => {
+  const d = new Date(v) // interprété en heure locale par le navigateur
+  return isNaN(d.getTime()) ? '' : d.toISOString()
+}
+
 if (!isNew) {
   const { data } = await useFetch<{ article: any }>(`/api/admin/articles/${route.params.id}`)
   const a = data.value?.article
   if (a) {
-    Object.assign(form, { id: a.id, title: a.title, slug: a.slug, excerpt: a.excerpt || '', cover: a.cover || '', status: a.status, body: a.body || '' })
+    Object.assign(form, {
+      id: a.id, title: a.title, slug: a.slug, excerpt: a.excerpt || '', cover: a.cover || '',
+      status: (a.status || 'draft') as Status, body: a.body || '',
+      publishedAtLocal: a.status === 'scheduled' ? isoToLocalInput(a.publishedAt) : ''
+    })
     slugTouched.value = true
+  }
+}
+
+/* ── Statut : libellés, aides et état « en ligne » ── */
+const scheduleIso = computed(() => localInputToIso(form.publishedAtLocal))
+const schedulePast = computed(() => !!scheduleIso.value && scheduleIso.value <= new Date().toISOString())
+
+const isLive = computed(() =>
+  form.status === 'published' || (form.status === 'scheduled' && schedulePast.value))
+
+const stateLabel = computed(() =>
+  form.status === 'published' ? 'En ligne'
+    : form.status === 'scheduled' ? (schedulePast.value ? 'En ligne' : 'Programmé')
+      : 'Brouillon · hors ligne')
+
+const saveLabel = computed(() =>
+  form.status === 'published' ? (form.id ? 'Mettre à jour' : 'Publier')
+    : form.status === 'scheduled' ? 'Programmer'
+      : 'Enregistrer le brouillon')
+
+const statusHelp = computed(() =>
+  form.status === 'published' ? 'Visible et indexable par Google (si le blog est indexé).'
+    : form.status === 'scheduled' ? 'Invisible jusqu’à la date choisie, puis mis en ligne automatiquement.'
+      : 'Invisible du public et de Google : l’URL renvoie une 404. Idéal pour écrire en amont.')
+
+const scheduleInfo = computed(() => {
+  if (!form.publishedAtLocal) return 'Choisissez une date : elle est obligatoire pour programmer.'
+  if (!scheduleIso.value) return 'Date invalide.'
+  if (schedulePast.value) return '⚠ Cette date est déjà passée : l’article sera mis en ligne immédiatement.'
+  const d = new Date(scheduleIso.value)
+  return `Mise en ligne le ${d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })} à ${d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}.`
+})
+
+function onStatus() {
+  markDirty()
+  // pré-remplit une date par défaut (demain 9 h) pour éviter un champ vide
+  if (form.status === 'scheduled' && !form.publishedAtLocal) {
+    const d = new Date()
+    d.setDate(d.getDate() + 1)
+    d.setHours(9, 0, 0, 0)
+    form.publishedAtLocal = isoToLocalInput(d.toISOString())
   }
 }
 
@@ -111,17 +184,24 @@ function insert(type: string) {
 const saving = ref(false)
 const saved = ref(false)
 const error = ref('')
-async function save(status: 'draft' | 'published') {
+async function save() {
   if (saving.value) return
   error.value = ''
   if (!form.title.trim()) { error.value = 'Le titre est requis.'; return }
+  if (form.status === 'scheduled' && !scheduleIso.value) {
+    error.value = 'Choisissez une date de mise en ligne valide pour programmer.'
+    return
+  }
   saving.value = true
-  form.status = status
   form.body = bodyEl.value?.innerHTML || ''
   try {
     const res = await $fetch<{ ok: boolean; id: number; slug: string }>('/api/admin/articles', {
       method: 'POST',
-      body: { id: form.id, title: form.title, slug: form.slug, excerpt: form.excerpt, cover: form.cover, body: form.body, status }
+      body: {
+        id: form.id, title: form.title, slug: form.slug, excerpt: form.excerpt,
+        cover: form.cover, body: form.body, status: form.status,
+        publishedAt: form.status === 'scheduled' ? scheduleIso.value : undefined
+      }
     })
     form.id = res.id
     form.slug = res.slug
@@ -145,6 +225,14 @@ async function save(status: 'draft' | 'published') {
 .editor-actions .btn { padding: 10px 18px; font-size: 13.5px; }
 .ed-view { font-family: var(--ff-mono); font-size: 12.5px; color: var(--muted); }
 .ed-view:hover { color: var(--ink); }
+
+/* état courant, lisible d'un coup d'œil à côté du bouton d'enregistrement */
+.ed-state { font-family: var(--ff-mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; border-radius: 999px; padding: 4px 11px; white-space: nowrap; border: 1px solid var(--line); color: var(--muted-2); }
+.ed-state--published { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.ed-state--scheduled { color: var(--ink); border-color: var(--ink-soft); }
+
+.ed-help { font-size: 11.5px; line-height: 1.5; color: var(--muted-2); margin: 6px 0 0; }
+.ed-help--warn { color: var(--ink-soft); }
 
 .editor-grid { display: grid; grid-template-columns: 1fr 300px; gap: 30px; align-items: start; }
 .ed-title { width: 100%; font-family: var(--ff-display); font-size: clamp(24px, 3vw, 34px); font-weight: 600; color: var(--ink); background: none; border: 0; border-bottom: 1px solid var(--line); padding: 6px 0 14px; letter-spacing: -.01em; }

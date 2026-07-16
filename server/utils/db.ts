@@ -299,16 +299,31 @@ export interface Article {
   excerpt?: string
   cover?: string
   body?: string
-  status?: 'draft' | 'published'
+  status?: ArticleStatus
   createdAt?: string
   updatedAt?: string
   publishedAt?: string
 }
 
+export type ArticleStatus = 'draft' | 'scheduled' | 'published'
+
 const mapArticle = (r: any): Article => ({
   id: r.id, slug: r.slug, title: r.title, excerpt: r.excerpt, cover: r.cover, body: r.body,
   status: r.status, createdAt: r.created_at, updatedAt: r.updated_at, publishedAt: r.published_at
 })
+
+/**
+ * Condition « visible publiquement » : publié, OU programmé dont l'heure est passée.
+ * Calculée à la lecture → aucune tâche de fond : un article programmé apparaît
+ * tout seul le moment venu. (Les dates sont en ISO, comparables telles quelles.)
+ */
+const PUBLIC_COND = `(status = 'published' OR (status = 'scheduled' AND published_at IS NOT NULL AND published_at <= ?))`
+
+/** Un article est-il en ligne maintenant ? (même règle que PUBLIC_COND, côté JS) */
+export function isArticleLive(a: Article, now = new Date().toISOString()): boolean {
+  if (a.status === 'published') return true
+  return a.status === 'scheduled' && !!a.publishedAt && a.publishedAt <= now
+}
 
 /** Tous les articles (admin), plus récents d'abord. */
 export async function listArticles(): Promise<Article[]> {
@@ -317,10 +332,12 @@ export async function listArticles(): Promise<Article[]> {
   return rows.map(mapArticle)
 }
 
-/** Articles publiés (public /blog). */
+/** Articles visibles publiquement (liste /blog + sitemap). Exclut brouillons et programmés à venir. */
 export async function listPublishedArticles(): Promise<Article[]> {
   await ensureReady()
-  const rows = await all(`SELECT * FROM articles WHERE status = 'published' ORDER BY COALESCE(published_at, created_at) DESC, id DESC`)
+  const rows = await all(
+    `SELECT * FROM articles WHERE ${PUBLIC_COND} ORDER BY COALESCE(published_at, created_at) DESC, id DESC`,
+    [new Date().toISOString()])
   return rows.map(mapArticle)
 }
 
@@ -331,29 +348,50 @@ export async function getArticle(id: number): Promise<Article | null> {
   return r ? mapArticle(r) : null
 }
 
-/** Un article par slug (public = publié uniquement). */
-export async function getArticleBySlug(slug: string, publishedOnly = true): Promise<Article | null> {
+/** Un article par slug. publicOnly = seulement s'il est en ligne (sinon 404 → jamais indexable). */
+export async function getArticleBySlug(slug: string, publicOnly = true): Promise<Article | null> {
   await ensureReady()
-  const r = publishedOnly
-    ? await get(`SELECT * FROM articles WHERE slug = ? AND status = 'published'`, [slug])
+  const r = publicOnly
+    ? await get(`SELECT * FROM articles WHERE slug = ? AND ${PUBLIC_COND}`, [slug, new Date().toISOString()])
     : await get(`SELECT * FROM articles WHERE slug = ?`, [slug])
   return r ? mapArticle(r) : null
 }
 
-/** Crée ou met à jour un article. Renvoie l'id. */
+/**
+ * Crée ou met à jour un article. Renvoie l'id.
+ *
+ * Date de publication selon le statut :
+ *  - brouillon  → aucune (l'article n'existe pas publiquement → 404 → jamais indexable)
+ *  - programmé  → la date choisie (doit être valide)
+ *  - publié     → la date d'origine si elle est déjà passée (on ne réécrit pas
+ *                 l'historique), sinon maintenant. Ce garde-fou évite qu'un article
+ *                 programmé plus tard puis « publié » reste invisible à cause de
+ *                 sa date future.
+ */
 export async function upsertArticle(a: Article): Promise<number | null> {
   await ensureReady()
   const now = new Date().toISOString()
-  const status = a.status === 'published' ? 'published' : 'draft'
+  const status: ArticleStatus =
+    a.status === 'published' ? 'published' : a.status === 'scheduled' ? 'scheduled' : 'draft'
+
+  const prev = a.id ? await get(`SELECT published_at FROM articles WHERE id = ?`, [a.id]) : null
+
+  let publishedAt: string | null = null
+  if (status === 'scheduled') {
+    const d = a.publishedAt ? new Date(a.publishedAt) : null
+    if (!d || isNaN(d.getTime())) throw new Error('Date de programmation invalide.')
+    publishedAt = d.toISOString()
+  } else if (status === 'published') {
+    const prevAt: string | undefined = prev?.published_at
+    publishedAt = prevAt && prevAt <= now ? prevAt : now
+  }
+
   if (a.id) {
-    const prev = await get(`SELECT published_at FROM articles WHERE id = ?`, [a.id])
-    const publishedAt = status === 'published' ? (prev?.published_at || now) : null
     await run(
       `UPDATE articles SET slug = ?, title = ?, excerpt = ?, cover = ?, body = ?, status = ?, updated_at = ?, published_at = ? WHERE id = ?`,
       [a.slug, a.title, a.excerpt || null, a.cover || null, a.body || null, status, now, publishedAt, a.id])
     return a.id
   }
-  const publishedAt = status === 'published' ? now : null
   return run(
     `INSERT INTO articles (slug, title, excerpt, cover, body, status, created_at, updated_at, published_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,

@@ -17,11 +17,14 @@
         <tbody>
           <tr v-for="a in articles" :key="a.id">
             <td><NuxtLink :to="`/admin/blog/${a.id}`" class="lk">{{ a.title }}</NuxtLink><div class="art-slug">/blog/{{ a.slug }}</div></td>
-            <td><span class="badge" :class="{ 'badge--on': a.status === 'published' }">{{ a.status === 'published' ? 'Publié' : 'Brouillon' }}</span></td>
+            <td>
+              <span class="badge" :class="badgeClass(a)">{{ statusLabel(a) }}</span>
+              <div v-if="a.status === 'scheduled' && !isLive(a)" class="art-when">{{ formatDate(a.publishedAt) }}</div>
+            </td>
             <td class="nowrap muted-c">{{ formatDate(a.updatedAt || a.createdAt) }}</td>
             <td class="ta-r nowrap">
               <NuxtLink :to="`/admin/blog/${a.id}`" class="art-action">Éditer</NuxtLink>
-              <a v-if="a.status === 'published'" :href="`/blog/${a.slug}`" target="_blank" rel="noopener" class="art-action">Voir</a>
+              <a v-if="isLive(a)" :href="`/blog/${a.slug}`" target="_blank" rel="noopener" class="art-action">Voir</a>
               <button type="button" class="art-action art-del" @click="remove(a)">Supprimer</button>
             </td>
           </tr>
@@ -36,7 +39,21 @@
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 useSeoMeta({ title: 'Blog — OTONOM Admin', robots: 'noindex, nofollow' })
 
-interface ArticleRow { id: number; slug: string; title: string; status: string; createdAt?: string; updatedAt?: string }
+interface ArticleRow { id: number; slug: string; title: string; status: string; createdAt?: string; updatedAt?: string; publishedAt?: string }
+
+/* Même règle que le serveur : un article programmé dont l'heure est passée est en ligne. */
+const isLive = (a: ArticleRow) =>
+  a.status === 'published' || (a.status === 'scheduled' && !!a.publishedAt && a.publishedAt <= new Date().toISOString())
+
+const statusLabel = (a: ArticleRow) =>
+  a.status === 'published' ? 'Publié'
+    : a.status === 'scheduled' ? (isLive(a) ? 'En ligne' : 'Programmé')
+      : 'Brouillon'
+
+const badgeClass = (a: ArticleRow) => ({
+  'badge--on': isLive(a),
+  'badge--wait': a.status === 'scheduled' && !isLive(a)
+})
 const { data, refresh } = await useFetch<{ articles: ArticleRow[] }>('/api/admin/articles')
 const articles = computed(() => data.value?.articles || [])
 
@@ -68,6 +85,8 @@ const formatDate = (iso?: string) => {
 .art-slug { font-family: var(--ff-mono); font-size: 11px; color: var(--muted-2); margin-top: 4px; }
 .badge { font-family: var(--ff-mono); font-size: 11px; letter-spacing: .04em; border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; color: var(--muted); }
 .badge--on { color: var(--ink); border-color: var(--ink); }
+.badge--wait { color: var(--ink-soft); border-color: var(--ink-soft); border-style: dashed; }
+.art-when { font-family: var(--ff-mono); font-size: 10.5px; color: var(--muted-2); margin-top: 5px; }
 .art-action { font-family: var(--ff-mono); font-size: 12px; color: var(--muted); margin-left: 16px; background: none; border: 0; cursor: pointer; }
 .art-action:hover { color: var(--ink); }
 .art-del:hover { color: var(--ink); text-decoration: underline; }
