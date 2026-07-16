@@ -56,9 +56,12 @@ export default defineNuxtConfig({
         // Décide AVANT le paint si le loader doit jouer. Il joue à CHAQUE chargement/rechargement
         // complet de la page (ce script inline ne s'exécute qu'au full load), mais PAS en navigation
         // interne SPA (le layout + PageLoader ne se remontent pas). Respecte prefers-reduced-motion.
+        // ⚠️ Jamais dans l'admin : ce layout n'a pas de PageLoader, donc personne ne retirerait
+        // `has-loader` — et son `overflow:hidden` bloquerait le scroll de la page.
         {
           innerHTML:
-            ';(function(){try{if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;' +
+            ';(function(){try{if(location.pathname.indexOf("/admin")===0)return;' +
+            'if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;' +
             'document.documentElement.classList.add("has-loader")}catch(e){}})();',
           tagPosition: 'head'
         },

@@ -47,8 +47,7 @@ useSeoMeta({
   ogTitle: () => article.value.title,
   ogDescription: () => article.value.excerpt || '',
   ogImage: () => article.value.cover || undefined,
-  ogType: 'article',
-  robots: 'noindex, nofollow'
+  ogType: 'article'
 })
 
 const formatDate = (iso?: string) => {

@@ -38,7 +38,16 @@ destinataires configurés pour ce formulaire (table `form_settings`, repli sur `
 ## Base de données
 
 SQLite via `node:sqlite` (intégré à Node, zéro dépendance). Tout l'accès est **isolé dans `server/utils/db.ts`** :
-passer à MySQL (PlanetHoster N0C) plus tard ne touchera que ce fichier. Tables : `leads`, `form_settings`, `articles`.
+passer à MySQL (PlanetHoster N0C) plus tard ne touchera que ce fichier. Tables : `leads`, `form_settings`,
+`articles`, `page_settings`.
+
+## Indexation des pages
+
+Pilotée depuis l'admin (onglet **Pages & indexation**), pas dans le code. La table **`page_settings`** est la
+**seule source de vérité** : elle alimente à la fois le `meta robots` (posé dans `app/app.vue` au rendu serveur)
+et le **sitemap** — une page désindexée en sort donc automatiquement. Une page absente de la table est indexable.
+L'accueil et les pages légales sont **verrouillées** (non désindexables), `/admin` et `/merci` jamais indexables.
+⚠️ Ne pas remettre de `robots` en dur dans une page (voir `CLAUDE.md`).
 
 ## Admin & blog
 

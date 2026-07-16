@@ -36,7 +36,7 @@
             <circle class="ems-node-bg" r="28" />
             <g class="ems-ico"><path d="M-2.6,-15 L-9.5,15 M2.6,-15 L9.5,15 M-6.6,4 L6.6,4 M-4.4,-6 L4.4,-6 M-2.6,-15 L2.6,-15" /><path d="M-12,-10 L12,-10" /></g>
           </g></g>
-          <text class="ems-lbl" x="84" y="178"><tspan class="ems-idx">01 </tspan>Réseau</text>
+          <text class="ems-lbl" x="84" y="186"><tspan class="ems-idx">01 </tspan>Réseau</text>
         </g>
         <!-- 02 · Solaire → EMS -->
         <g class="ems-branch ems-b2" aria-hidden="true">
@@ -48,7 +48,7 @@
             <circle class="ems-node-bg" r="28" />
             <g class="ems-ico"><path d="M-16,5 L-9.5,-9 L16,-9 L9.5,5 Z" /><path d="M-12.8,-2 L12.8,-2" /><path d="M-4.4,-9 L-7.7,5 M3,-9 L-0.3,5 M10.3,-9 L7,5" /><path d="M-1.5,5 L-1.5,11 M-6,11 L3,11" /></g>
           </g></g>
-          <text class="ems-lbl" x="84" y="474"><tspan class="ems-idx">02 </tspan>Solaire</text>
+          <text class="ems-lbl" x="84" y="482"><tspan class="ems-idx">02 </tspan>Solaire</text>
         </g>
         <!-- 03 · Stockage ⇄ EMS -->
         <g class="ems-branch ems-b3" aria-hidden="true">
@@ -75,7 +75,7 @@
             <circle class="ems-node-bg" r="28" />
             <g class="ems-ico"><rect x="-11" y="-14.5" width="14.5" height="29" rx="3" /><rect x="-7.6" y="-10.5" width="7.7" height="5.5" rx="1.2" /><path d="M4,-6 q6.2,0 6.2,6.2 l0,7" /><circle cx="10.2" cy="9.5" r="2.4" /></g>
           </g></g>
-          <text class="ems-lbl" x="476" y="178"><tspan class="ems-idx">04 </tspan>Recharge VE</text>
+          <text class="ems-lbl" x="476" y="186"><tspan class="ems-idx">04 </tspan>Recharge VE</text>
         </g>
         <!-- 05 · EMS → Bâtiment -->
         <g class="ems-branch ems-b5" aria-hidden="true">
@@ -87,7 +87,7 @@
             <circle class="ems-node-bg" r="28" />
             <g class="ems-ico"><path d="M-12,13 L-12,-10.5 L12,-10.5 L12,13 M-14.5,13 L14.5,13" /><rect x="-8.25" y="-6.5" width="4.5" height="4.5" /><rect x="0.75" y="-6.5" width="4.5" height="4.5" /><rect x="-8.25" y="1" width="4.5" height="4.5" /><rect x="0.75" y="1" width="4.5" height="4.5" /></g>
           </g></g>
-          <text class="ems-lbl" x="476" y="474"><tspan class="ems-idx">05 </tspan>Bâtiment</text>
+          <text class="ems-lbl" x="476" y="482"><tspan class="ems-idx">05 </tspan>Bâtiment</text>
         </g>
         <!-- hub -->
         <g aria-hidden="true" transform="translate(280,270)"><g class="ems-hub-g">
@@ -309,8 +309,7 @@
 // Page d'accueil V2 (bac à sable) — noindep pour éviter le doublon SEO avec /.
 useSeoMeta({
   title: "Accueil V2 (test) — OTONOM",
-  description: "Version de travail de la page d'accueil OTONOM.",
-  robots: "noindex, nofollow"
+  description: "Version de travail de la page d'accueil OTONOM."
 })
 </script>
 

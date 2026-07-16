@@ -14,6 +14,7 @@
       <div class="admin-tabs-in">
         <NuxtLink to="/admin" :class="{ active: isLeads }">Formulaires &amp; leads</NuxtLink>
         <NuxtLink to="/admin/blog" :class="{ active: isBlog }">Blog</NuxtLink>
+        <NuxtLink to="/admin/pages" :class="{ active: isPages }">Pages &amp; indexation</NuxtLink>
       </div>
     </nav>
 
@@ -25,7 +26,13 @@
 const { loggedIn, clear } = useUserSession()
 const route = useRoute()
 const isBlog = computed(() => route.path.startsWith('/admin/blog'))
+const isPages = computed(() => route.path.startsWith('/admin/pages'))
 const isLeads = computed(() => route.path === '/admin')
+
+// Sécurité : l'admin n'a pas de PageLoader. Si la classe `has-loader` traînait
+// (ex. arrivée depuis le site pendant le préloader), son `overflow:hidden`
+// bloquerait le scroll de l'admin. Personne d'autre ne viendrait la retirer.
+onMounted(() => document.documentElement.classList.remove('has-loader'))
 
 async function onLogout() {
   await $fetch('/api/admin/logout', { method: 'POST' })

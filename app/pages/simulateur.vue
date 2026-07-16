@@ -164,8 +164,7 @@ import { calculerSimulateur, construireVueSimulateur, resumeSimulateur, type Sim
 
 useSeoMeta({
   title: 'Simulateur — OTONOM | Économies, ROI & maturité de votre transition',
-  description: "En moins de 5 minutes, estimez vos économies annuelles, votre investissement, vos aides mobilisables, votre ROI et votre score de maturité énergétique. Ordres de grandeur indicatifs.",
-  robots: 'noindex, nofollow'
+  description: "En moins de 5 minutes, estimez vos économies annuelles, votre investissement, vos aides mobilisables, votre ROI et votre score de maturité énergétique. Ordres de grandeur indicatifs."
 })
 
 const TAG_LABELS: Record<TagKind, string> = {

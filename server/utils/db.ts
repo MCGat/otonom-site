@@ -74,11 +74,35 @@ const SCHEMA: Array<{ sqlite: string; mysql?: string }> = [
       status VARCHAR(20) NOT NULL DEFAULT 'draft',
       created_at VARCHAR(40), updated_at VARCHAR(40), published_at VARCHAR(40)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`
+  },
+  {
+    // Indexation des pages : SEULE source de vérité pour le meta robots ET le sitemap.
+    // Une ligne = une exception ; toute page absente est considérée indexable.
+    sqlite: `CREATE TABLE IF NOT EXISTS page_settings (
+      path TEXT PRIMARY KEY, indexed INTEGER NOT NULL DEFAULT 1, updated_at TEXT
+    )`,
+    mysql: `CREATE TABLE IF NOT EXISTS page_settings (
+      path VARCHAR(190) PRIMARY KEY, indexed TINYINT NOT NULL DEFAULT 1, updated_at VARCHAR(40)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`
   }
 ]
 
-async function ensureReady() {
-  if (engine) return
+// Verrou d'initialisation : sans lui, deux appels concurrents (ex. les seeds au
+// démarrage, ou deux requêtes simultanées) peuvent repartir avant que la
+// connexion et le schéma soient prêts — `engine` étant posé avant les await.
+let readyPromise: Promise<void> | null = null
+
+function ensureReady(): Promise<void> {
+  if (!readyPromise) {
+    readyPromise = initDb().catch((e) => {
+      readyPromise = null // permet une nouvelle tentative au prochain appel
+      throw e
+    })
+  }
+  return readyPromise
+}
+
+async function initDb() {
   const cfg = useRuntimeConfig()
   const my = cfg.mysql
 
@@ -340,4 +364,89 @@ export async function upsertArticle(a: Article): Promise<number | null> {
 export async function deleteArticle(id: number) {
   await ensureReady()
   await run(`DELETE FROM articles WHERE id = ?`, [id])
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   INDEXATION DES PAGES — source unique pour le meta robots et le sitemap.
+   Convention : une page ABSENTE de la table est indexable. Seules les
+   exceptions (non indexées) sont stockées.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/** Pages qu'on ne doit JAMAIS pouvoir désindexer depuis l'admin (garde-fou). */
+export const LOCKED_INDEXED = new Set(['/', '/mentions-legales', '/confidentialite'])
+
+/** Pages techniques, jamais indexables (non pilotables). */
+export const ALWAYS_NOINDEX = ['/admin', '/merci']
+
+/** Normalise un chemin : minuscule, sans query/hash, sans slash final. */
+export function normalizePath(p: string): string {
+  let s = String(p || '').split('?')[0].split('#')[0].trim().toLowerCase()
+  if (!s.startsWith('/')) s = '/' + s
+  if (s.length > 1) s = s.replace(/\/+$/, '')
+  return s || '/'
+}
+
+/** true si le chemin relève d'une zone toujours non indexable (/admin, /merci…). */
+export function isAlwaysNoindex(path: string): boolean {
+  const p = normalizePath(path)
+  return ALWAYS_NOINDEX.some((base) => p === base || p.startsWith(base + '/'))
+}
+
+/** Toutes les exceptions stockées : { '/simulateur': false, … } */
+export async function listPageSettings(): Promise<Record<string, boolean>> {
+  await ensureReady()
+  const rows = await all(`SELECT path, indexed FROM page_settings`)
+  const out: Record<string, boolean> = {}
+  for (const r of rows) out[normalizePath(r.path)] = Number(r.indexed) === 1
+  return out
+}
+
+/** Une page est-elle indexable ? (défaut : oui, sauf zone technique ou exception en base) */
+export async function isPageIndexed(path: string): Promise<boolean> {
+  const p = normalizePath(path)
+  if (isAlwaysNoindex(p)) return false
+  if (LOCKED_INDEXED.has(p)) return true
+  const settings = await listPageSettings()
+  return settings[p] !== false
+}
+
+/**
+ * Règles compactes de non-indexation, pour le rendu (meta robots) et le sitemap.
+ * Un préfixe couvre la page ET ses sous-pages (ex. /blog ⇒ /blog/mon-article).
+ * Toute la logique métier vit ici : le client se contente d'appliquer les règles.
+ */
+export async function getNoindexRules(): Promise<{ prefixes: string[] }> {
+  const settings = await listPageSettings()
+  const prefixes = [...ALWAYS_NOINDEX]
+  for (const [p, indexed] of Object.entries(settings)) {
+    if (!indexed && !LOCKED_INDEXED.has(p)) prefixes.push(p)
+  }
+  return { prefixes }
+}
+
+/** Applique les règles à un chemin (même logique côté serveur et client). */
+export function matchesNoindex(path: string, prefixes: string[]): boolean {
+  const p = normalizePath(path)
+  return prefixes.some((pre) => p === pre || p.startsWith(pre + '/'))
+}
+
+/** Définit l'indexation d'une page. Renvoie false si la page est verrouillée. */
+export async function setPageIndexed(path: string, indexed: boolean): Promise<boolean> {
+  const p = normalizePath(path)
+  if (LOCKED_INDEXED.has(p) || isAlwaysNoindex(p)) return false // garde-fou serveur
+  await ensureReady()
+  const now = new Date().toISOString()
+  const val = indexed ? 1 : 0
+  if (engine === 'mysql') {
+    await run(
+      `INSERT INTO page_settings (path, indexed, updated_at) VALUES (?, ?, ?)
+       ON DUPLICATE KEY UPDATE indexed = VALUES(indexed), updated_at = VALUES(updated_at)`,
+      [p, val, now])
+  } else {
+    await run(
+      `INSERT INTO page_settings (path, indexed, updated_at) VALUES (?, ?, ?)
+       ON CONFLICT(path) DO UPDATE SET indexed = excluded.indexed, updated_at = excluded.updated_at`,
+      [p, val, now])
+  }
+  return true
 }

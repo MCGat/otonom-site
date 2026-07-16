@@ -87,6 +87,18 @@ Le build de prod (`npm run build` → `.output/server/index.mjs`) est vérifié 
   raison sociale, SIREN/RCS, adresse, capital, directeur de publication, hébergeur).
 - **Recalibrer les coefficients du simulateur** (`SIM_CONFIG` dans `app/utils/simulateur.ts`) avec OTONOM (ROI un peu agressif).
 
+## Indexation des pages (IMPORTANT)
+L'indexation est pilotée **depuis l'admin** (onglet « Pages & indexation »), pas dans le code.
+**Ne JAMAIS remettre de `robots` en dur dans une page** (`useSeoMeta({ robots: … })`) : la table
+**`page_settings`** est la **seule source de vérité**, lue à la fois par le meta robots (posé dans
+`app/app.vue` au rendu serveur) **et** par `server/routes/sitemap.xml.ts`. C'est ce qui garantit
+qu'une page désindexée sort automatiquement du sitemap (plus de divergence possible).
+- Convention : page **absente** de la table = **indexable**. Seules les exceptions sont stockées.
+- Un préfixe couvre les sous-pages (`/blog` désindexé ⇒ `/blog/mon-article` aussi).
+- Garde-fous (`server/utils/db.ts`) : `LOCKED_INDEXED` (`/`, pages légales — jamais désindexables)
+  et `ALWAYS_NOINDEX` (`/admin`, `/merci` — jamais indexables). Appliqués **côté serveur**.
+- Seules exceptions au `robots` en dur : les pages `admin/*` et `error.vue` (zones techniques).
+
 ## Rédaction d'articles de blog
 **Avant de rédiger ou modifier un article, lire `REDACTION-ARTICLES.md`** (méthode SEO/GEO OTONOM : cocons
 sémantiques, maillage interne, liens externes officiels dosés, vérification factuelle des chiffres, blocs de style,

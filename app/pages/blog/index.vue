@@ -26,8 +26,7 @@
 <script setup lang="ts">
 useSeoMeta({
   title: 'Blog — OTONOM | Transition mobilité, recharge & énergie',
-  description: "Décryptages OTONOM sur la fiscalité du véhicule électrique, la recharge (IRVE), l'énergie et le ROI de la transition des entreprises.",
-  robots: 'noindex, nofollow'
+  description: "Décryptages OTONOM sur la fiscalité du véhicule électrique, la recharge (IRVE), l'énergie et le ROI de la transition des entreprises."
 })
 
 const { data } = await useFetch<{ articles: any[] }>('/api/articles')
