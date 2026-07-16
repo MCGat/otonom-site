@@ -14,6 +14,7 @@
     </div>
     <p class="hero-note reveal">On ne vend ni matériel ni logiciel — on orchestre votre performance.</p>
     <div class="ems-hero reveal">
+      <div ref="stageEl" class="ems-stage">
       <svg class="ems-schema" viewBox="0 0 560 540" role="img" aria-label="Schéma : l'EMS — Energy Management System — pilote les flux d'énergie entre le réseau, le solaire, le stockage, la recharge des véhicules et le bâtiment.">
         <g class="ems-cross" aria-hidden="true">
           <g transform="translate(58,50)"><path d="M-5,0 H5 M0,-5 V5" /></g>
@@ -96,6 +97,28 @@
           <text class="ems-hub-sub" y="27">PILOTAGE</text>
         </g></g>
       </svg>
+
+        <button
+          type="button"
+          class="ems-info"
+          :class="{ open: infoOpen }"
+          :aria-expanded="infoOpen"
+          aria-controls="ems-usecase"
+          aria-label="Voir un cas d'usage de l'EMS"
+          @click="infoOpen = !infoOpen"
+        >i</button>
+
+        <div v-show="infoOpen" id="ems-usecase" class="ems-pop" role="region" aria-label="Cas d'usage de l'EMS">
+          <div class="ems-pop-head">
+            <span class="ems-pop-k">Cas d'usage</span>
+            <button type="button" class="ems-pop-x" aria-label="Fermer" @click="infoOpen = false">×</button>
+          </div>
+          <p class="ems-pop-t">18&nbsp;h — la flotte rentre.</p>
+          <p>Plutôt que de tout recharger d'un coup et de faire bondir votre pointe de puissance, l'EMS lisse la charge sur la nuit&nbsp;: d'abord le solaire stocké dans la journée, puis le réseau aux heures creuses.</p>
+          <p class="ems-pop-out">Au matin, les véhicules sont prêts — au meilleur coût, sans dépasser votre puissance souscrite.</p>
+        </div>
+      </div>
+
       <div class="ems-cap2">
         <span class="ems-cap2-k">EMS — Energy Management System</span>
         <p>Le « cerveau » qui arbitre vos flux d'énergie : production (réseau, solaire), stockage et usages (recharge, bâtiment) — pour un kWh toujours au meilleur coût.</p>
@@ -310,6 +333,25 @@ useSeoMeta({
   "title": "OTONOM — Un seul interlocuteur pour la mobilité, la recharge et l'énergie de votre entreprise",
   "description": "OTONOM orchestre de A à Z la transition mobilité, recharge et énergie des entreprises. Un seul interlocuteur, des résultats chiffrés, sans complexité. Diagnostic gratuit."
 })
+
+// Cas d'usage de l'EMS (bouton « i » sur le coin du hub)
+const infoOpen = ref(false)
+const stageEl = ref<HTMLElement | null>(null)
+
+const onDocClick = (e: MouseEvent) => {
+  if (!infoOpen.value) return
+  if (stageEl.value && !stageEl.value.contains(e.target as Node)) infoOpen.value = false
+}
+const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') infoOpen.value = false }
+
+onMounted(() => {
+  document.addEventListener('click', onDocClick)
+  document.addEventListener('keydown', onKey)
+})
+onBeforeUnmount(() => {
+  document.removeEventListener('click', onDocClick)
+  document.removeEventListener('keydown', onKey)
+})
 </script>
 
 <!-- Styles hero V2 (texte + schéma EMS clair) — scopés à cette page -->
@@ -326,6 +368,40 @@ useSeoMeta({
 
 /* — schéma (thème clair : traits sombres, hub noir) — */
 .ems-schema { width: 100%; height: auto; display: block; }
+
+/* — Cas d'usage : bouton « i » ancré sur le coin haut-droit du hub — */
+/* Le hub occupe (232,222)→(328,318) dans un viewBox de 560×540 : son coin
+   haut-droit tombe donc à 328/560 = 58.57% et 222/540 = 41.11%. En %, le bouton
+   suit le SVG quand il se réduit, tout en gardant une taille de clic fixe. */
+.ems-stage { position: relative; }
+.ems-info {
+  position: absolute; left: 58.57%; top: 41.11%; transform: translate(-50%, -50%);
+  width: 26px; height: 26px; border-radius: 50%; z-index: 3; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--ff-display); font-size: 14px; font-weight: 600; line-height: 1;
+  color: var(--ink); background: var(--l-bg1); border: 1px solid var(--line);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .16);
+  /* Pas d'animation d'apparition : c'est un contrôle cliquable, il doit être
+     visible de façon inconditionnelle (une anim qui ne jouerait pas le rendrait
+     invisible donc inutilisable). */
+  transition: background .2s ease, color .2s ease, border-color .2s ease;
+}
+.ems-info:hover, .ems-info.open { background: var(--ink); color: var(--l-bg1); border-color: var(--ink); }
+.ems-info:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+.ems-pop {
+  position: absolute; top: 47%; right: 0; z-index: 4;
+  width: min(300px, 94%);
+  background: var(--l-bg1); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 16px 18px 18px; box-shadow: 0 14px 40px -12px rgba(0, 0, 0, .3);
+}
+.ems-pop-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.ems-pop-k { font-family: var(--ff-mono); font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted-2); }
+.ems-pop-x { background: none; border: 0; padding: 0 2px; font-size: 17px; line-height: 1; color: var(--muted-2); cursor: pointer; }
+.ems-pop-x:hover { color: var(--ink); }
+.ems-pop-t { font-family: var(--ff-display); font-size: 14.5px; font-weight: 600; color: var(--ink); margin: 0 0 7px; }
+.ems-pop p { font-size: 12.5px; line-height: 1.6; color: var(--muted); margin: 0 0 8px; }
+.ems-pop-out { color: var(--ink-soft) !important; border-top: 1px solid var(--line-soft); padding-top: 9px; margin-bottom: 0 !important; }
 .ems-cross path { stroke: var(--muted-2); stroke-width: 1; opacity: 0; transition: opacity .8s ease 1.5s; }
 .ems-orbit { fill: none; stroke: var(--line-soft); stroke-width: 1; stroke-dasharray: 3 7; opacity: 0; transition: opacity 1s ease .9s; transform-origin: center; transform-box: fill-box; }
 .ems-halo { fill: none; stroke: var(--line-soft); stroke-width: 1; opacity: 0; transition: opacity 1s ease .75s; }
@@ -361,6 +437,9 @@ useSeoMeta({
    réels : on remonte leur taille dans le viewBox pour compenser. */
 @media (max-width: 560px) {
   .ems-lbl { font-size: 15px; }
+  /* Agrandis, les libellés du haut s'élargissent et frôlent la flèche 04 :
+     on les descend (les deux, pour qu'ils restent alignés entre eux). */
+  .ems-b1 .ems-lbl, .ems-b4 .ems-lbl { transform: translateY(10px); }
 }
 
 /* — légende sous le schéma — */
