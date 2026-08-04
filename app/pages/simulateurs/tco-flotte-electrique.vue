@@ -441,6 +441,94 @@
     </div>
 
   </div></section>
+
+  <!-- ══════════════════ V2 — MISE EN FORME ALTERNATIVE ══════════════════
+       Placée sous la V1 pour comparaison. Le pari : cadrer le résultat
+       « par véhicule et par an » plutôt qu'en cumul de flotte. Un chiffre
+       à deux chiffres se saisit d'un coup ; un million demande un effort. -->
+  <section v-if="r" class="section section--light tco-v2"><div class="wrap">
+    <div class="v2-flag"><span>V2</span> Mise en forme alternative</div>
+
+    <div class="v2-grid">
+      <!-- Chiffre principal -->
+      <div class="v2-hero">
+        <span class="v2-eyebrow">Passer à l'électrique, par véhicule</span>
+        <div class="v2-num tabnum">{{ eurosExact(Math.abs(v2.economieAnParVeh)) }}</div>
+        <p class="v2-sub">{{ v2.economieAnParVeh >= 0 ? "d'économies par an" : 'de surcoût par an' }}</p>
+
+        <span class="v2-badge" :class="{ 'is-neg': v2.economieAnParVeh < 0 }">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path v-if="v2.economieAnParVeh >= 0" d="M20 6L9 17l-5-5" />
+            <path v-else d="M12 9v4M12 17h.01M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" />
+          </svg>
+          Coût total {{ v2.economieAnParVeh >= 0 ? 'réduit' : 'augmenté' }} de {{ v2.pct }}&nbsp;%
+        </span>
+
+        <p class="v2-note">Coût total de détention&nbsp;: acquisition, énergie, entretien, assurance, taxes et infrastructure — sur une année pleine.</p>
+      </div>
+
+      <!-- Comparaison des deux motorisations -->
+      <div class="v2-compare">
+        <div class="v2-card">
+          <span class="v2-card-l">{{ v2.libelleTherm }}</span>
+          <b class="v2-card-v tabnum">{{ eurosExact(v2.moisTherm) }}</b>
+          <em>par mois et par véhicule</em>
+          <span class="v2-card-an tabnum">{{ eurosExact(v2.anTherm) }} par an</span>
+        </div>
+        <div class="v2-card" :class="{ 'is-best': v2.economieAnParVeh >= 0 }">
+          <span v-if="v2.economieAnParVeh >= 0" class="v2-reco">Recommandé</span>
+          <span class="v2-card-l">Électrique</span>
+          <b class="v2-card-v tabnum">{{ eurosExact(v2.moisElec) }}</b>
+          <em>par mois et par véhicule</em>
+          <span class="v2-card-an tabnum">{{ eurosExact(v2.anElec) }} par an</span>
+        </div>
+      </div>
+
+      <!-- Échelle : ce que ça donne sur la flotte entière -->
+      <div class="v2-scale">
+        <span class="v2-scale-l">Sur vos {{ r.input.nbVehicules }} véhicules et {{ r.dureeMois }} mois</span>
+        <b class="tabnum">{{ fmtEcart(r.ecart) }}</b>
+        <span class="v2-scale-x">soit {{ euros(r.investInfraTotal) }} d'infrastructure à décaisser</span>
+      </div>
+
+      <!-- Détail verrouillé -->
+      <div v-if="!unlocked" class="v2-lock">
+        <div class="v2-lock-blur" aria-hidden="true">
+          <div v-for="n in 5" :key="n" class="v2-ghost"><span></span><span></span></div>
+        </div>
+        <div class="v2-lock-card">
+          <span class="v2-lock-tag">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
+            Détail réservé
+          </span>
+          <h3>D'où vient ce chiffre</h3>
+          <p>Laissez vos coordonnées pour ouvrir la ventilation poste par poste et le tableau détaillé.</p>
+          <a href="#tcoUnlock" class="btn btn--primary" @click.prevent="allerAuMur">
+            Voir le détail du calcul
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Détail ouvert : ventilation annuelle par véhicule -->
+      <div v-else class="v2-detail">
+        <span class="v2-eyebrow">Ventilation, par véhicule et par an</span>
+        <div class="table-x"><div class="table-x-scroll" tabindex="0" role="region" aria-label="Ventilation annuelle par véhicule">
+          <table class="tco-table">
+            <thead><tr><th>Poste</th><th>{{ v2.libelleTherm }}</th><th>Électrique</th><th>Écart</th></tr></thead>
+            <tbody>
+              <tr v-for="l in v2.lignes" :key="l.label" :class="{ 'is-total': l.total }">
+                <td>{{ l.label }}</td>
+                <td class="tabnum">{{ l.t }}</td>
+                <td class="tabnum">{{ l.e }}</td>
+                <td class="tabnum" :class="{ 'is-strong': l.total }">{{ l.d }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div></div>
+      </div>
+    </div>
+  </div></section>
 </template>
 
 <script setup lang="ts">
@@ -449,7 +537,7 @@ import {
   LABELS_CATEGORIE, LABELS_FINANCEMENT, LABELS_PROFIL,
   type TcoInput, type TcoResult
 } from '~/utils/simulateurs/tcoFlotte'
-import { euros, ecart as fmtEcart, nombre as nombreFr, corpsLead, SCENARIO_LABELS, type ScenarioKey } from '~/utils/simulateurs/core'
+import { euros, eurosExact, ecart as fmtEcart, nombre as nombreFr, corpsLead, SCENARIO_LABELS, type ScenarioKey } from '~/utils/simulateurs/core'
 
 useSeoMeta({
   title: 'Simulateur de TCO flotte électrique — OTONOM | Recharge & infra comprises',
@@ -1029,6 +1117,61 @@ const pointsTable = computed(() => {
   return out
 })
 
+/* ── V2 : les mêmes résultats, cadrés par véhicule et par an ────────────── */
+
+const LIBELLES_MOTORISATION: Record<string, string> = {
+  diesel: 'Diesel', essence: 'Essence',
+  'hybride-essence': 'Hybride essence', 'hybride-diesel': 'Hybride diesel'
+}
+
+const v2 = computed(() => {
+  const val = r.value
+  if (!val) {
+    return { economieAnParVeh: 0, pct: 0, moisTherm: 0, moisElec: 0, anTherm: 0, anElec: 0, libelleTherm: 'Thermique', lignes: [] as any[] }
+  }
+  const N = val.input.nbVehicules!
+  const ans = val.dureeMois / 12
+  const parVehAn = (x: number) => x / N / ans
+
+  const lignes = LIBELLES_POSTES
+    .filter(([k]) => (val.elec.postes[k] as number) || (val.therm.postes[k] as number))
+    .map(([k, label]) => {
+      const t = parVehAn((val.therm.postes[k] as number) || 0)
+      const e = parVehAn((val.elec.postes[k] as number) || 0)
+      const signe = k === 'valeurResiduelle' ? -1 : 1
+      const ecartExact = (t - e) * signe
+      return {
+        label, t: eurosExact(t), e: eurosExact(e),
+        d: (ecartExact >= 0 ? '+' : '−') + eurosExact(Math.abs(ecartExact)), total: false
+      }
+    })
+  const ec = parVehAn(val.ecart)
+  lignes.push({
+    label: 'Coût total de détention',
+    t: eurosExact(parVehAn(val.therm.tcoOperationnel)),
+    e: eurosExact(parVehAn(val.elec.tcoOperationnel)),
+    d: (ec >= 0 ? '+' : '−') + eurosExact(Math.abs(ec)),
+    total: true
+  })
+
+  return {
+    economieAnParVeh: parVehAn(val.ecart),
+    pct: String(Math.abs(Math.round(val.ecartPct * 1000) / 10)).replace('.', ','),
+    moisTherm: val.tcoMensuelParVehiculeTherm,
+    moisElec: val.tcoMensuelParVehiculeElec,
+    anTherm: parVehAn(val.therm.tcoOperationnel),
+    anElec: parVehAn(val.elec.tcoOperationnel),
+    libelleTherm: LIBELLES_MOTORISATION[val.input.motorisationTherm || 'diesel'] || 'Thermique',
+    lignes
+  }
+})
+
+/** La V2 renvoie vers le mur de la V1 : un seul formulaire, un seul lead. */
+function allerAuMur() {
+  document.getElementById('tcoUnlock')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  document.getElementById('tNom')?.focus({ preventScroll: true })
+}
+
 /* ── Lead ────────────────────────────────────────────────────────────────── */
 const unlocked = ref(false)
 const g = reactive({ nom: '', email: '', entreprise: '', tel: '', optinCommercial: false, honey: '' })
@@ -1246,4 +1389,115 @@ function printReport() {
   .tco-curve { stroke: #000; }
   .tco-scen-row { border-color: #000; }
 }
+/* ══════════════════ V2 — mise en forme alternative ══════════════════
+   Reprend le cadrage « par véhicule, par an » du marché, mais sans
+   couleur : le concurrent s'appuie sur un vert d'accent, interdit ici.
+   L'accent se fait donc par l'encre pleine, le filet et l'espace. */
+
+.tco-v2 { border-top: 1px solid var(--line); }
+
+.v2-flag {
+  display: inline-flex; align-items: center; gap: 10px; margin-bottom: 34px;
+  font-family: var(--ff-mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--muted-2);
+}
+.v2-flag span {
+  background: var(--ink); color: var(--bg); padding: 4px 9px; border-radius: 4px;
+  letter-spacing: .1em;
+}
+
+.v2-grid { display: grid; gap: 20px; }
+
+/* ── Chiffre principal ── */
+.v2-hero {
+  background: var(--ink); color: var(--bg);
+  border-radius: var(--radius); padding: clamp(28px, 4vw, 44px);
+}
+.v2-eyebrow {
+  display: block; font-family: var(--ff-mono); font-size: 11px;
+  letter-spacing: .16em; text-transform: uppercase; opacity: .6;
+}
+.v2-num {
+  font-family: var(--ff-display); font-size: clamp(44px, 8vw, 78px);
+  line-height: 1; letter-spacing: -.02em; margin-top: 16px;
+}
+.v2-sub { margin-top: 10px; font-size: 16px; opacity: .78; }
+
+.v2-badge {
+  display: inline-flex; align-items: center; gap: 9px; margin-top: 24px;
+  padding: 9px 16px; border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, .28); background: rgba(255, 255, 255, .07);
+  font-size: 13.5px; font-weight: 500;
+}
+.v2-badge svg { width: 15px; height: 15px; flex: none; }
+.v2-badge.is-neg { border-color: rgba(255, 255, 255, .4); }
+
+.v2-note {
+  margin-top: 24px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, .16);
+  font-size: 13px; opacity: .62; line-height: 1.6; max-width: 62ch;
+}
+
+/* ── Comparaison des deux motorisations ── */
+.v2-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.v2-card {
+  position: relative; border: 1px solid var(--line); border-radius: var(--radius);
+  padding: clamp(22px, 3vw, 30px); background: var(--bg);
+}
+.v2-card.is-best { border-color: var(--ink); border-width: 2px; padding: calc(clamp(22px, 3vw, 30px) - 1px); }
+
+.v2-reco {
+  position: absolute; top: -11px; left: clamp(20px, 3vw, 28px);
+  background: var(--ink); color: var(--bg); border-radius: 999px; padding: 4px 12px;
+  font-family: var(--ff-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+}
+.v2-card-l { display: block; font-family: var(--ff-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted-2); }
+.v2-card-v { display: block; margin-top: 12px; font-family: var(--ff-display); font-size: clamp(26px, 4vw, 38px); line-height: 1; }
+.v2-card em { display: block; margin-top: 8px; font-style: normal; font-size: 13px; color: var(--muted-2); }
+.v2-card-an { display: block; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line-soft); font-size: 13px; color: var(--muted); }
+
+/* ── Rappel d'échelle ── */
+.v2-scale {
+  display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
+  padding: 20px 24px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg-1);
+}
+.v2-scale-l { font-family: var(--ff-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted-2); }
+.v2-scale b { font-family: var(--ff-display); font-size: clamp(20px, 3vw, 26px); color: var(--ink); }
+.v2-scale-x { font-size: 13px; color: var(--muted-2); }
+
+/* ── Détail verrouillé ── */
+/* Le cadre était dimensionné par les lignes floutées : la carte posée
+   par-dessus débordait. On lui garantit la place. */
+.v2-lock { position: relative; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; min-height: 330px; }
+.v2-lock-blur { padding: 30px 28px; display: grid; gap: 20px; filter: blur(5px); opacity: .5; }
+.v2-ghost { display: flex; justify-content: space-between; gap: 40px; }
+.v2-ghost span { height: 11px; border-radius: 3px; background: var(--line); }
+.v2-ghost span:first-child { flex: 1; max-width: 300px; }
+.v2-ghost span:last-child { width: 88px; }
+.v2-ghost:nth-child(2n) span:first-child { max-width: 220px; }
+.v2-ghost:nth-child(3n) span:first-child { max-width: 260px; }
+
+.v2-lock-card {
+  position: absolute; inset: 0; display: grid; place-content: center; justify-items: center;
+  text-align: center; padding: 24px; gap: 4px;
+}
+.v2-lock-tag {
+  display: inline-flex; align-items: center; gap: 8px; margin-bottom: 10px;
+  padding: 7px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg);
+  font-family: var(--ff-mono); font-size: 11px; letter-spacing: .08em; color: var(--muted);
+}
+.v2-lock-tag svg { width: 13px; height: 13px; }
+.v2-lock-card h3 { font-size: clamp(19px, 2.6vw, 24px); }
+.v2-lock-card p { margin-top: 8px; font-size: 14px; color: var(--muted); max-width: 46ch; line-height: 1.6; }
+.v2-lock-card .btn { margin-top: 20px; }
+
+/* ── Détail ouvert ── */
+.v2-detail { border: 1px solid var(--line); border-radius: var(--radius); padding: 26px 28px; }
+.v2-detail .table-x { margin-top: 18px; }
+
+@media (max-width: 720px) {
+  .v2-compare { grid-template-columns: 1fr; }
+  .v2-scale { flex-direction: column; gap: 6px; }
+}
+
+@media print { .tco-v2 { display: none !important; } }
 </style>
