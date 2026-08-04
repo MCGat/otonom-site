@@ -496,6 +496,77 @@
 
   </div></section>
 
+  <!-- ════════ CONTENU SEO / GEO ════════
+       Toujours visible, hors du mur : c'est ce que lisent Google et les moteurs
+       de réponse. Affirmations auto-portantes (chaque fait se comprend hors
+       contexte, avec sa donnée datée), FAQ formulée en vraies requêtes,
+       tableau réutilisable — conformément à REDACTION-ARTICLES.md §6. -->
+  <section class="section section--tight tco-seo"><div class="wrap">
+    <div class="sec-head">
+      <span class="kicker">Comprendre le calcul</span>
+      <h2>Le TCO d'une flotte électrique&nbsp;: méthode, postes et pièges</h2>
+    </div>
+
+    <div class="article-body">
+      <p>Le <strong>TCO</strong> — <em>total cost of ownership</em>, ou <strong>coût total de possession</strong> — est le seul indicateur qui permette de comparer honnêtement un véhicule électrique et un véhicule thermique. Comparer deux prix d'achat, ou deux loyers, revient à comparer deux icebergs à la hauteur de leur partie émergée&nbsp;: l'électrique concentre son coût à l'acquisition puis coûte peu à l'usage, le thermique fait l'inverse.</p>
+
+      <p>Ce simulateur détaille un poste que très peu d'outils chiffrent&nbsp;: <strong>l'infrastructure de recharge</strong>. Nombre de points de charge, travaux, raccordement, pilotage et durée d'amortissement sont calculés séparément, et l'on distingue ce qui pèse sur le <strong>coût économique</strong> de ce qui pèse sur la <strong>trésorerie</strong>. Bornes et raccordement représentent un investissement réel, et c'est précisément le poste qui surprend les entreprises six mois après la décision.</p>
+
+      <h3>Qu'est-ce que le TCO d'un véhicule d'entreprise&nbsp;?</h3>
+      <p>Le TCO d'un véhicule d'entreprise est la somme de tous les coûts supportés sur sa durée de détention, généralement 36 à 60 mois&nbsp;: acquisition ou loyers, énergie, entretien, pneumatiques, assurance, fiscalité, gestion administrative et infrastructure, dont on retranche la valeur de revente. Ramené au mois ou au kilomètre, il donne le <strong>prix de revient kilométrique</strong> (PRK), l'indicateur de référence des gestionnaires de flotte.</p>
+
+      <h3>Les postes qui font l'écart entre électrique et thermique</h3>
+      <table>
+        <thead><tr><th>Poste</th><th>Ce qui change en électrique</th></tr></thead>
+        <tbody>
+          <tr><td>Énergie</td><td>Recharger sur site en heures creuses coûte nettement moins cher qu'un plein de carburant, et la TVA sur l'électricité est récupérable à 100&nbsp;% contre 80&nbsp;% sur l'essence et le gazole d'un véhicule de tourisme</td></tr>
+          <tr><td>Entretien</td><td>Ni vidange, ni embrayage, ni courroie&nbsp;; un freinage moins sollicité grâce à la récupération d'énergie</td></tr>
+          <tr><td>Fiscalité</td><td>Exonération des deux taxes annuelles, amortissement déductible jusqu'à 30&nbsp;000&nbsp;€, abattement de jusqu'à 70&nbsp;% sur l'avantage en nature</td></tr>
+          <tr><td>Malus</td><td>Aucun malus CO₂ ni malus au poids pour un véhicule 100&nbsp;% électrique</td></tr>
+          <tr><td>Pneumatiques</td><td><em>Plus cher</em>&nbsp;: le couple et la masse accélèrent l'usure</td></tr>
+          <tr><td>Assurance</td><td><em>Plus cher</em>&nbsp;: pièces et réparations coûtent davantage</td></tr>
+          <tr><td>Valeur de revente</td><td><em>Plus faible</em>&nbsp;: c'est l'hypothèse la plus déterminante et la plus incertaine du calcul</td></tr>
+        </tbody>
+      </table>
+
+      <div class="article-callout">
+        <span class="callout-label">À retenir</span>
+        <p>Le TCO d'une flotte électrique dépend surtout de trois variables&nbsp;: le <strong>kilométrage annuel</strong>, le <strong>lieu de recharge</strong> et la <strong>valeur de revente</strong>. En dessous d'un certain kilométrage, ou avec une recharge majoritairement en borne publique rapide, l'électrique peut coûter plus cher. Un calcul sérieux se fait sur vos usages réels, jamais sur une moyenne.</p>
+      </div>
+
+      <h3>Pourquoi l'infrastructure de recharge doit entrer dans le calcul</h3>
+      <p>Une borne dure huit à dix ans, un véhicule quatre. Imputer la totalité de l'investissement au premier cycle de véhicules est l'erreur qui fait conclure à tort que l'électrique n'est pas rentable&nbsp;; l'ignorer complètement produit l'erreur inverse. Ce simulateur impute la <strong>quote-part</strong> correspondant à la durée analysée, tout en affichant l'investissement total à décaisser et le mois où l'entreprise l'a récupéré.</p>
+      <p>Le dimensionnement dépend des usages et non du nombre de véhicules&nbsp;: une flotte qui rentre au dépôt chaque nuit partage quelques points de charge lents, là où une flotte itinérante réclame de la recharge rapide, bien plus coûteuse. Depuis le 1ᵉʳ janvier 2025, certains bâtiments non résidentiels de plus de vingt places de stationnement doivent d'ailleurs être équipés d'au moins un point de recharge par tranche de vingt places&nbsp;: notre page <NuxtLink to="/expertises">expertises</NuxtLink> décrit le périmètre que nous couvrons sur ce sujet.</p>
+
+      <h3>Les erreurs qui faussent une comparaison de TCO</h3>
+      <ul>
+        <li><strong>Comparer sur des bases différentes</strong> — même segment, même durée, même kilométrage, sinon le résultat ne veut rien dire.</li>
+        <li><strong>Retenir le prix de la recharge publique rapide</strong> alors que l'essentiel des recharges d'une flotte organisée se fait sur site ou à domicile, à un tarif bien inférieur.</li>
+        <li><strong>Compter deux fois les services</strong> — un loyer de location longue durée inclut souvent l'entretien, les pneumatiques et l'assurance.</li>
+        <li><strong>Oublier la fiscalité</strong>, qui alourdit le coût d'un thermique et allège celui d'un électrique.</li>
+        <li><strong>Prendre une valeur de revente datée</strong>&nbsp;: quelques points d'écart suffisent à inverser une conclusion.</li>
+      </ul>
+
+      <h3>Qui est concerné dans l'entreprise</h3>
+      <p>Le <NuxtLink to="/daf">directeur financier</NuxtLink> arbitre sur le coût complet et la trésorerie, le <NuxtLink to="/dirigeants">dirigeant</NuxtLink> sur le moment où la décision devient gagnante, les <NuxtLink to="/services-generaux">services généraux</NuxtLink> sur le dimensionnement de l'infrastructure et le <NuxtLink to="/drh">DRH</NuxtLink> sur l'avantage en nature des véhicules de fonction. C'est parce que ces quatre lectures se contredisent souvent qu'un chiffre unique et partagé fait gagner du temps.</p>
+
+      <h2>Questions fréquentes sur le TCO d'une flotte électrique</h2>
+      <div class="article-faq">
+        <details><summary>Comment calculer le TCO d'un véhicule électrique&nbsp;?</summary><div class="faq-a">On additionne, sur la durée de détention&nbsp;: l'acquisition ou les loyers, l'énergie, l'entretien, les pneumatiques, l'assurance, les taxes, la gestion et la quote-part d'infrastructure de recharge, puis on retranche la valeur de revente. Le résultat se ramène ensuite au mois et au kilomètre pour être comparable à un véhicule thermique équivalent.</div></details>
+        <details><summary>Une flotte électrique coûte-t-elle moins cher qu'une flotte thermique&nbsp;?</summary><div class="faq-a">Dans la plupart des usages d'entreprise — roulage régulier et recharge principalement sur site — oui&nbsp;: le surcoût d'acquisition est plus que compensé par l'énergie, l'entretien et la fiscalité. En dessous d'un certain kilométrage annuel, ou avec une recharge majoritairement publique, le résultat peut s'inverser. C'est pourquoi le calcul doit porter sur vos usages réels.</div></details>
+        <details><summary>L'infrastructure de recharge est-elle comprise dans le TCO&nbsp;?</summary><div class="faq-a">Elle devrait l'être, et c'est rarement le cas dans les outils existants. Ce simulateur impute la quote-part d'amortissement correspondant à la durée analysée — une borne servant huit à dix ans quand un véhicule est renouvelé au bout de quatre — et affiche séparément l'investissement total à décaisser.</div></details>
+        <details><summary>Quelle est la variable la plus déterminante du calcul&nbsp;?</summary><div class="faq-a">La valeur de revente. Elle se soustrait en bout de chaîne, ce qui lui donne un effet de levier disproportionné&nbsp;: quelques points d'écart déplacent le résultat de plusieurs dizaines de milliers d'euros sur une flotte. Viennent ensuite le kilométrage annuel et le mix de recharge.</div></details>
+        <details><summary>Quels avantages fiscaux réduisent le TCO d'un véhicule électrique en 2026&nbsp;?</summary><div class="faq-a">Un véhicule 100&nbsp;% électrique est exonéré des deux taxes annuelles sur l'affectation à des fins économiques, échappe au malus CO₂ comme au malus au poids, bénéficie d'un amortissement déductible jusqu'à 30&nbsp;000&nbsp;€ et d'un abattement de jusqu'à 70&nbsp;% sur l'avantage en nature. Le détail figure dans notre article sur <NuxtLink to="/blog/fiscalite-vehicule-electrique-2026">la fiscalité du véhicule électrique en entreprise</NuxtLink>.</div></details>
+        <details><summary>Qui peut affiner ce calcul avec mes données réelles&nbsp;?</summary><div class="faq-a">OTONOM, orchestrateur de la transition mobilité, recharge et énergie des entreprises&nbsp;: nous auditons vos usages, calculons le coût complet de chaque scénario, coordonnons installateurs, énergéticiens et financeurs, puis vérifions les gains sur facture. Un seul interlocuteur, de A à Z.</div></details>
+      </div>
+
+      <h3>Pour aller plus loin</h3>
+      <p>Les règles applicables sont publiques et vérifiables&nbsp;: les <a href="https://entreprendre.service-public.gouv.fr/vosdroits/F22203" target="_blank" rel="noopener noreferrer">taxes annuelles sur l'affectation des véhicules à des fins économiques</a> et les <a href="https://www.urssaf.fr/accueil/employeur/cotisations/avantages-en-nature.html" target="_blank" rel="noopener noreferrer">règles d'évaluation de l'avantage en nature</a> sont décrites par l'administration, et le <a href="https://www.ecologie.gouv.fr/politiques-publiques/fiscalite-environnementale-relative-aux-vehicules" target="_blank" rel="noopener noreferrer">ministère de la Transition écologique</a> publie le cadre de la fiscalité environnementale des véhicules.</p>
+
+      <hr>
+      <p class="disclaimer">Barèmes appliqués selon les millésimes traversés par la simulation, à partir du 01/01/2026. Montants exprimés en «&nbsp;jusqu'à&nbsp;», donnés à titre indicatif et non contractuel — à confirmer avec votre expert-comptable. Les valeurs de revente et les coûts d'infrastructure sont des ordres de grandeur, affinés lors de l'audit gratuit OTONOM.</p>
+    </div>
+  </div></section>
 </template>
 
 <script setup lang="ts">

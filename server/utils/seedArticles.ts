@@ -1,7 +1,7 @@
 // Articles de blog embarqués (seed). Insérés au démarrage s'ils n'existent pas encore
 // en base — permet de livrer le contenu en prod via git (BDD gitignorée).
 // Généré depuis la BDD locale ; pour modifier un article publié, passer par l'admin.
-import { getArticleBySlug, upsertArticle, type Article } from './db'
+import { getArticleBySlug, listArticles, upsertArticle, type Article } from './db'
 
 const SEED_ARTICLES: Article[] = [
   {
@@ -54,6 +54,29 @@ const SEED_ARTICLES: Article[] = [
   }
 ]
 
+/**
+ * Liens internes devenus obsolètes dans le CORPS des articles déjà en base.
+ * Le seed n'écrase jamais un article existant : sans cette migration, les
+ * articles déjà publiés continueraient de pointer vers d'anciennes URLs — qui
+ * redirigent, mais une redirection dans un lien interne dilue le référencement.
+ */
+const LIENS_A_CORRIGER: [string, string][] = [
+  ['href="/simulateur"', 'href="/simulateurs/transition"'],
+  ['href="/simulateur-tco"', 'href="/simulateurs/tco-flotte-electrique"']
+]
+
+async function migrerLiensInternes(): Promise<void> {
+  for (const a of await listArticles()) {
+    if (!a.body) continue
+    let corps = a.body
+    for (const [avant, apres] of LIENS_A_CORRIGER) corps = corps.split(avant).join(apres)
+    if (corps !== a.body) {
+      await upsertArticle({ ...a, body: corps })
+      console.log('[seed] liens internes mis à jour :', a.slug)
+    }
+  }
+}
+
 /** Insère les articles seed manquants (idempotent : n'écrase jamais un article existant). */
 export async function seedArticles(): Promise<void> {
   for (const a of SEED_ARTICLES) {
@@ -67,4 +90,5 @@ export async function seedArticles(): Promise<void> {
       console.error('[seed] échec pour', a.slug, e)
     }
   }
+  try { await migrerLiensInternes() } catch (e) { console.error('[seed] migration des liens', e) }
 }

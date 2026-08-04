@@ -1,5 +1,5 @@
 <template>
-  <div class="admin">
+  <div class="admin" :class="{ 'admin--light': isBlog }">
     <header class="admin-bar">
       <div class="admin-bar-in">
         <NuxtLink to="/admin" class="admin-brand" aria-label="OTONOM — admin"><OtonomLogo /><span>Admin</span></NuxtLink>
@@ -43,6 +43,22 @@ async function onLogout() {
 
 <style scoped>
 .admin { min-height: 100vh; background: var(--bg); }
+
+/* L'onglet BLOG seul tourne en thème clair : la rédaction se relit mieux sur
+   blanc. On rebascule les tokens une fois ici et toutes ses pages suivent,
+   puisqu'elles ne peignent qu'avec des variables. Fond de page blanc, barres
+   et panneaux d'un gris à peine marqué pour garder la hiérarchie. */
+.admin--light {
+  --bg: var(--l-bg1); --bg-1: var(--l-bg); --bg-2: var(--l-bg2); --panel: var(--l-panel);
+  --ink: var(--l-ink); --ink-soft: var(--l-ink-soft); --muted: var(--l-muted); --muted-2: var(--l-muted2);
+  --line: rgba(0, 0, 0, var(--l-line-a)); --line-soft: rgba(0, 0, 0, var(--l-line-soft-a));
+  --white: var(--l-ink); --halo: rgba(0, 0, 0, .22);
+  color: var(--ink);
+}
+/* Les boutons globaux gardent une couleur de texte codée en dur : on la reprend. */
+.admin--light :deep(.btn--primary) { background: var(--l-ink); color: var(--l-bg1); }
+.admin--light :deep(.btn--primary:hover) { box-shadow: 0 0 30px -8px rgba(0, 0, 0, .32); }
+.admin--light :deep(.btn--ghost:hover) { background: rgba(0, 0, 0, .045); }
 .admin-bar { position: sticky; top: 0; z-index: 20; background: var(--bg-1); border-bottom: 1px solid var(--line); }
 .admin-bar-in { max-width: 1140px; margin: 0 auto; padding: 0 clamp(20px, 5vw, 40px); height: 64px; display: flex; align-items: center; justify-content: space-between; }
 .admin-brand { display: flex; align-items: center; gap: 12px; color: var(--ink); }

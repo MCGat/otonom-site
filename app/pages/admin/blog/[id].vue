@@ -28,7 +28,61 @@
           <button type="button" @mousedown.prevent="insert('faq')">FAQ</button>
         </div>
 
-        <div ref="bodyEl" class="article-body ed-body" contenteditable="true" @input="markDirty" />
+        <div ref="bodyEl" class="article-body ed-body" contenteditable="true" @input="onBodyInput" />
+
+        <!-- Inspecteur de liens : se recalcule à chaque frappe, pour voir en un
+             coup d'œil ce qui est maillé et ce qui pointe dans le vide. -->
+        <section class="lk-panel">
+          <header class="lk-panel-h">
+            <h2>Liens de l'article</h2>
+            <span class="lk-count">{{ liens.length }} lien{{ liens.length > 1 ? 's' : '' }}</span>
+          </header>
+
+          <p v-if="liensCasses.length" class="lk-alert">
+            {{ liensCasses.length }} lien{{ liensCasses.length > 1 ? 's' : '' }} interne{{ liensCasses.length > 1 ? 's' : '' }}
+            ne répond{{ liensCasses.length > 1 ? 'ent' : '' }} pas — l'article publié enverrait le lecteur sur une 404.
+          </p>
+
+          <div class="lk-cols">
+            <div class="lk-col">
+              <div class="lk-col-h"><span>Liens internes</span><span class="lk-n">{{ liensInternes.length }}</span></div>
+              <ul v-if="liensInternes.length" class="lk-list">
+                <li v-for="l in liensInternes" :key="l.href" class="lk-item" :class="`is-${l.etat}`">
+                  <div class="lk-line">
+                    <a :href="l.href" target="_blank" rel="noopener" class="lk-href">{{ l.href }}</a>
+                    <span v-if="l.n > 1" class="lk-x">×{{ l.n }}</span>
+                  </div>
+                  <div class="lk-meta">
+                    <span class="lk-dot" />{{ l.note }}
+                    <span class="lk-anchor">« {{ l.libelle }} »</span>
+                  </div>
+                </li>
+              </ul>
+              <p v-else class="lk-empty">Aucun lien interne. Un article isolé ne fait pas de cocon.</p>
+            </div>
+
+            <div class="lk-col">
+              <div class="lk-col-h"><span>Liens externes</span><span class="lk-n">{{ liensExternes.length }}</span></div>
+              <ul v-if="liensExternes.length" class="lk-list">
+                <li v-for="l in liensExternes" :key="l.href" class="lk-item">
+                  <div class="lk-line">
+                    <a :href="l.href" target="_blank" rel="noopener" class="lk-href">{{ l.hote }}</a>
+                    <span v-if="l.officiel" class="lk-off">Officiel</span>
+                    <span v-if="l.n > 1" class="lk-x">×{{ l.n }}</span>
+                  </div>
+                  <div class="lk-meta">
+                    <span class="lk-anchor">« {{ l.libelle }} »</span>
+                  </div>
+                </li>
+              </ul>
+              <p v-else class="lk-empty">Aucun lien externe. Une source officielle citée renforce la crédibilité.</p>
+            </div>
+          </div>
+
+          <ul v-if="liensAutres.length" class="lk-autres">
+            <li v-for="l in liensAutres" :key="l.href"><code>{{ l.href }}</code> — {{ l.note }}</li>
+          </ul>
+        </section>
       </div>
 
       <aside class="editor-side">
@@ -52,6 +106,23 @@
         <label class="ed-label">Extrait (résumé de liste)</label>
         <textarea v-model="form.excerpt" class="ed-input" rows="3" @input="markDirty" />
 
+        <label class="ed-label">Cocon sémantique</label>
+        <select v-model="form.cocon" class="ed-input" @change="markDirty">
+          <option value="">— Non classé —</option>
+          <option v-for="c in COCONS" :key="c.cle" :value="c.cle">{{ c.label }}</option>
+        </select>
+        <p v-if="!form.cocon && coconDevine" class="ed-help">Deviné d'après le slug : <strong>{{ coconDevine }}</strong>. Choisissez-le pour figer le classement.</p>
+
+        <label class="ed-label">Tags <small>séparés par des virgules</small></label>
+        <input v-model="form.tags" class="ed-input" placeholder="fiscalité, flotte, recharge" @input="markDirty">
+        <div v-if="tagsApercu.length" class="ed-tags">
+          <span v-for="t in tagsApercu" :key="t" class="ed-tag">{{ t }}</span>
+        </div>
+        <p v-if="tagsConnus.length" class="ed-help">
+          Déjà utilisés :
+          <button v-for="t in tagsConnus" :key="t" type="button" class="ed-tag-add" @click="ajouterTag(t)">+ {{ t }}</button>
+        </p>
+
         <label class="ed-label">Image de couverture (URL)</label>
         <input v-model="form.cover" class="ed-input" placeholder="/assets/img/… ou https://…" @input="markDirty">
         <img v-if="form.cover" :src="form.cover" alt="" class="ed-cover-prev">
@@ -67,14 +138,17 @@
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 useSeoMeta({ title: 'Éditeur — OTONOM Admin', robots: 'noindex, nofollow' })
 
+import { COCONS, devinerCocon, labelCocon } from '~/utils/cocons'
+
 const route = useRoute()
+const router = useRouter()
 const isNew = route.params.id === 'new'
 
 type Status = 'draft' | 'scheduled' | 'published'
 
 const form = reactive({
   id: null as number | null, title: '', slug: '', excerpt: '', cover: '',
-  status: 'draft' as Status, body: '',
+  status: 'draft' as Status, body: '', tags: '', cocon: '',
   publishedAtLocal: '' // valeur du champ datetime-local (heure locale, pas UTC)
 })
 const slugTouched = ref(false)
@@ -103,10 +177,37 @@ if (!isNew) {
     Object.assign(form, {
       id: a.id, title: a.title, slug: a.slug, excerpt: a.excerpt || '', cover: a.cover || '',
       status: (a.status || 'draft') as Status, body: a.body || '',
+      tags: a.tags || '', cocon: a.cocon || '',
       publishedAtLocal: a.status === 'scheduled' ? isoToLocalInput(a.publishedAt) : ''
     })
     slugTouched.value = true
   }
+}
+
+/* Tous les articles : sert au contrôle des liens internes /blog/… ET à proposer
+   les tags déjà en usage (pour éviter « recharge » et « Recharge » côté filtres). */
+const { data: tousData } = await useFetch<{ articles: any[] }>('/api/admin/articles')
+const tous = computed(() => tousData.value?.articles || [])
+
+const estEnLigne = (a: any) =>
+  a.status === 'published' || (a.status === 'scheduled' && !!a.publishedAt && a.publishedAt <= new Date().toISOString())
+
+/* ── Cocon & tags ── */
+const coconDevine = computed(() => labelCocon(devinerCocon(form.slug, form.title)))
+const tagsApercu = computed(() => form.tags.split(',').map((t) => t.trim()).filter(Boolean))
+
+const tagsConnus = computed(() => {
+  const set = new Set<string>()
+  for (const a of tous.value) {
+    for (const t of String(a.tags || '').split(',')) { const v = t.trim(); if (v) set.add(v) }
+  }
+  const deja = new Set(tagsApercu.value.map((t) => t.toLowerCase()))
+  return [...set].filter((t) => !deja.has(t.toLowerCase())).sort((a, b) => a.localeCompare(b, 'fr'))
+})
+
+function ajouterTag(t: string) {
+  form.tags = [...tagsApercu.value, t].join(', ')
+  markDirty()
 }
 
 /* ── Statut : libellés, aides et état « en ligne » ── */
@@ -154,6 +255,7 @@ const bodyEl = ref<HTMLElement | null>(null)
 function warnUnload(e: BeforeUnloadEvent) { if (dirty.value) { e.preventDefault(); e.returnValue = '' } }
 onMounted(() => {
   if (bodyEl.value) bodyEl.value.innerHTML = form.body || '<p>Commencez à écrire…</p>'
+  scanLiens()
   window.addEventListener('beforeunload', warnUnload)
 })
 onBeforeUnmount(() => window.removeEventListener('beforeunload', warnUnload))
@@ -165,11 +267,86 @@ onBeforeRouteLeave(() => {
 const slugify = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 120)
 function onTitle() { markDirty(); if (!slugTouched.value) form.slug = slugify(form.title) }
 
+/* ══ Inspecteur de liens ══════════════════════════════════════════════════
+   Relit les <a> du contenu à chaque frappe. Les internes sont confrontés au
+   routeur (la route existe-t-elle ?) et à la liste des articles (le billet
+   visé est-il en ligne ?) : un lien vers un brouillon renverrait une 404. */
+interface Lien {
+  href: string; libelle: string; n: number
+  genre: 'interne' | 'externe' | 'autre'
+  etat: 'ok' | 'brouillon' | 'introuvable'
+  note: string; hote?: string; officiel?: boolean
+}
+
+const liens = ref<Lien[]>([])
+const DOMAINES_OFFICIELS = /(^|\.)(gouv\.fr|ademe\.fr|urssaf\.fr|service-public\.fr|europa\.eu)$/
+
+function etatInterne(chemin: string): { etat: Lien['etat']; note: string } {
+  const sansAncre = chemin.split('#')[0]!.split('?')[0]! || '/'
+  const m = /^\/blog\/([^/]+)\/?$/.exec(sansAncre)
+  if (m) {
+    const a = tous.value.find((x) => x.slug === m[1])
+    if (!a) return { etat: 'introuvable', note: 'Article inexistant' }
+    if (!estEnLigne(a)) return { etat: 'brouillon', note: `« ${a.title} » — pas encore en ligne` }
+    return { etat: 'ok', note: `« ${a.title} » — en ligne` }
+  }
+  try {
+    if (router.resolve(sansAncre).matched.length) return { etat: 'ok', note: 'Page du site' }
+  } catch { /* chemin non résolvable → traité comme introuvable */ }
+  return { etat: 'introuvable', note: 'Aucune page à cette adresse' }
+}
+
+function analyser(href: string): Omit<Lien, 'libelle' | 'n'> {
+  const h = href.trim()
+  if (!h || h.startsWith('#')) return { href: h, genre: 'autre', etat: 'ok', note: 'Ancre interne à la page' }
+  if (/^(mailto|tel):/i.test(h)) return { href: h, genre: 'autre', etat: 'ok', note: 'Contact direct' }
+
+  // Une URL absolue vers otonom.fr est un lien interne déguisé : on le ramène au chemin.
+  if (/^https?:\/\//i.test(h)) {
+    let u: URL
+    try { u = new URL(h) } catch { return { href: h, genre: 'autre', etat: 'introuvable', note: 'URL illisible' } }
+    if (/(^|\.)otonom\.fr$/.test(u.hostname)) {
+      const r = etatInterne(u.pathname + u.hash)
+      return { href: u.pathname + u.search + u.hash, genre: 'interne', ...r }
+    }
+    return {
+      href: h, genre: 'externe', etat: 'ok', hote: u.hostname.replace(/^www\./, ''),
+      officiel: DOMAINES_OFFICIELS.test(u.hostname), note: 'Lien sortant'
+    }
+  }
+
+  if (h.startsWith('/')) return { href: h, genre: 'interne', ...etatInterne(h) }
+  return { href: h, genre: 'autre', etat: 'introuvable', note: 'Adresse relative — préférez un chemin absolu (/…)' }
+}
+
+function scanLiens() {
+  const el = bodyEl.value
+  if (!el) { liens.value = []; return }
+  const par = new Map<string, Lien>()
+  for (const a of Array.from(el.querySelectorAll('a[href]'))) {
+    const base = analyser(a.getAttribute('href') || '')
+    if (!base.href) continue
+    const vu = par.get(base.href)
+    if (vu) { vu.n++; continue }
+    par.set(base.href, { ...base, libelle: (a.textContent || '').trim().slice(0, 70) || '(sans texte)', n: 1 })
+  }
+  liens.value = [...par.values()]
+}
+
+const liensInternes = computed(() => liens.value.filter((l) => l.genre === 'interne'))
+const liensExternes = computed(() => liens.value.filter((l) => l.genre === 'externe'))
+const liensAutres = computed(() => liens.value.filter((l) => l.genre === 'autre'))
+const liensCasses = computed(() => liensInternes.value.filter((l) => l.etat !== 'ok'))
+
+function onBodyInput() { markDirty(); scanLiens() }
+/* La liste des articles arrive après le rendu : les états « brouillon » en dépendent. */
+watch(tous, scanLiens)
+
 const cmd = (c: string) => document.execCommand(c, false)
 const block = (tag: string) => document.execCommand('formatBlock', false, tag)
 function addLink() {
   const url = prompt('URL du lien :')
-  if (url) document.execCommand('createLink', false, url)
+  if (url) { document.execCommand('createLink', false, url); onBodyInput() }
 }
 const BLOCKS: Record<string, string> = {
   callout: '<div class="article-callout"><span class="callout-label">À retenir</span><p>Votre point clé ici.</p></div><p><br></p>',
@@ -179,6 +356,7 @@ const BLOCKS: Record<string, string> = {
 function insert(type: string) {
   bodyEl.value?.focus()
   document.execCommand('insertHTML', false, BLOCKS[type])
+  onBodyInput()
 }
 
 const saving = ref(false)
@@ -200,6 +378,7 @@ async function save() {
       body: {
         id: form.id, title: form.title, slug: form.slug, excerpt: form.excerpt,
         cover: form.cover, body: form.body, status: form.status,
+        tags: form.tags, cocon: form.cocon,
         publishedAt: form.status === 'scheduled' ? scheduleIso.value : undefined
       }
     })
@@ -254,6 +433,49 @@ async function save() {
 .ed-input:focus { outline: none; border-color: var(--ink); }
 textarea.ed-input { resize: vertical; }
 .ed-cover-prev { width: 100%; border-radius: 9px; border: 1px solid var(--line-soft); margin-top: 6px; filter: grayscale(1); }
+.ed-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.ed-tag { font-family: var(--ff-mono); font-size: 10.5px; color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 3px 9px; }
+.ed-tag-add { font-family: var(--ff-mono); font-size: 10.5px; color: var(--muted-2); background: none; border: 0; padding: 2px 5px 2px 0; cursor: pointer; }
+.ed-tag-add:hover { color: var(--ink); }
+
+/* ── Inspecteur de liens ── */
+.lk-panel { margin-top: 26px; border: 1px solid var(--line); border-radius: var(--radius); padding: 20px clamp(16px, 2.4vw, 26px); background: var(--bg-1); }
+.lk-panel-h { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; }
+.lk-panel-h h2 { font-size: 15px; letter-spacing: -.01em; }
+.lk-count { font-family: var(--ff-mono); font-size: 11px; color: var(--muted-2); }
+
+.lk-alert { font-size: 12.5px; line-height: 1.55; color: var(--ink); border-left: 2px solid var(--ink); padding-left: 11px; margin-top: 14px; }
+
+.lk-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; margin-top: 18px; }
+.lk-col-h { display: flex; align-items: center; justify-content: space-between; font-family: var(--ff-mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted-2); padding-bottom: 9px; border-bottom: 1px solid var(--line); }
+.lk-n { color: var(--ink); }
+
+.lk-list { list-style: none; margin: 0; padding: 0; }
+.lk-item { padding: 11px 0; border-bottom: 1px solid var(--line-soft); }
+.lk-item:last-child { border-bottom: 0; }
+.lk-line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.lk-href { font-family: var(--ff-mono); font-size: 12px; color: var(--ink); word-break: break-all; }
+.lk-href:hover { text-decoration: underline; text-underline-offset: 3px; }
+.lk-x { font-family: var(--ff-mono); font-size: 10px; color: var(--muted-2); }
+.lk-off { font-family: var(--ff-mono); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 2px 7px; }
+
+.lk-meta { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; font-size: 11.5px; color: var(--muted-2); margin-top: 5px; }
+.lk-anchor { font-style: italic; opacity: .75; }
+/* Pastille d'état : pleine = OK, creuse = brouillon, barrée = introuvable.
+   Aucune couleur — la forme suffit, et la DA l'impose. */
+.lk-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ink); flex: none; opacity: .5; }
+.is-brouillon .lk-dot { background: none; border: 1px solid var(--ink); opacity: .8; }
+.is-brouillon .lk-meta, .is-introuvable .lk-meta { color: var(--ink-soft); }
+.is-introuvable .lk-dot { background: none; border: 1px solid var(--ink); position: relative; opacity: 1; }
+.is-introuvable .lk-dot::after { content: ''; position: absolute; inset: -2px auto -2px 2px; width: 1px; background: var(--ink); transform: rotate(45deg); }
+.is-introuvable .lk-href { text-decoration: line-through; text-decoration-thickness: 1px; }
+
+.lk-empty { font-size: 12px; color: var(--muted-2); line-height: 1.55; padding: 12px 0; }
+.lk-autres { list-style: none; margin: 16px 0 0; padding: 13px 0 0; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--muted-2); display: grid; gap: 5px; }
+.lk-autres code { font-family: var(--ff-mono); color: var(--muted); }
+
+@media (max-width: 720px) { .lk-cols { grid-template-columns: 1fr; gap: 20px; } }
+
 .ed-error { font-size: 13px; color: var(--ink-soft); border-left: 2px solid var(--ink); padding-left: 10px; }
 .ed-saved { font-family: var(--ff-mono); font-size: 12px; color: var(--muted); }
 

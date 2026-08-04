@@ -65,6 +65,7 @@ const SCHEMA: Array<{ sqlite: string; mysql?: string }> = [
       slug TEXT UNIQUE NOT NULL, title TEXT NOT NULL,
       excerpt TEXT, cover TEXT, body TEXT,
       status TEXT NOT NULL DEFAULT 'draft',
+      tags TEXT, cocon TEXT,
       created_at TEXT, updated_at TEXT, published_at TEXT
     )`,
     mysql: `CREATE TABLE IF NOT EXISTS articles (
@@ -72,6 +73,7 @@ const SCHEMA: Array<{ sqlite: string; mysql?: string }> = [
       slug VARCHAR(200) UNIQUE NOT NULL, title VARCHAR(300) NOT NULL,
       excerpt TEXT, cover VARCHAR(500), body MEDIUMTEXT,
       status VARCHAR(20) NOT NULL DEFAULT 'draft',
+      tags VARCHAR(500), cocon VARCHAR(60),
       created_at VARCHAR(40), updated_at VARCHAR(40), published_at VARCHAR(40)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`
   },
@@ -133,6 +135,8 @@ async function initDb() {
   // 2b) Migrations additives (colonnes ajoutées après la 1re mise en prod)
   await ensureColumn('form_settings', 'pages', 'TEXT')
   await ensureColumn('leads', 'is_test', 'INTEGER NOT NULL DEFAULT 0')
+  await ensureColumn('articles', 'tags', engine === 'mysql' ? 'VARCHAR(500)' : 'TEXT')
+  await ensureColumn('articles', 'cocon', engine === 'mysql' ? 'VARCHAR(60)' : 'TEXT')
 
   // 3) Données par défaut
   await seedDefaults(cfg)
@@ -310,6 +314,10 @@ export interface Article {
   cover?: string
   body?: string
   status?: ArticleStatus
+  /** Mots-clés libres, stockés en une chaîne « a, b, c » (voir normaliserTags). */
+  tags?: string
+  /** Cocon sémantique d'appartenance — clé de COCONS (app/utils/cocons.ts). */
+  cocon?: string
   createdAt?: string
   updatedAt?: string
   publishedAt?: string
@@ -319,8 +327,35 @@ export type ArticleStatus = 'draft' | 'scheduled' | 'published'
 
 const mapArticle = (r: any): Article => ({
   id: r.id, slug: r.slug, title: r.title, excerpt: r.excerpt, cover: r.cover, body: r.body,
-  status: r.status, createdAt: r.created_at, updatedAt: r.updated_at, publishedAt: r.published_at
+  status: r.status, tags: r.tags || '', cocon: r.cocon || '',
+  createdAt: r.created_at, updatedAt: r.updated_at, publishedAt: r.published_at
 })
+
+/**
+ * Nettoie une saisie de tags : découpe sur virgules, retire les doublons
+ * (comparaison insensible à la casse et aux accents) et borne la longueur.
+ * Le stockage reste une simple chaîne : pas de table de jointure pour si peu,
+ * et le filtrage se fait sur des volumes d'articles très faibles.
+ */
+export function normaliserTags(input?: string | string[]): string {
+  const brut = Array.isArray(input) ? input : String(input || '').split(',')
+  const vus = new Set<string>()
+  const out: string[] = []
+  for (const t of brut) {
+    const tag = t.trim().replace(/\s+/g, ' ').slice(0, 40)
+    if (!tag) continue
+    const cle = tag.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+    if (vus.has(cle)) continue
+    vus.add(cle)
+    out.push(tag)
+    if (out.length >= 12) break
+  }
+  return out.join(', ')
+}
+
+/** Découpe une chaîne de tags stockée en tableau exploitable. */
+export const listeTags = (tags?: string): string[] =>
+  String(tags || '').split(',').map((t) => t.trim()).filter(Boolean)
 
 /**
  * Condition « visible publiquement » : publié, OU programmé dont l'heure est passée.
@@ -396,16 +431,19 @@ export async function upsertArticle(a: Article): Promise<number | null> {
     publishedAt = prevAt && prevAt <= now ? prevAt : now
   }
 
+  const tags = normaliserTags(a.tags) || null
+  const cocon = (a.cocon || '').trim().slice(0, 60) || null
+
   if (a.id) {
     await run(
-      `UPDATE articles SET slug = ?, title = ?, excerpt = ?, cover = ?, body = ?, status = ?, updated_at = ?, published_at = ? WHERE id = ?`,
-      [a.slug, a.title, a.excerpt || null, a.cover || null, a.body || null, status, now, publishedAt, a.id])
+      `UPDATE articles SET slug = ?, title = ?, excerpt = ?, cover = ?, body = ?, status = ?, tags = ?, cocon = ?, updated_at = ?, published_at = ? WHERE id = ?`,
+      [a.slug, a.title, a.excerpt || null, a.cover || null, a.body || null, status, tags, cocon, now, publishedAt, a.id])
     return a.id
   }
   return run(
-    `INSERT INTO articles (slug, title, excerpt, cover, body, status, created_at, updated_at, published_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [a.slug, a.title, a.excerpt || null, a.cover || null, a.body || null, status, now, now, publishedAt])
+    `INSERT INTO articles (slug, title, excerpt, cover, body, status, tags, cocon, created_at, updated_at, published_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [a.slug, a.title, a.excerpt || null, a.cover || null, a.body || null, status, tags, cocon, now, now, publishedAt])
 }
 
 /** Supprime un article. */

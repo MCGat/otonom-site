@@ -32,6 +32,8 @@ export default defineEventHandler(async (event) => {
     cover: String(b.cover || ''),
     body: String(b.body || ''),
     status,
+    tags: normaliserTags(b.tags),
+    cocon: String(b.cocon || ''),
     publishedAt
   })
   return { ok: true, id, slug, status }

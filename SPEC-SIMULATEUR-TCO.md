@@ -93,8 +93,13 @@ internationaux). Constats :
 
 ### Notre promesse
 
-> Le seul simulateur qui chiffre le coût réel d'une flotte électrique **bornes et raccordement
-> compris** — et qui vous dit à partir de quand vous êtes gagnant.
+> Le simulateur qui détaille le coût réel d'une flotte électrique **bornes et raccordement
+> compris** — points de charge, travaux, raccordement et durée d'amortissement — et qui distingue
+> coût économique et trésorerie pour dire à partir de quand vous êtes gagnant.
+>
+> *(Formulation volontairement précise plutôt qu'absolue : l'étude TCO Scope d'Arval évoque des
+> contraintes d'infrastructure sans que sa méthodologie soit publique. « Le seul » serait
+> indéfendable ; le détail du traitement, lui, l'est.)*
 
 ### Ce que le simulateur n'est PAS
 

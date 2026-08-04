@@ -157,6 +157,75 @@
       </div>
     </div>
   </div></section>
+
+  <section class="section section--tight sim-seo"><div class="wrap">
+    <div class="sec-head">
+      <span class="kicker">Comprendre le calcul</span>
+      <h2>Chiffrer une transition énergétique d'entreprise&nbsp;: leviers, aides et retour sur investissement</h2>
+    </div>
+
+    <div class="article-body">
+      <p>La transition mobilité, recharge et énergie d'une entreprise n'est pas une décision unique&nbsp;: c'est une <strong>série de leviers</strong> qui se financent en partie les uns les autres. Électrifier la flotte réduit le budget carburant et l'entretien, mais crée un besoin de recharge&nbsp;; installer des bornes augmente la facture d'électricité, que la renégociation du contrat, l'autoconsommation solaire et le pilotage de la consommation viennent à leur tour compenser. Pris isolément, chaque levier paraît coûteux. C'est leur <strong>combinaison</strong> qui produit le gain.</p>
+
+      <p>Ce simulateur d'économies parcourt ces leviers dans l'ordre où ils se posent réellement, et rend trois chiffres&nbsp;: le <strong>gain annuel estimé</strong>, l'<strong>investissement</strong> à consentir net des aides mobilisables, et le <strong>retour sur investissement</strong> exprimé en années. Il y ajoute un <strong>score de maturité</strong> sur 100, qui indique moins une note qu'un ordre de priorité.</p>
+
+      <h3>Qu'est-ce qu'un simulateur d'économies d'énergie pour une entreprise&nbsp;?</h3>
+      <p>C'est un outil d'ordre de grandeur, pas un devis. Il applique à votre situation déclarée — taille de flotte, kilométrage, consommation d'électricité, surface de toiture, nombre de sites — des barèmes publics datés et des hypothèses de marché, puis chiffre l'écart entre votre situation actuelle et une situation optimisée. Sa valeur n'est pas dans la précision du montant, mais dans le fait de savoir <strong>quel levier pèse le plus</strong> chez vous, et lequel ne vaut pas l'effort.</p>
+
+      <h3>Les leviers chiffrés par le simulateur</h3>
+      <table>
+        <thead><tr><th>Levier</th><th>D'où vient le gain</th></tr></thead>
+        <tbody>
+          <tr><td>Flotte</td><td>Écart entre budget carburant et coût de recharge, entretien allégé, et évitement de la taxe annuelle incitative pour les flottes concernées</td></tr>
+          <tr><td>Avantage en nature</td><td>Abattement de jusqu'à 70&nbsp;% sur l'avantage en nature d'un véhicule électrique mis à disposition d'un salarié</td></tr>
+          <tr><td>Recharge (IRVE)</td><td>Investissement en points de charge et génie civil, diminué des aides ouvertes au moment du projet</td></tr>
+          <tr><td>Contrat d'énergie</td><td>Mise en concurrence de la fourniture d'électricité, souvent le gain le plus rapide à obtenir</td></tr>
+          <tr><td>Photovoltaïque</td><td>Part d'autoconsommation qui remplace de l'électricité achetée, et prime à l'investissement</td></tr>
+          <tr><td>Stockage</td><td>Effacement des pointes et arbitrage entre heures pleines et heures creuses</td></tr>
+          <tr><td>Pilotage de l'énergie</td><td>Réduction de la facture par l'ajustement de la puissance souscrite et le lissage des usages</td></tr>
+        </tbody>
+      </table>
+
+      <div class="article-callout">
+        <span class="callout-label">À retenir</span>
+        <p>Le levier le plus rentable est presque toujours celui qui ne demande aucun investissement&nbsp;: <strong>renégocier le contrat d'énergie</strong> et <strong>ajuster la puissance souscrite</strong>. Beaucoup d'entreprises commencent par les bornes ou le solaire, et découvrent après coup qu'elles payaient leur électricité trop cher depuis des années. L'ordre dans lequel on agit change le résultat autant que les actions elles-mêmes.</p>
+      </div>
+
+      <h3>Comment se lit le retour sur investissement</h3>
+      <p>Le retour sur investissement rapporte l'investissement net d'aides au gain annuel qu'il produit. Un ROI de trois ans signifie que l'opération s'autofinance à partir de la troisième année, puis dégage un gain récurrent. Deux précautions&nbsp;: le gain annuel dépend de prix de l'énergie qui évoluent, et l'investissement doit être décaissé avant d'être récupéré — un calcul de <strong>trésorerie</strong> reste nécessaire à côté du calcul de rentabilité. Si votre sujet principal est la flotte, notre <NuxtLink to="/simulateurs/tco-flotte-electrique">simulateur de TCO flotte électrique</NuxtLink> pousse ce raisonnement beaucoup plus loin, infrastructure de recharge comprise.</p>
+
+      <h3>Les aides mobilisables, et pourquoi elles se vérifient au cas par cas</h3>
+      <p>Programme ADVENIR pour les infrastructures de recharge, prime à l'autoconsommation photovoltaïque, certificats d'économies d'énergie&nbsp;: ces dispositifs existent, mais leurs <strong>guichets ouvrent et se ferment</strong>, et les conditions d'éligibilité varient selon le type de site, le bénéficiaire et l'usage. Une aide annoncée dans un article de l'an dernier peut être close aujourd'hui. Le simulateur en donne une estimation&nbsp;; nous vérifions les guichets réellement ouverts au moment de votre projet, ce qui fait partie de <NuxtLink to="/methode">notre méthode</NuxtLink>.</p>
+
+      <h3>Les erreurs qui faussent une estimation d'économies</h3>
+      <ul>
+        <li><strong>Additionner des gains qui se recouvrent</strong> — l'autoconsommation solaire et la renégociation du contrat portent en partie sur les mêmes kilowattheures.</li>
+        <li><strong>Oublier la facture d'électricité créée par la recharge</strong>, qui vient en déduction du gain carburant.</li>
+        <li><strong>Retenir une aide sans vérifier son guichet</strong>, alors que les dispositifs évoluent d'une année à l'autre.</li>
+        <li><strong>Raisonner en rentabilité sans regarder la trésorerie</strong>&nbsp;: une opération rentable peut être indécidable si le décaissement arrive au mauvais moment.</li>
+        <li><strong>Traiter les sujets séparément</strong>, en confiant flotte, bornes et énergie à trois prestataires qui n'optimisent chacun que leur périmètre.</li>
+      </ul>
+
+      <h3>Qui est concerné dans l'entreprise</h3>
+      <p>Le <NuxtLink to="/dirigeants">dirigeant</NuxtLink> arbitre sur le potentiel global et le moment d'engager, le <NuxtLink to="/daf">directeur financier</NuxtLink> sur l'investissement, les aides et la trésorerie, les <NuxtLink to="/services-generaux">services généraux</NuxtLink> sur l'exploitation des sites et de la recharge, le <NuxtLink to="/drh">DRH</NuxtLink> sur l'avantage en nature et l'acceptation par les collaborateurs. Ces quatre lectures aboutissent rarement au même ordre de priorité&nbsp;: un chiffrage commun évite des mois d'arbitrage.</p>
+
+      <h2>Questions fréquentes sur le chiffrage d'une transition énergétique</h2>
+      <div class="article-faq">
+        <details><summary>Combien une entreprise peut-elle économiser en électrifiant sa flotte&nbsp;?</summary><div class="faq-a">Le gain vient principalement de trois postes&nbsp;: l'écart entre le budget carburant et le coût de la recharge, l'entretien allégé d'un véhicule électrique, et la fiscalité. Son ampleur dépend surtout du kilométrage annuel et du lieu de recharge — recharger au dépôt en heures creuses n'a pas le même coût qu'en borne publique rapide. Un chiffrage sérieux se fait sur vos usages réels.</div></details>
+        <details><summary>Par quel levier faut-il commencer&nbsp;?</summary><div class="faq-a">Par ceux qui ne demandent pas d'investissement&nbsp;: la renégociation du contrat de fourniture d'électricité et l'ajustement de la puissance souscrite produisent un gain immédiat et financent souvent la suite. Viennent ensuite l'électrification de la flotte et l'infrastructure de recharge, puis la production et le stockage.</div></details>
+        <details><summary>Quel retour sur investissement attendre d'une transition énergétique&nbsp;?</summary><div class="faq-a">Il varie fortement selon le levier&nbsp;: quasi immédiat pour une renégociation de contrat, de quelques années pour l'infrastructure de recharge et le photovoltaïque en autoconsommation. C'est pourquoi le simulateur rend un ROI global tout en détaillant le gain levier par levier&nbsp;: la moyenne cache toujours un levier très rentable et un levier qui l'est peu.</div></details>
+        <details><summary>À quoi sert le score de maturité sur 100&nbsp;?</summary><div class="faq-a">Il situe votre organisation sur les axes mobilité, recharge, énergie et pilotage, et met en évidence l'axe le plus en retard. Ce n'est pas une note de performance mais un ordre de priorité&nbsp;: l'axe le plus faible est en général celui où le prochain euro investi rapporte le plus.</div></details>
+        <details><summary>Les aides pour installer des bornes de recharge en entreprise existent-elles toujours&nbsp;?</summary><div class="faq-a">Des dispositifs existent, mais leurs guichets et leurs conditions d'éligibilité évoluent régulièrement selon le type de site et le bénéficiaire. Une estimation d'aide doit toujours être confirmée au moment du projet&nbsp;: c'est une des premières vérifications que nous menons lors de l'audit.</div></details>
+        <details><summary>Qui peut affiner ce calcul avec mes données réelles&nbsp;?</summary><div class="faq-a">OTONOM, orchestrateur de la transition mobilité, recharge et énergie des entreprises&nbsp;: nous auditons vos usages et vos factures, chiffrons chaque levier, coordonnons installateurs, énergéticiens, financeurs et mainteneurs, puis vérifions les gains sur facture. Un seul interlocuteur, de A à Z.</div></details>
+      </div>
+
+      <h3>Pour aller plus loin</h3>
+      <p>Les cadres applicables sont publics&nbsp;: l'<a href="https://www.ademe.fr/" target="_blank" rel="noopener noreferrer">ADEME</a> documente la maîtrise de l'énergie et la mobilité des entreprises, le <a href="https://www.ecologie.gouv.fr/politiques-publiques/fiscalite-environnementale-relative-aux-vehicules" target="_blank" rel="noopener noreferrer">ministère de la Transition écologique</a> publie le cadre de la fiscalité environnementale des véhicules, l'administration décrit les <a href="https://entreprendre.service-public.gouv.fr/vosdroits/F22203" target="_blank" rel="noopener noreferrer">taxes annuelles sur l'affectation des véhicules à des fins économiques</a> et l'<a href="https://www.urssaf.fr/accueil/employeur/cotisations/avantages-en-nature.html" target="_blank" rel="noopener noreferrer">URSSAF</a> les règles d'évaluation de l'avantage en nature. Le détail fiscal figure dans notre article sur <NuxtLink to="/blog/fiscalite-vehicule-electrique-2026">la fiscalité du véhicule électrique en entreprise</NuxtLink>, et notre page <NuxtLink to="/expertises">expertises</NuxtLink> décrit le périmètre que nous couvrons.</p>
+
+      <hr>
+      <p class="disclaimer">Barèmes et hypothèses au 01/01/2026. Montants exprimés en «&nbsp;jusqu'à&nbsp;», donnés à titre indicatif et non contractuel — à confirmer avec votre expert-comptable et, pour les aides, au moment du dépôt de dossier. Les gains énergétiques sont des ordres de grandeur, affinés lors de l'audit gratuit OTONOM.</p>
+    </div>
+  </div></section>
 </template>
 
 <script setup lang="ts">

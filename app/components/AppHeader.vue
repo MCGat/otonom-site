@@ -107,14 +107,15 @@ const simulateursDisponibles = [
     url: '/simulateurs/transition',
     titre: 'Simulateur de transition',
     sous: 'Économies, investissement, ROI et score de maturité'
+  },
+  {
+    url: '/simulateurs/tco-flotte-electrique',
+    titre: 'Simulateur de TCO flotte électrique',
+    sous: 'Coût total de possession, recharge et infrastructure comprises'
   }
 ]
 
 const simulateursAVenir = [
-  {
-    titre: 'Simulateur de TCO flotte électrique',
-    sous: 'Coût total de possession, recharge et infrastructure comprises'
-  },
   {
     titre: 'Coût & refacturation de la recharge d\'un collaborateur',
     sous: 'Recharge à domicile, remboursement et traitement social'
