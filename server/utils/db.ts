@@ -177,10 +177,16 @@ async function seedDefaults(cfg: any) {
     ? `INSERT IGNORE INTO form_settings (form_key, label, recipients, updated_at) VALUES (?, ?, ?, ?)`
     : `INSERT OR IGNORE INTO form_settings (form_key, label, recipients, updated_at) VALUES (?, ?, ?, ?)`
   await run(ins, ['contact', 'Formulaire de contact', def, now])
-  await run(ins, ['simulateur', 'Simulateur (lead qualifié)', def, now])
+  await run(ins, ['simulateur', 'Simulateur de transition', def, now])
+  await run(ins, ['tco-flotte', 'Simulateur de TCO flotte électrique', def, now])
+  // Renommage du simulateur : ne touche que l'ancien libellé par défaut,
+  // jamais un nom personnalisé depuis l'admin.
+  await run(`UPDATE form_settings SET label = ? WHERE form_key = ? AND label = ?`,
+    ['Simulateur de transition', 'simulateur', 'Simulateur (lead qualifié)'])
   // Pages connues par défaut (uniquement si pas encore renseignées)
   await run(`UPDATE form_settings SET pages = ? WHERE form_key = ? AND (pages IS NULL OR pages = '')`, ['/contact', 'contact'])
   await run(`UPDATE form_settings SET pages = ? WHERE form_key = ? AND (pages IS NULL OR pages = '')`, ['/simulateur', 'simulateur'])
+  await run(`UPDATE form_settings SET pages = ? WHERE form_key = ? AND (pages IS NULL OR pages = '')`, ['/simulateur-tco', 'tco-flotte'])
 }
 
 /** Insère un lead, renvoie son id. */

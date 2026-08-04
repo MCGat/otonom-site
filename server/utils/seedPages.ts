@@ -3,7 +3,7 @@
 // déjà un réglage, donc ne réécrase jamais un choix fait depuis l'admin.
 import { listPageSettings, setPageIndexed } from './db'
 
-const DEFAULT_NOINDEX = ['/simulateur', '/blog', '/accueil-v2']
+const DEFAULT_NOINDEX = ['/simulateur', '/simulateur-tco', '/blog', '/accueil-v2']
 
 export async function seedPageSettings(): Promise<void> {
   try {

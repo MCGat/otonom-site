@@ -72,7 +72,8 @@ export async function sendLeadEmail(lead: Lead, recipients: string): Promise<boo
     console.warn('OTONOM mailer: SMTP non configuré ou aucun destinataire — email non envoyé')
     return false
   }
-  const kicker = lead.formKey === 'simulateur' ? 'Lead simulateur' : 'Nouvelle demande'
+  const kicker = lead.formKey === 'simulateur' ? 'Lead simulateur de transition'
+    : lead.formKey === 'tco-flotte' ? 'Lead simulateur TCO' : 'Nouvelle demande'
   const transport = nodemailer.createTransport({
     host: s.host,
     port: Number(s.port) || 465,
@@ -80,7 +81,9 @@ export async function sendLeadEmail(lead: Lead, recipients: string): Promise<boo
     auth: { user: s.user, pass: s.pass },
     tls: { minVersion: 'TLSv1.2' }
   })
-  const sujetBase = lead.formKey === 'simulateur' ? 'Simulateur — lead qualifié' : "Nouvelle demande d'audit"
+  const sujetBase = lead.formKey === 'simulateur' ? 'Simulateur de transition — lead qualifié'
+    : lead.formKey === 'tco-flotte' ? 'Simulateur TCO flotte électrique — lead qualifié'
+      : "Nouvelle demande d'audit"
   await transport.sendMail({
     from: `"${s.fromName}" <${s.from}>`,
     to: recipients,

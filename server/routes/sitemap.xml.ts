@@ -14,6 +14,7 @@ const LASTMOD = '2026-07-08'
 const ROUTES: Array<{ loc: string; priority: string; freq: string }> = [
   { loc: '/', priority: '1.0', freq: 'weekly' },
   { loc: '/simulateur', priority: '0.9', freq: 'monthly' },
+  { loc: '/simulateur-tco', priority: '0.9', freq: 'monthly' },
   { loc: '/blog', priority: '0.8', freq: 'weekly' },
   { loc: '/expertises', priority: '0.8', freq: 'monthly' },
   { loc: '/methode', priority: '0.8', freq: 'monthly' },
