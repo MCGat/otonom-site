@@ -87,81 +87,83 @@
     </div>
     <div class="sec-head"><span class="kicker">Votre résultat</span><h2>Ce que l'électrique change, véhicule par véhicule.</h2></div>
 
-      <div class="v2-hero">
-      <span class="v2-eyebrow">Passer un véhicule à l'électrique</span>
-      <div class="v2-num tabnum">{{ eurosExact(Math.abs(v2.economieAnParVeh)) }}</div>
-      <p class="v2-sub">
-        {{ v2.economieAnParVeh >= 0 ? "d'économies" : 'de surcoût' }}
-        <b>chaque année</b>, <b>pour un seul véhicule</b>
-      </p>
+    <div class="v2-grid">
+        <div class="v2-hero">
+        <span class="v2-eyebrow">Passer un véhicule à l'électrique</span>
+        <div class="v2-num tabnum">{{ eurosExact(Math.abs(v2.economieAnParVeh)) }}</div>
+        <p class="v2-sub">
+          {{ v2.economieAnParVeh >= 0 ? "d'économies" : 'de surcoût' }}
+          <b>chaque année</b>, <b>pour un seul véhicule</b>
+        </p>
 
-      <span class="v2-badge" :class="{ 'is-neg': v2.economieAnParVeh < 0 }">
-        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path v-if="v2.economieAnParVeh >= 0" d="M20 6L9 17l-5-5" />
-          <path v-else d="M12 9v4M12 17h.01M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" />
-        </svg>
-        Coût total {{ v2.economieAnParVeh >= 0 ? 'réduit' : 'augmenté' }} de {{ v2.pct }}&nbsp;% face au {{ v2.libelleTherm.toLowerCase() }}
-      </span>
+        <span class="v2-badge" :class="{ 'is-neg': v2.economieAnParVeh < 0 }">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path v-if="v2.economieAnParVeh >= 0" d="M20 6L9 17l-5-5" />
+            <path v-else d="M12 9v4M12 17h.01M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" />
+          </svg>
+          Coût total {{ v2.economieAnParVeh >= 0 ? 'réduit' : 'augmenté' }} de {{ v2.pct }}&nbsp;% face au {{ v2.libelleTherm.toLowerCase() }}
+        </span>
 
-      <p class="v2-note">Différence de <b>coût complet</b> entre les deux motorisations, sur une année pleine. Le détail juste en dessous.</p>
-      </div>
-
-      <!-- Comparaison des deux motorisations -->
-      <div class="v2-compare">
-      <div class="v2-card">
-        <span class="v2-card-l">Si vous restez en {{ v2.libelleTherm.toLowerCase() }}</span>
-        <b class="v2-card-v tabnum">{{ eurosExact(v2.anTherm) }}</b>
-        <em>par an, pour un véhicule</em>
-        <span class="v2-card-an tabnum">soit {{ eurosExact(v2.moisTherm) }} par mois</span>
-      </div>
-      <div class="v2-card" :class="{ 'is-best': v2.economieAnParVeh >= 0 }">
-        <span v-if="v2.economieAnParVeh >= 0" class="v2-reco">Recommandé</span>
-        <span class="v2-card-l">Si vous passez à l'électrique</span>
-        <b class="v2-card-v tabnum">{{ eurosExact(v2.anElec) }}</b>
-        <em>par an, pour un véhicule</em>
-        <span class="v2-card-an tabnum">soit {{ eurosExact(v2.moisElec) }} par mois</span>
-      </div>
-      </div>
-
-      <!-- D'où sort le total : la multiplication posée à plat -->
-      <div class="v2-calc">
-      <div class="v2-calc-line">
-        <div class="v2-calc-t">
-          <b class="tabnum">{{ eurosExact(Math.abs(v2.economieAnParVeh)) }}</b>
-          <span>par véhicule<br>et par an</span>
+        <p class="v2-note">Différence de <b>coût complet</b> entre les deux motorisations, sur une année pleine. Le détail juste en dessous.</p>
         </div>
-        <span class="v2-calc-op" aria-hidden="true">×</span>
-        <div class="v2-calc-t">
-          <b class="tabnum">{{ r.input.nbVehicules }}</b>
-          <span>véhicule{{ r.input.nbVehicules! > 1 ? 's' : '' }}</span>
-        </div>
-        <span class="v2-calc-op" aria-hidden="true">×</span>
-        <div class="v2-calc-t">
-          <b class="tabnum">{{ r.dureeMois / 12 }}</b>
-          <span>an{{ r.dureeMois > 12 ? 's' : '' }} de détention<br>({{ r.dureeMois }} mois)</span>
-        </div>
-        <span class="v2-calc-op v2-calc-eq" aria-hidden="true">=</span>
-        <div class="v2-calc-t is-res">
-          <b class="tabnum">{{ euros(Math.abs(r.ecart)) }}</b>
-          <span>{{ r.ecart >= 0 ? "d'économies" : 'de surcoût' }}<br>sur toute la flotte</span>
-        </div>
-      </div>
 
-      <p class="v2-calc-note">
-        <span class="v2-calc-l">À financer au départ</span>
-        <b class="tabnum">{{ euros(r.investInfraTotal) }}</b>
-        de bornes et de travaux — une dépense ponctuelle, pas une économie.
-      </p>
-      </div>
+        <!-- Comparaison des deux motorisations -->
+        <div class="v2-compare">
+        <div class="v2-card">
+          <span class="v2-card-l">Si vous restez en {{ v2.libelleTherm.toLowerCase() }}</span>
+          <b class="v2-card-v tabnum">{{ eurosExact(v2.anTherm) }}</b>
+          <em>par an, pour un véhicule</em>
+          <span class="v2-card-an tabnum">soit {{ eurosExact(v2.moisTherm) }} par mois</span>
+        </div>
+        <div class="v2-card" :class="{ 'is-best': v2.economieAnParVeh >= 0 }">
+          <span v-if="v2.economieAnParVeh >= 0" class="v2-reco">Recommandé</span>
+          <span class="v2-card-l">Si vous passez à l'électrique</span>
+          <b class="v2-card-v tabnum">{{ eurosExact(v2.anElec) }}</b>
+          <em>par an, pour un véhicule</em>
+          <span class="v2-card-an tabnum">soit {{ eurosExact(v2.moisElec) }} par mois</span>
+        </div>
+        </div>
 
-      <!-- Ce que « coût complet » recouvre, au moment où le lecteur le lit -->
-      <p class="v2-legende">
-      Ces montants sont le <b>coût complet</b> d'un véhicule&nbsp;: loyer ou acquisition,
-      énergie, entretien, pneumatiques, assurance, taxes et quote-part des bornes.
-      Ce n'est <b>pas</b> un loyer — celui-ci n'en représente qu'une partie.
-      La soustraction tombe juste&nbsp;: {{ eurosExact(v2.anTherm) }} − {{ eurosExact(v2.anElec) }}
-      = <b>{{ eurosExact(Math.abs(v2.economieAnParVeh)) }}</b>, le chiffre annoncé plus haut.
-      </p>
+        <!-- D'où sort le total : la multiplication posée à plat -->
+        <div class="v2-calc">
+        <div class="v2-calc-line">
+          <div class="v2-calc-t">
+            <b class="tabnum">{{ eurosExact(Math.abs(v2.economieAnParVeh)) }}</b>
+            <span>par véhicule<br>et par an</span>
+          </div>
+          <span class="v2-calc-op" aria-hidden="true">×</span>
+          <div class="v2-calc-t">
+            <b class="tabnum">{{ r.input.nbVehicules }}</b>
+            <span>véhicule{{ r.input.nbVehicules! > 1 ? 's' : '' }}</span>
+          </div>
+          <span class="v2-calc-op" aria-hidden="true">×</span>
+          <div class="v2-calc-t">
+            <b class="tabnum">{{ r.dureeMois / 12 }}</b>
+            <span>an{{ r.dureeMois > 12 ? 's' : '' }} de détention<br>({{ r.dureeMois }} mois)</span>
+          </div>
+          <span class="v2-calc-op v2-calc-eq" aria-hidden="true">=</span>
+          <div class="v2-calc-t is-res">
+            <b class="tabnum">{{ euros(Math.abs(r.ecart)) }}</b>
+            <span>{{ r.ecart >= 0 ? "d'économies" : 'de surcoût' }}<br>sur toute la flotte</span>
+          </div>
+        </div>
+
+        <p class="v2-calc-note">
+          <span class="v2-calc-l">À financer au départ</span>
+          <b class="tabnum">{{ euros(r.investInfraTotal) }}</b>
+          de bornes et de travaux — une dépense ponctuelle, pas une économie.
+        </p>
+        </div>
+
+        <!-- Ce que « coût complet » recouvre, au moment où le lecteur le lit -->
+        <p class="v2-legende">
+        Ces montants sont le <b>coût complet</b> d'un véhicule&nbsp;: loyer ou acquisition,
+        énergie, entretien, pneumatiques, assurance, taxes et quote-part des bornes.
+        Ce n'est <b>pas</b> un loyer — celui-ci n'en représente qu'une partie.
+        La soustraction tombe juste&nbsp;: {{ eurosExact(v2.anTherm) }} − {{ eurosExact(v2.anElec) }}
+        = <b>{{ eurosExact(Math.abs(v2.economieAnParVeh)) }}</b>, le chiffre annoncé plus haut.
+        </p>
+    </div>
 
     <p v-if="r.avantagesNonModelises.length" class="tco-prudence">
       <strong>Ce calcul est prudent.</strong>
@@ -1311,7 +1313,7 @@ function printReport() {
    L'accent se fait donc par l'encre pleine, le filet et l'espace. */
 
 
-.v2-grid { display: grid; gap: 20px; }
+.v2-grid { display: grid; gap: 20px; margin-top: clamp(28px, 4vw, 40px); }
 
 /* ── Chiffre principal ── */
 .v2-hero {
