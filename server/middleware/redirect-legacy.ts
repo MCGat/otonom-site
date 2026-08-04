@@ -9,7 +9,8 @@
 const KNOWN = new Set([
   '/', '/a-propos', '/expertises', '/methode', '/contact',
   '/dirigeants', '/daf', '/drh', '/services-generaux',
-  '/mentions-legales', '/confidentialite', '/simulateur'
+  '/mentions-legales', '/confidentialite',
+  '/simulateurs', '/simulateurs/transition', '/simulateurs/tco-flotte-electrique'
 ])
 
 /**
@@ -17,7 +18,11 @@ const KNOWN = new Set([
  * La clé couvre la page ET ses sous-pages (/offre ⇒ /offre/quoi-que-ce-soit).
  */
 const LEGACY: Record<string, string> = {
-  '/offre': '/'
+  '/offre': '/',
+  // Les simulateurs sont passés sous une arborescence commune : un seul
+  // simulateur ne justifiait pas de niveau, quatre si.
+  '/simulateur-tco': '/simulateurs/tco-flotte-electrique',
+  '/simulateur': '/simulateurs/transition'
 }
 
 /** Minuscule + sans slash final (le query/hash n'est pas dans pathname). */

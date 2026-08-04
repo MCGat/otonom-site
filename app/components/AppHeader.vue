@@ -14,17 +14,27 @@
           @mouseenter="ouvrir"
           @mouseleave="fermer"
         >
-          <button
+          <NuxtLink
             ref="declencheur"
-            type="button"
+            to="/simulateurs"
             class="nav-sim-trigger"
             :class="{ 'is-current': surSimulateur }"
             :aria-expanded="simOpen"
             aria-haspopup="true"
-            @click="basculer"
+            @click="fermer"
             @keydown.escape="fermer"
           >
             Simulateurs
+            <svg class="nav-sim-chev" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 9l6 6 6-6" /></svg>
+          </NuxtLink>
+          <!-- Sur mobile il n'y a pas de survol : un bouton dédié déplie la liste. -->
+          <button
+            type="button"
+            class="nav-sim-toggle"
+            :aria-expanded="simOpen"
+            aria-label="Afficher les simulateurs"
+            @click="simOpen = !simOpen"
+          >
             <svg class="nav-sim-chev" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 9l6 6 6-6" /></svg>
           </button>
 
@@ -89,12 +99,12 @@
 <script setup lang="ts">
 const menuOpen = ref(false)
 const simOpen = ref(false)
-const declencheur = ref<HTMLButtonElement | null>(null)
+const declencheur = ref<HTMLElement | null>(null)
 const route = useRoute()
 
 const simulateursDisponibles = [
   {
-    url: '/simulateur',
+    url: '/simulateurs/transition',
     titre: 'Simulateur de transition',
     sous: 'Économies, investissement, ROI et score de maturité'
   }
@@ -115,7 +125,7 @@ const simulateursAVenir = [
   }
 ]
 
-const surSimulateur = computed(() => route.path.startsWith('/simulateur'))
+const surSimulateur = computed(() => route.path.startsWith('/simulateurs'))
 
 // Le survol ouvre au pointeur ; le clic sert au tactile et au clavier.
 let fermeture: ReturnType<typeof setTimeout> | null = null
@@ -128,11 +138,6 @@ function fermer() {
   // referait disparaître le menu sous le curseur.
   fermeture = setTimeout(() => { simOpen.value = false }, 120)
 }
-function basculer() {
-  simOpen.value = !simOpen.value
-  if (!simOpen.value) declencheur.value?.blur()
-}
-
 watch(() => route.path, () => {
   menuOpen.value = false
   simOpen.value = false
@@ -165,6 +170,8 @@ watch(() => route.path, () => {
 
 .nav-sim-chev { width: 13px; height: 13px; transition: transform .32s cubic-bezier(.4, 0, .2, 1); }
 .nav-sim.is-open .nav-sim-chev { transform: rotate(180deg); }
+
+.nav-sim-toggle { display: none; background: none; border: 0; color: var(--muted); cursor: pointer; padding: 14px 0 14px 12px; }
 
 /* ── Panneau ─────────────────────────────────────────────────────────────── */
 .nav-sim-panel {
@@ -275,8 +282,12 @@ a.nav-sim-item:focus-visible .nav-sim-go { transform: none; opacity: 1; color: #
 /* ── Mobile : plus de survol, le sous-menu se déplie dans le flux ────────── */
 @media (max-width: 880px) {
   .nav-sim { display: block; width: 100%; border-bottom: 1px solid var(--line-soft); }
-  .nav-sim-trigger { width: 100%; justify-content: space-between; padding: 14px 0; font-size: 16px; }
+  .nav-sim { display: flex; flex-wrap: wrap; align-items: center; }
+  .nav-sim-trigger { flex: 1; padding: 14px 0; font-size: 16px; border-bottom: 0; }
   .nav-sim-trigger::after { display: none; }
+  .nav-sim-trigger .nav-sim-chev { display: none; }   /* porté par le bouton dédié */
+  .nav-sim-toggle { display: block; }
+  .nav-sim-panel { flex-basis: 100%; }
 
   .nav-sim-panel {
     position: static; transform: none; width: 100%;

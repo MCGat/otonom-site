@@ -179,14 +179,18 @@ async function seedDefaults(cfg: any) {
   await run(ins, ['contact', 'Formulaire de contact', def, now])
   await run(ins, ['simulateur', 'Simulateur de transition', def, now])
   await run(ins, ['tco-flotte', 'Simulateur de TCO flotte électrique', def, now])
+  // Les simulateurs ont changé d'URL : on suit les pages déjà renseignées,
+  // sinon les destinataires resteraient attachés à une adresse qui n'existe plus.
+  await run(`UPDATE form_settings SET pages = ? WHERE pages = ?`, ['/simulateurs/transition', '/simulateur'])
+  await run(`UPDATE form_settings SET pages = ? WHERE pages = ?`, ['/simulateurs/tco-flotte-electrique', '/simulateur-tco'])
   // Renommage du simulateur : ne touche que l'ancien libellé par défaut,
   // jamais un nom personnalisé depuis l'admin.
   await run(`UPDATE form_settings SET label = ? WHERE form_key = ? AND label = ?`,
     ['Simulateur de transition', 'simulateur', 'Simulateur (lead qualifié)'])
   // Pages connues par défaut (uniquement si pas encore renseignées)
   await run(`UPDATE form_settings SET pages = ? WHERE form_key = ? AND (pages IS NULL OR pages = '')`, ['/contact', 'contact'])
-  await run(`UPDATE form_settings SET pages = ? WHERE form_key = ? AND (pages IS NULL OR pages = '')`, ['/simulateur', 'simulateur'])
-  await run(`UPDATE form_settings SET pages = ? WHERE form_key = ? AND (pages IS NULL OR pages = '')`, ['/simulateur-tco', 'tco-flotte'])
+  await run(`UPDATE form_settings SET pages = ? WHERE form_key = ? AND (pages IS NULL OR pages = '')`, ['/simulateurs/transition', 'simulateur'])
+  await run(`UPDATE form_settings SET pages = ? WHERE form_key = ? AND (pages IS NULL OR pages = '')`, ['/simulateurs/tco-flotte-electrique', 'tco-flotte'])
 }
 
 /** Insère un lead, renvoie son id. */
@@ -436,7 +440,7 @@ export function isAlwaysNoindex(path: string): boolean {
   return ALWAYS_NOINDEX.some((base) => p === base || p.startsWith(base + '/'))
 }
 
-/** Toutes les exceptions stockées : { '/simulateur': false, … } */
+/** Toutes les exceptions stockées : { '/simulateurs': false, … } */
 export async function listPageSettings(): Promise<Record<string, boolean>> {
   await ensureReady()
   const rows = await all(`SELECT path, indexed FROM page_settings`)
@@ -475,6 +479,12 @@ export function matchesNoindex(path: string, prefixes: string[]): boolean {
 }
 
 /** Définit l'indexation d'une page. Renvoie false si la page est verrouillée. */
+/** Supprime le réglage d'une page qui n'existe plus (URL migrée). */
+export async function deletePageSetting(path: string): Promise<void> {
+  await ensureReady()
+  await run(`DELETE FROM page_settings WHERE path = ?`, [normalizePath(path)])
+}
+
 export async function setPageIndexed(path: string, indexed: boolean): Promise<boolean> {
   const p = normalizePath(path)
   if (LOCKED_INDEXED.has(p) || isAlwaysNoindex(p)) return false // garde-fou serveur

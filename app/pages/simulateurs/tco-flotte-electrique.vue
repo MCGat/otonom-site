@@ -397,7 +397,7 @@
 
       <p class="disclaimer sim-disclaimer">Estimations en ordres de grandeur, établies sur les barèmes des millésimes {{ r.anneeDebut }}–{{ r.anneeFin }}, données à titre indicatif et non contractuel — à confirmer avec votre expert-comptable. Les montants réels dépendent de votre situation et sont affinés lors de l'audit gratuit OTONOM.</p>
 
-      <p class="tco-cross">Vous cherchez une vue plus large — mobilité, recharge <em>et</em> énergie&nbsp;? Passez par le <NuxtLink to="/simulateur">simulateur de transition</NuxtLink>.</p>
+      <p class="tco-cross">Vous cherchez une vue plus large — mobilité, recharge <em>et</em> énergie&nbsp;? Passez par le <NuxtLink to="/simulateurs/transition">simulateur de transition</NuxtLink>.</p>
 
       <div class="cta-block">
         <h2>Transformons ce calcul en trajectoire.</h2>
