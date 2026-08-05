@@ -5,12 +5,18 @@
         <div>
           <OtonomLogo />
           <p>L'orchestrateur de la transition mobilité, recharge et énergie des entreprises. Une marque du groupe MC&nbsp;Groupe.</p>
+          <ul class="foot-contact">
+            <li><a href="mailto:gregory@otonom.fr">gregory@otonom.fr</a></li>
+            <li><NuxtLink to="/contact">Réserver un audit gratuit</NuxtLink></li>
+          </ul>
         </div>
         <div>
           <h4>Naviguer</h4>
           <ul>
             <li><NuxtLink to="/expertises">Expertises</NuxtLink></li>
             <li><NuxtLink to="/methode">Méthode</NuxtLink></li>
+            <li><NuxtLink to="/simulateurs">Simulateurs</NuxtLink></li>
+            <li><NuxtLink to="/blog">Blog</NuxtLink></li>
             <li><NuxtLink to="/a-propos">À propos</NuxtLink></li>
             <li><NuxtLink to="/contact">Contact</NuxtLink></li>
           </ul>
@@ -25,10 +31,11 @@
           </ul>
         </div>
         <div>
-          <h4>Contact</h4>
+          <h4>Simulateurs</h4>
           <ul>
-            <li><a href="mailto:gregory@otonom.fr">gregory@otonom.fr</a></li>
-            <li><NuxtLink to="/contact">Réserver un audit</NuxtLink></li>
+            <li><NuxtLink to="/simulateurs/transition">Simulateur de transition</NuxtLink></li>
+            <li><NuxtLink to="/simulateurs/tco-flotte-electrique">TCO flotte électrique</NuxtLink></li>
+            <li><NuxtLink to="/simulateurs">Tous les simulateurs</NuxtLink></li>
           </ul>
         </div>
       </div>
@@ -45,4 +52,7 @@
 
 <style scoped>
 .site-footer .logo { height: 18px; width: auto; }
+/* Contact remonté sous la marque : sa colonne servait à trois liens et n'en
+   portait que deux, alors que les simulateurs n'étaient nulle part. */
+.foot-contact { margin-top: 20px; }
 </style>
