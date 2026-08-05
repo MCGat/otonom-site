@@ -37,7 +37,8 @@ Un article OTONOM ne publie **jamais** un chiffre fiscal, un plafond ou une éch
 | **Titre (H1 / `title`)** | 55–65 caractères, contient le mot-clé principal + l'intention (souvent « en entreprise » / « 2026 »). Un seul H1 (le champ titre ; ne pas remettre de `<h1>` dans le corps). |
 | **Slug** | court, mots-clés, sans année si l'article a vocation à durer (sinon millésimé). Généré depuis le titre, épuré. |
 | **Excerpt (meta description)** | 150–160 caractères, mots-clés en tête, donne envie de cliquer. Sert de résumé de liste **et** de meta description. |
-| **Chapô** | 1 paragraphe d'intro avant le 1ᵉʳ `<h2>` : pose le sujet, annonce le plan, place le mot-clé. |
+| **TL;DR** | **OBLIGATOIRE**, tout premier bloc du corps, avant le chapô. Bloc `.article-tldr` : 1 phrase de réponse directe + 3 à 5 puces auto-portantes + 1 ligne de cadrage (date des barèmes, caractère indicatif). 80–160 mots. Voir §6. |
+| **Chapô** | 1 paragraphe d'intro **après le TL;DR** et avant le 1ᵉʳ `<h2>` : pose le sujet, annonce le plan, place le mot-clé. |
 | **`<h2>` / `<h3>`** | Hiérarchie logique. Les `<h2>` alimentent **le sommaire automatique** (généré tout seul si ≥ 2 H2). Titres explicites et riches en mots-clés naturels. |
 | **Longueur** | Article de fond : **1 200–2 000 mots**. Mieux vaut couvrir complètement un sujet que survoler. |
 | **Corps** | Phrases courtes, une idée par paragraphe. Alterner texte / tableau / callout / FAQ pour le rythme. |
@@ -115,6 +116,16 @@ Un ou deux liens externes **de qualité** renforcent la confiance (E-E-A-T) et l
 
 Les moteurs de réponse (ChatGPT, Perplexity, Google AI…) citent les contenus **structurés, factuels et auto-portants**. À faire systématiquement :
 
+- **TL;DR en tête d'article** — le bloc le plus rentable en GEO : c'est celui que les moteurs de réponse
+  lisent en premier et citent le plus volontiers, parce qu'il tient seul. Règles :
+  - **1 phrase de réponse directe** à la question du titre, qui se comprend sans rien lire d'autre.
+  - **3 à 5 puces**, chacune auto-portante, chacune portant **un fait daté et chiffré**. Une puce qui
+    renvoie au reste de l'article (« comme nous le verrons ») est une puce perdue.
+  - **1 ligne de cadrage** finale : date des barèmes, caractère indicatif.
+  - **80 à 160 mots.** Plus long, il cesse d'être un résumé ; plus court, il n'apprend rien.
+  - Il **résume**, il n'annonce pas. « Nous verrons quels leviers existent » ne se cite pas ;
+    « Quatre leviers réduisent le coût : … » se cite.
+  - Aucun chiffre qui ne figure pas, sourcé, dans le corps de l'article.
 - **Affirmations auto-portantes** : chaque fait clé doit se comprendre **hors contexte** et contenir sa donnée datée (« Le plafond d'amortissement d'un véhicule électrique est de 30 000 € en 2026 »). C'est ce que l'IA extrait.
 - **FAQ** en fin d'article : formuler les questions comme de **vraies requêtes** (« Quel est le plafond… », « La TVA est-elle récupérable… »). Excellent pour featured snippets **et** GEO.
 - **Tableaux** comparatifs et **exemples chiffrés** : formats directement réutilisables par les LLM.
@@ -127,6 +138,19 @@ Les moteurs de réponse (ChatGPT, Perplexity, Google AI…) citent les contenus 
 
 Le corps est du HTML rendu sous `.article-body`. Utiliser **uniquement** ces blocs (déjà stylés N&B dans `app/assets/css/main.css`) :
 
+- **TL;DR** (obligatoire, tout premier bloc du corps — voir §2 et §6) :
+  ```html
+  <div class="article-tldr">
+    <span class="tldr-label">L'essentiel</span>
+    <p>La réponse directe à la question du titre, en une phrase.</p>
+    <ul>
+      <li>Un fait daté et chiffré, compréhensible hors contexte.</li>
+      <li>Un deuxième.</li>
+      <li>Un troisième.</li>
+    </ul>
+    <p>Barèmes au 01/01/2026, indicatifs et non contractuels.</p>
+  </div>
+  ```
 - **Callout** « À retenir » :
   ```html
   <div class="article-callout"><span class="callout-label">À retenir</span><p>Le point clé.</p></div>

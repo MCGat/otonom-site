@@ -41,3 +41,6 @@ logs
 .env
 .env.*
 !.env.example
+
+# Export de travail des articles (régénéré, ne pas versionner)
+ARTICLES-A-VERIFIER.md

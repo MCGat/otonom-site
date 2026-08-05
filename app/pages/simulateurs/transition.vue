@@ -165,6 +165,18 @@
     </div>
 
     <div class="article-body">
+      <div class="article-tldr">
+        <span class="tldr-label">L'essentiel</span>
+        <p>Une transition énergétique d'entreprise se chiffre <strong>levier par levier</strong>, pas globalement&nbsp;: électrification de la flotte, avantage en nature, infrastructure de recharge, contrat d'électricité, photovoltaïque, stockage et pilotage de la consommation.</p>
+        <ul>
+          <li>Le simulateur rend trois chiffres&nbsp;: le <strong>gain annuel</strong>, l'<strong>investissement net d'aides</strong> et le <strong>retour sur investissement</strong> en années, plus un score de maturité sur 100.</li>
+          <li>Les leviers les plus rentables sont ceux qui <strong>ne demandent aucun investissement</strong>&nbsp;: renégocier le contrat d'électricité et ajuster la puissance souscrite. Ils financent souvent la suite.</li>
+          <li>Les leviers <strong>se compensent entre eux</strong>&nbsp;: les bornes alourdissent la facture d'électricité que l'autoconsommation et le pilotage viennent réduire. Additionner des gains calculés séparément conduit à les compter deux fois.</li>
+          <li>Les aides existent mais leurs <strong>guichets ouvrent et se ferment</strong>&nbsp;: toute estimation doit être confirmée au moment du projet.</li>
+        </ul>
+        <p>Résultats en ordres de grandeur, sur barèmes et hypothèses au 01/01/2026&nbsp;: un point de départ pour arbitrer, pas un devis.</p>
+      </div>
+
       <p>La transition mobilité, recharge et énergie d'une entreprise n'est pas une décision unique&nbsp;: c'est une <strong>série de leviers</strong> qui se financent en partie les uns les autres. Électrifier la flotte réduit le budget carburant et l'entretien, mais crée un besoin de recharge&nbsp;; installer des bornes augmente la facture d'électricité, que la renégociation du contrat, l'autoconsommation solaire et le pilotage de la consommation viennent à leur tour compenser. Pris isolément, chaque levier paraît coûteux. C'est leur <strong>combinaison</strong> qui produit le gain.</p>
 
       <p>Ce simulateur d'économies parcourt ces leviers dans l'ordre où ils se posent réellement, et rend trois chiffres&nbsp;: le <strong>gain annuel estimé</strong>, l'<strong>investissement</strong> à consentir net des aides mobilisables, et le <strong>retour sur investissement</strong> exprimé en années. Il y ajoute un <strong>score de maturité</strong> sur 100, qui indique moins une note qu'un ordre de priorité.</p>

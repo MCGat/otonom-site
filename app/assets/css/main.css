@@ -701,6 +701,19 @@ a.persona .more svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-
 .article-body pre{background:var(--bg-2);border:1px solid var(--line-soft);border-radius:var(--radius);padding:18px 20px;overflow-x:auto}
 .article-body pre code{background:none;border:0;padding:0}
 
+/* TL;DR — résumé en tête d'article. Il ouvre la page : filet à gauche plutôt
+   qu'encadré, pour ne pas concurrencer visuellement le callout « À retenir ».
+   Bloc auto-portant : c'est lui que les moteurs de réponse citent en premier. */
+.article-tldr{margin:0 0 clamp(30px,4vw,44px);padding:2px 0 2px clamp(18px,2.4vw,26px);border-left:2px solid var(--ink)}
+.article-tldr .tldr-label{display:block;font-family:var(--ff-mono);font-size:10.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+.article-tldr p{font-size:clamp(15.5px,1.5vw,17px);line-height:1.6;color:var(--ink-soft)}
+.article-tldr p+p{margin-top:.6em}
+.article-tldr strong{color:var(--ink);font-weight:600}
+.article-tldr ul{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:9px}
+.article-tldr li{position:relative;padding-left:20px;font-size:15px;line-height:1.55;color:var(--ink-soft)}
+.article-tldr li::before{content:"";position:absolute;left:0;top:.62em;width:11px;height:1px;background:var(--ink);opacity:.55}
+.article-tldr li strong{color:var(--ink)}
+
 /* Callout */
 .article-callout{position:relative;border:1px solid var(--line);border-radius:var(--radius);padding:clamp(24px,3.2vw,32px) clamp(26px,3.6vw,36px);background:var(--bg-1);box-shadow:0 1px 0 0 var(--line-soft)}
 .article-callout>*:first-child{margin-top:0}

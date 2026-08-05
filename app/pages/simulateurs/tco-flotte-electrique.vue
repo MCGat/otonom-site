@@ -508,6 +508,18 @@
     </div>
 
     <div class="article-body">
+      <div class="article-tldr">
+        <span class="tldr-label">L'essentiel</span>
+        <p>Le <strong>TCO</strong> (coût total de possession) additionne tous les coûts d'un véhicule sur sa durée de détention — acquisition ou loyers, énergie, entretien, pneumatiques, assurance, fiscalité, gestion et infrastructure de recharge — puis en retranche la <strong>valeur de revente</strong>. C'est le seul indicateur qui compare honnêtement un électrique et un thermique.</p>
+        <ul>
+          <li>Trois variables décident du résultat&nbsp;: le <strong>kilométrage annuel</strong>, le <strong>lieu de recharge</strong> et la <strong>valeur de revente</strong>. En dessous d'un certain kilométrage, ou avec une recharge majoritairement en borne publique rapide, l'électrique peut coûter plus cher.</li>
+          <li>Ce simulateur chiffre l'<strong>infrastructure de recharge</strong>, poste que beaucoup d'outils laissent de côté&nbsp;: points de charge, travaux, raccordement et pilotage, avec la quote-part imputée à la durée analysée — une borne sert huit à dix ans quand un véhicule est renouvelé au bout de quatre.</li>
+          <li>La <strong>valeur de revente</strong> a l'effet de levier le plus fort parce qu'elle se soustrait en bout de calcul&nbsp;: quelques points d'écart déplacent le résultat de dizaines de milliers d'euros sur une flotte.</li>
+          <li>Le résultat distingue le <strong>coût économique</strong> de la <strong>trésorerie</strong>&nbsp;: une flotte peut être gagnante sur la durée tout en demandant un décaissement important au départ.</li>
+        </ul>
+        <p>Barèmes appliqués selon les millésimes traversés, à partir du 01/01/2026. Ordres de grandeur indicatifs, affinés lors de l'audit.</p>
+      </div>
+
       <p>Le <strong>TCO</strong> — <em>total cost of ownership</em>, ou <strong>coût total de possession</strong> — est le seul indicateur qui permette de comparer honnêtement un véhicule électrique et un véhicule thermique. Comparer deux prix d'achat, ou deux loyers, revient à comparer deux icebergs à la hauteur de leur partie émergée&nbsp;: l'électrique concentre son coût à l'acquisition puis coûte peu à l'usage, le thermique fait l'inverse.</p>
 
       <p>Ce simulateur détaille un poste que très peu d'outils chiffrent&nbsp;: <strong>l'infrastructure de recharge</strong>. Nombre de points de charge, travaux, raccordement, pilotage et durée d'amortissement sont calculés séparément, et l'on distingue ce qui pèse sur le <strong>coût économique</strong> de ce qui pèse sur la <strong>trésorerie</strong>. Bornes et raccordement représentent un investissement réel, et c'est précisément le poste qui surprend les entreprises six mois après la décision.</p>
