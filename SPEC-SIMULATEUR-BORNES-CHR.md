@@ -1,7 +1,10 @@
 # Spécification — Simulateur « Combien de bornes pour mon camping / hôtel ? »
 
-> **Statut : proposition, à valider.** Document destiné à la vérification externe (ChatGPT)
-> avant développement. Rédigé le 05/08/2026.
+> **Statut : VALIDÉ POUR DÉVELOPPEMENT DE LA V1** après deux relectures externes.
+> Version 3 du 05/08/2026. Les corrections de formule (arrivées, recettes, énergie, puissance)
+> sont intégrées ci-dessous et doivent être respectées dès la première ligne de code ; les
+> coefficients pourront être calibrés avec OTONOM ensuite, sans toucher à l'architecture.
+> **Toutes les valeurs d'hypothèse vivent dans une configuration versionnée, jamais en dur.**
 > Nom de travail : **Simulateur de dimensionnement IRVE tourisme**.
 > URL cible : `/simulateurs/bornes-camping-hotel`.
 
@@ -37,9 +40,14 @@ neutralisé par l'exemption PME. Pour mémoire, en non résidentiel il impose : 
 cinq pré-équipée**, **2 % des places accessibles PMR** (au moins une), **au moins un point de
 recharge installé**, et **deux points au-delà de 200 places**.
 
-Deux autres portes de sortie existent, applicables à tous : les travaux d'adaptation du
-réseau **en amont** qui coûteraient plus cher que l'installation en aval, et le seuil des
-**7 % du coût total de rénovation** (L113-14, 1°).
+Deux mécanismes peuvent **adapter ou écarter** l'obligation — et ils ne font pas la même chose :
+
+- **Le seuil des 7 %** (L113-14, 1°) est une véritable exemption, mais **uniquement dans le
+  cadre d'une rénovation importante** : les obligations tombent lorsque les installations de
+  recharge et leur raccordement dépassent 7 % du coût total de la rénovation.
+- **Les travaux importants sur le réseau en amont** ne suppriment rien. Ils **limitent le
+  nombre de points exigés**, jusqu'à ce que le coût en amont ne dépasse plus celui en aval.
+  Une obligation réduite reste une obligation.
 
 > **Ce que le simulateur doit dire :** « Vous n'y êtes probablement pas obligé. Vous perdez
 > probablement des réservations. » C'est plus vrai, et plus vendeur, que de brandir une
@@ -50,13 +58,29 @@ pas de le supposer. Cinq questions suffisent, et elles doivent être posées :
 
 1. Possédez-vous les murs **et** le parking ?
 2. Les occupez-vous vous-même ?
-3. Êtes-vous une PME indépendante, ou appartenez-vous à un groupe dépassant les seuils
-   européens (250 salariés, 50 M€ de chiffre d'affaires ou 43 M€ de bilan) ?
-4. Le parking est-il existant, neuf, ou en rénovation importante ?
-5. Combien compte-t-il de places ?
+3. Le parking est-il existant, neuf, ou en rénovation importante ?
+4. Combien compte-t-il de places ?
+5. **Trois questions distinctes** pour la qualification PME, jamais une seule :
+   moins de 250 salariés ? · chiffre d'affaires supérieur à 50 M€ ? · total de bilan
+   supérieur à 43 M€ ? — plus « appartenez-vous à un groupe ou à un réseau de sociétés liées ? »
 
-Sans ces réponses, le simulateur ne conclut rien sur le plan réglementaire — il le dit et
-propose de faire vérifier.
+**La logique PME ne se code pas en un test simple.** Une PME emploie **moins de 250
+personnes ET respecte au moins l'un** des deux plafonds. Une société de 200 salariés à 60 M€
+de chiffre d'affaires **reste une PME** si son bilan ne dépasse pas 43 M€. L'écrire
+« 250 salariés OU 50 M€ OU 43 M€ dépassé = pas PME » est faux.
+
+Dès qu'une réponse est « je ne sais pas », ou dès qu'il y a des sociétés liées, le simulateur
+n'arbitre pas : **« votre éventuelle exemption PME doit être vérifiée »**.
+
+### 2.1 ter — Corse et Outre-mer : ne pas appliquer le moteur métropolitain
+
+Les obligations des articles L113-12 et L113-13 peuvent être **adaptées** dans les zones non
+interconnectées par leurs programmations pluriannuelles de l'énergie. Le résultat
+réglementaire doit donc bifurquer :
+
+- **Métropole hors Corse** → moteur L113-12 à L113-14 ;
+- **Corse ou territoire ultramarin** → « réglementation propre à votre territoire, à
+  vérifier », sans conclusion automatique.
 
 ### 2.1 bis — Vocabulaire : borne ≠ point de recharge
 
@@ -84,9 +108,20 @@ Le simulateur doit donc afficher **zéro aide nationale par défaut**, et orient
 dispositifs régionaux, qui existent mais varient. C'est un contre-pied total du discours
 ambiant : c'est exactement ce qui le rendra crédible et citable.
 
-⚠️ **[À CONFIRMER n° 1]** — Les conditions exactes du guichet **Corse et Outre-Mer** :
-un camping corse ou ultramarin est-il éligible, pour quel type de parking, à quel taux et
-quel plafond ? La page de détail n'a pas pu être lue.
+**✅ Exception confirmée — les zones non interconnectées.** En Corse, à La Réunion, en
+Guadeloupe, Guyane, Martinique, à Mayotte et dans les Îles du Ponant, des guichets restent
+ouverts, notamment :
+
+| Cas | Taux | Plafond |
+|---|---|---|
+| Parking d'entreprise **ouvert au public** | 30 % | selon la puissance |
+| Flotte et salariés | 20 % | 900 € par point |
+
+Le **pilotage énergétique par le signal EDF-SEI y est obligatoire** pour obtenir la prime.
+Un camping corse ou ultramarin peut donc être aidé, contrairement à son homologue
+métropolitain — c'est une bifurcation à coder, pas une note de bas de page.
+**[À REVÉRIFIER au moment du développement]** — taux et plafonds issus de la relecture
+externe, à confronter à advenir.mobi avant mise en ligne.
 
 ### 2.3 « Dimensionnez sur 30 % de véhicules électriques » — erreur d'un facteur cinq
 
@@ -167,7 +202,7 @@ C'est ici que tous les outils du marché se trompent : **un client qui reste sep
 recharge pas sept fois.**
 
 ```
-arrivees_par_nuit = capacite × occupation / duree_sejour
+arrivees_par_nuit = vehicules_presents / duree_sejour     ← véhicules, PAS unités
 VE_arrivants     = arrivees_par_nuit × part_VE
 VE_en_sejour     = (vehicules_presents − arrivees_par_nuit) × part_VE
 
@@ -177,9 +212,22 @@ sessions_par_nuit = VE_arrivants × 0,90 + VE_en_sejour × taux_appoint
 - Un véhicule **déjà sur place** ne recharge que s'il a fait des excursions.
   `taux_appoint` = 0,25 en camping, 0,15 en hôtel de séjour. **[À CONFIRMER n° 6]**
 
-C'est ce terme qui explique pourquoi **un hôtel a besoin de plus de bornes qu'un camping à
-capacité égale** : à 1,8 nuit de séjour moyen, presque tout le parc se renouvelle chaque
-nuit, alors qu'à 7 nuits, un septième seulement arrive.
+C'est ce terme qui explique pourquoi **un hôtel a besoin de plus de points qu'un camping de
+capacité comparable** : à 1,8 nuit de séjour moyen, presque tout le parc se renouvelle chaque
+nuit, alors qu'à 7 nuits, un septième seulement arrive. Vérifié à l'horizon 2030 :
+
+| | Véhicules présents | Arrivées/nuit | Sessions | Points |
+|---|---:|---:|---:|---:|
+| Camping 150 emplacements | 120 | 17,1 | 4,73 | **7** |
+| Hôtel 150 chambres | 79 | 43,8 | 5,13 | **8** |
+
+L'hôtel a **un tiers de véhicules en moins** sur son parking et demande pourtant **un point
+de plus**. C'est la rotation qui commande, pas le stock.
+
+> ⚠️ **Comparaison à ne pas faire.** La version 1 de cette spec illustrait ce point par « un
+> hôtel de 40 chambres a besoin de plus de points qu'un camping de 150 emplacements ». C'est
+> **faux** : le calcul donne 2 points contre 7. L'erreur était de comparer des capacités sans
+> rapport. La rotation ne compense pas un écart de taille — elle joue à taille comparable.
 
 **Étape 4. Du besoin aux points de charge**
 
@@ -232,12 +280,35 @@ Si `P_appelee > marge_disponible`, deux issues chiffrées et comparées :
    Une nuit de 12 h absorbe beaucoup : le pilotage suffit dans la plupart des cas.
 2. **Renforcement du raccordement** : coûteux, long, à éviter quand c'est évitable.
 
+**Vérifier la puissance ne suffit pas : il faut vérifier l'ÉNERGIE.** Un plafond de pilotage
+peut respecter la marge du site tout en étant incapable de délivrer, sur une nuit, ce que les
+véhicules réclament. C'est la lacune principale de la version 1 de cette spec.
+
+```
+energie_a_delivrer = kWh_nuit
+puissance_mini_energie = energie_a_delivrer / (fenetre_recharge × rendement)
+```
+
+Trois verdicts possibles, et non plus un seul :
+
+| Situation | Verdict |
+|---|---|
+| `marge ≥ plafond recommandé` | installation compatible, pilotage confortable |
+| `puissance_mini_energie ≤ marge < plafond recommandé` | compatible, mais recharge plus lente ou pilotage très contraint |
+| `marge < puissance_mini_energie` | **énergie insuffisante** : renforcer, réduire le nombre de sessions, ou allonger la fenêtre de charge |
+
 **Le résultat s'affiche en puissance pilotée, jamais en somme des puissances maximales.**
-Écrire « 8 points × 11 kW = 88 kW » est trompeur et fait fuir le gérant. La bonne
-formulation, celle qui montre l'intérêt du pilotage :
+Écrire « 8 points × 11 kW = 88 kW » est trompeur et fait fuir le gérant :
 
 > « **8 points de recharge de 11 kW, plafonnés dynamiquement à 44 kW** pour l'ensemble du
 > parking. »
+
+Ce plafond doit être **calculé** à partir du besoin énergétique nocturne et de la marge du
+site — pas choisi. Un plafond posé arbitrairement est exactement l'erreur que le simulateur
+prétend éviter chez les autres.
+
+Le coefficient **0,93** entre kVA et kW est une **hypothèse de prudence configurable**, pas
+une conversion universelle.
 
 Deux précisions à faire figurer, parce qu'elles évitent une déception :
 - **Tous les véhicules n'acceptent pas 22 kW en courant alternatif** — beaucoup plafonnent à
@@ -267,7 +338,23 @@ les conséquences.
 | Aides | aucune (voir §2.2) | c'était précisément le guichet ADVENIR fermé en 2023 |
 
 Ouvrir au public transforme un service d'hébergeur en activité de recharge, avec ses
-obligations propres. Le simulateur ne doit pas laisser croire que c'est le même projet.
+obligations propres — données, continuité de service, contrôle au moins annuel.
+
+**Mais le statut ne se déduit pas de l'intention.** La définition juridique d'un point ouvert
+au public est plus large que « accessible à qui ne dort pas ici » : une infrastructure sur
+domaine privé peut être **réputée ouverte au public** dès lors que son accès est non
+discriminatoire, même avec authentification ou paiement. Le simulateur ne code donc pas
+« réservé aux clients = privé ». Il pose cinq questions — accès physique libre ? réservation
+obligatoire ? extérieurs admis ? badge ou code individuel ? conditions identiques pour tous ? —
+et rend un verdict prudent : **probablement non ouvert au public · probablement ouvert au
+public · statut à vérifier**.
+
+⚠️ **Limite assumée en version 1.** Ouvrir au public n'ajoute pas seulement des obligations :
+cela ajoute une **demande de passage** que nous ne savons pas estimer sans étude de
+fréquentation. La version 1 l'exclut explicitement du dimensionnement et le dit :
+« la demande des visiteurs extérieurs n'est pas intégrée à cette estimation ». Même règle
+pour les **salariés** : soit on demande leur nombre et leur présence, soit on les exclut en
+le disant. Un besoin non chiffré ne doit jamais être un besoin silencieusement ignoré.
 
 ### 3.7 Le classement touristique, un levier plus fort que l'obligation
 
@@ -298,11 +385,27 @@ invest = points × cout_point + genie_civil(distance, nb_zones) + pilotage + ren
 
 **Recettes** — le camping revend l'électricité :
 ```
-kWh_annuels = sessions_par_nuit × kWh_par_session × nuits_exploitees × occupation_moyenne
-marge_kWh   = prix_revente − prix_achat
-recette     = kWh_annuels × marge_kWh
+kWh_nuit = VE_arrivants × 0,90 × 30 kWh + VE_en_sejour × taux_appoint × 12 kWh
+
+sessions_annuelles ≈ sessions_nuit_haute_saison × nuits_ouvertes
+                     × (occupation_moyenne / occupation_haute_saison)
+
+marge_kWh = prix_revente − prix_achat − frais_variables (monétique, supervision)
+recette_nette = kWh_annuels × marge_kWh
+                − abonnement_supervision − maintenance − contrôle réglementaire
 ```
-- `kWh_par_session` : 30 kWh pour un arrivant, 12 kWh pour un appoint. **[À CONFIRMER n° 8]**
+
+⚠️ **Deux pièges corrigés depuis la version 1 :**
+- **Le taux d'occupation était compté deux fois.** `sessions_par_nuit` l'intègre déjà ; le
+  multiplier à nouveau par `occupation_moyenne` divisait la recette par un facteur proche de
+  deux. On ramène désormais la haute saison à la moyenne par un **rapport**, pas un produit.
+- **Une énergie moyenne par session perdait l'essentiel.** Un arrivant (~30 kWh) et un
+  appoint (~12 kWh) n'ont rien à voir : les deux termes restent séparés jusqu'au bout.
+
+En version 2, remplacer l'approximation par une somme réelle par saison :
+`sessions_haute × nuits_haute + sessions_moyenne × nuits_moyenne + sessions_basse × nuits_basse`.
+
+- Énergies par session : 30 kWh à l'arrivée, 12 kWh en appoint. **[À CONFIRMER n° 8]**
 - `prix_revente` : 0,35 à 0,50 €/kWh. `prix_achat` : le tarif professionnel du site.
 - **Un établissement saisonnier n'exploite que 5 mois** : c'est ce qui allonge le retour sur
   investissement, et c'est précisément ce que les simulateurs génériques oublient.
@@ -374,14 +477,24 @@ reproduire.
 
 ## 5. Cas de test à figer
 
-| Cas | Attendu à vérifier |
+Valeurs recalculées avec les hypothèses de la spec (parc 11,5 % en 2030, facteur de pointe
+1,4, appoint 0,25 camping / 0,15 hôtel) et la **formule d'arrivées corrigée**. Les attendus
+de la version 1 ne correspondaient pas au moteur qu'elle décrivait.
+
+| Cas | Attendu, scénario confort |
 |---|---|
-| Camping 150 emplacements, 80 %, séjour 7 nuits, horizon 2030 | ~4 à 6 points |
-| Hôtel 40 chambres, 70 %, séjour 1,8 nuit, horizon 2030 | **plus de points qu'un camping de 150 emplacements** — la contre-intuition à vérifier |
-| Camping 60 emplacements, horizon 2026 | 1 à 2 points : ne pas sur-équiper un petit site |
-| Même camping, horizon 2034 | doit croître nettement, sinon la projection ne sert à rien |
+| Camping 150 emplacements, 80 %, 7 nuits, horizon 2030 | **7 points** (4,73 sessions × 1,4) |
+| Hôtel 40 chambres, 70 %, 1,8 nuit, horizon 2030 | **2 points** (1,37 × 1,4) |
+| **Hôtel 150 chambres** vs camping 150 emplacements | **8 contre 7** — la rotation joue à capacité comparable, avec un tiers de véhicules en moins |
+| Camping 60 emplacements, horizon 2026 | ~2 points : ne pas sur-équiper un petit site |
+| Même camping, horizon 2034 | ~5 points, sinon la projection ne sert à rien |
 | Puissance souscrite très juste | doit basculer sur « pilotage indispensable » |
+| Énergie nocturne supérieure à la marge | doit rendre le **troisième verdict** (énergie insuffisante), pas seulement « pilotage » |
 | Établissement saisonnier 5 mois vs annuel | le retour sur investissement doit environ doubler |
+
+**Ces attendus sont à figer avant le développement**, quitte à recalibrer d'abord les taux
+d'appoint et le facteur de pointe : des tests qui ne correspondent pas au moteur ne testent
+rien.
 
 ---
 
@@ -423,9 +536,10 @@ guichets), SDES (parc en circulation), ADEME.
 
 | N° | Point | Pourquoi c'est important |
 |---|---|---|
-| 1 | Conditions du guichet ADVENIR Corse et Outre-Mer | seule aide nationale peut-être mobilisable |
+| ~~1~~ | ~~Guichet ADVENIR Corse et Outre-Mer~~ | ✅ **Confirmé** : 30 % en parking ouvert au public, 20 % plafonné à 900 €/point en flotte et salariés, pilotage EDF-SEI obligatoire |
 | 2 | Véhicules par emplacement / par chambre | multiplie tout le calcul |
-| 3 | Trajectoire du parc électrique 2026 → 2034 | hypothèse la plus structurante |
+| 3a | ~~Point de départ du parc : 5,5 % en 2026~~ | ✅ **Confirmé** : 3,5 % électriques + 2,0 % hybrides rechargeables dans le parc roulant au 01/01/2026 |
+| 3b | Trajectoire 2027 → 2034 | reste l'hypothèse la plus structurante du modèle |
 | 4 | Sur-électrification des clientèles NL / DE / BE | pertinent surtout en littoral |
 | 5 | Effet du niveau de gamme sur la part de véhicules électriques | peut être supprimé si non étayé |
 | 6 | Taux de recharge d'appoint en séjour | différencie camping et hôtel |
@@ -440,7 +554,45 @@ guichets), SDES (parc en circulation), ADEME.
 
 ---
 
-## 8. Retour de la relecture externe — ce qui a été intégré, et ce qui a été écarté
+## 8 bis. Deuxième relecture externe — quatre bugs de formule et une conclusion fausse
+
+La relecture de la version 2 a validé le lancement du développement **sous réserve** de
+corriger le moteur. Elle avait raison sur tout, y compris là où ça fait mal.
+
+### Les quatre erreurs de formule, corrigées
+
+1. **Arrivées** — `capacite × occupation / duree_sejour` oubliait `vehicules_par_unite`.
+   L'hôtel était surévalué (0,75 véhicule par chambre), la résidence sous-évaluée (1,1).
+2. **Recettes** — le taux d'occupation était appliqué **deux fois**, `sessions_par_nuit`
+   l'intégrant déjà. La recette était divisée par près de deux.
+3. **Énergie par session** — une valeur moyenne unique effaçait la différence entre une
+   recharge d'arrivée (~30 kWh) et un appoint (~12 kWh).
+4. **Puissance** — le moteur vérifiait la puissance de pointe mais **jamais l'énergie
+   livrable dans la nuit**. Le « plafonné à 44 kW » de l'exemple était arbitraire.
+
+### La conclusion que nous avions fausse
+
+La version 2 affirmait qu'**un hôtel de 40 chambres a besoin de plus de points qu'un camping
+de 150 emplacements**. Recalculé avec nos propres hypothèses : **2 points contre 7**. L'erreur
+n'était pas dans le raisonnement sur la rotation — qui reste juste — mais dans le choix de
+comparer des capacités sans rapport. À 150 contre 150, l'hôtel demande bien plus (8 contre 7),
+avec un tiers de véhicules en moins. La formulation a été reprise et le cas de test corrigé.
+
+### Trois points réglementaires resserrés
+- Les travaux en amont **limitent** le nombre de points, ils n'exemptent pas.
+- La qualification PME se pose en **trois questions** distinctes, pas une.
+- La Corse et l'Outre-mer sortent du moteur métropolitain — mais y **gagnent** des aides.
+
+### Confirmations obtenues
+Guichets ADVENIR en zones non interconnectées, parc rechargeable à 5,5 % en 2026, étude de
+conception obligatoire à 50 places, et critère Atout France n° 222 **optionnel, 2 points,
+catégories 1 à 5 étoiles**. Surtout : **aucun critère de recharge au référentiel Camping
+et PRL** — l'argument du classement ne vaut donc **pas** pour les campings, qui sont notre
+cible principale. À ne pas utiliser.
+
+---
+
+## 8. Première relecture externe — ce qui a été intégré, et ce qui a été écarté
 
 ### Intégré
 - Séparation en **quatre réponses distinctes** (§3.5) plutôt qu'un chiffre unique.
