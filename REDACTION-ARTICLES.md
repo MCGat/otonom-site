@@ -176,8 +176,11 @@ Le corps est du HTML rendu sous `.article-body`. Utiliser **uniquement** ces blo
 
 - Un article = une ligne dans la table `articles` (BDD, `server/utils/db.ts`). Corps stocké en **HTML**.
 - Édition des textes possible dans **l'admin** (onglet **Blog** → éditeur visuel).
-- Champs : `title`, `slug`, `excerpt`, `cover` (image en niveaux de gris), `body`, `status` (`draft`/`published`).
-- Image de couverture : format paysage, **noir & blanc / désaturée** (le rendu applique un grayscale).
+- Champs : `title`, `slug`, `excerpt`, `cover`, `tags`, `cocon`, `body`, `status` (`draft`/`scheduled`/`published`).
+- **AUCUNE IMAGE pour l'instant** (décision du patron, 05/08/2026) : laisser `cover` vide et ne pas
+  poser de `<img>` dans le corps. Les visuels seront choisis et ajoutés plus tard, en une passe.
+  La mise en page fonctionne sans image — la carte de liste et le hero d'article s'adaptent tout seuls.
+- Quand les images reviendront : format paysage, **noir & blanc / désaturée** (le rendu applique un grayscale).
 - **Ne jamais mettre un article en prod sans validation explicite du patron.** Push git uniquement sur demande.
 
 ---
