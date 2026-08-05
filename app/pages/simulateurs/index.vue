@@ -96,6 +96,17 @@ const simulateurs = [
     cta: 'Calculer mon TCO'
   },
   {
+    url: '/simulateurs/bornes-camping-hotel',
+    titre: 'Combien de bornes pour mon camping ou mon hôtel ?',
+    description: "Le dimensionnement d'une infrastructure de recharge pour accueillir des clients, sans surinvestir ni décevoir.",
+    points: [
+      'Nombre de points de charge selon les arrivées, pas selon la capacité',
+      'Puissance à installer, et si votre abonnement suffit',
+      'Ce que la loi impose réellement, et les aides encore ouvertes'
+    ],
+    cta: 'Calculer mon besoin'
+  },
+  {
     url: null,
     titre: "Coût & refacturation de la recharge d'un collaborateur",
     description: "Quand un salarié recharge chez lui, qui paie quoi ? Le coût réel, le juste remboursement et son traitement social.",
@@ -103,17 +114,6 @@ const simulateurs = [
       'Coût réel de la recharge à domicile, heures creuses comprises',
       'Montant de remboursement et traitement en avantage en nature',
       'Comparaison avec la recharge sur site et en itinérance'
-    ],
-    cta: null
-  },
-  {
-    url: null,
-    titre: 'Combien de bornes pour mon camping ou mon hôtel ?',
-    description: "Le dimensionnement d'une infrastructure de recharge pour accueillir des clients, sans surinvestir ni décevoir.",
-    points: [
-      'Nombre de points de charge selon la fréquentation et les rotations',
-      'Puissance à installer et impact sur votre raccordement',
-      'Investissement, exploitation et recettes possibles'
     ],
     cta: null
   }

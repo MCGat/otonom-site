@@ -109,10 +109,13 @@ registre pour être **datées et tracées**, mais aucun script ne peut dire qu'e
 
 ## 5. Nouveaux simulateurs
 
-- **Bornes camping / hôtel** — spec rédigée, v2 avec retour externe intégré :
-  `SPEC-SIMULATEUR-BORNES-CHR.md`. 14 points à confirmer, dont la trajectoire du parc
-  électrique, tous les coûts, et l'existence d'un critère « borne » au référentiel de
-  l'hôtellerie de plein air.
+- ~~**Bornes camping / hôtel**~~ — ✅ **développé le 05/08/2026** (`/simulateurs/bornes-camping-hotel`,
+  moteur `app/utils/simulateurs/bornesChr.ts`, 57 tests dans `test/bornes-chr.test.ts`).
+  Restent à caler avec OTONOM avant promotion : **tous les coûts d'installation**
+  (`CONFIG.couts`), la **trajectoire du parc rechargeable 2027-2034**, et les taux du
+  guichet ADVENIR en zone non interconnectée, repris d'une relecture externe et non
+  d'advenir.mobi. La **correction de gamme** est volontairement neutralisée à 1,0 faute de
+  source — la réactiver déplacerait les résultats jusqu'à 28 %.
 - **Coût et refacturation de la recharge d'un collaborateur** — annoncé « prochainement » sur
   `/simulateurs`, pas encore spécifié.
 

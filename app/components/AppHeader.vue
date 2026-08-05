@@ -113,6 +113,11 @@ const simulateursDisponibles = [
     url: '/simulateurs/tco-flotte-electrique',
     titre: 'Simulateur de TCO flotte électrique',
     sous: 'Coût total de possession, recharge et infrastructure comprises'
+  },
+  {
+    url: '/simulateurs/bornes-camping-hotel',
+    titre: 'Combien de bornes pour mon camping ou mon hôtel ?',
+    sous: 'Dimensionnement, puissance et aides réellement mobilisables'
   }
 ]
 
@@ -120,10 +125,6 @@ const simulateursAVenir = [
   {
     titre: 'Coût & refacturation de la recharge d\'un collaborateur',
     sous: 'Recharge à domicile, remboursement et traitement social'
-  },
-  {
-    titre: 'Combien de bornes pour mon camping ou mon hôtel ?',
-    sous: 'Dimensionnement selon la fréquentation et les rotations'
   }
 ]
 
