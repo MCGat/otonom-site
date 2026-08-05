@@ -89,15 +89,19 @@ const formatDate = (iso?: string) => {
 <style scoped>
 .btags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: clamp(26px, 3.5vw, 40px); }
 .btag {
-  font-family: var(--ff-mono); font-size: 11.5px; letter-spacing: .04em; color: var(--muted);
-  background: none; border: 1px solid var(--line); border-radius: 999px; padding: 7px 15px; cursor: pointer;
+  font-family: var(--ff-mono); font-size: 11.5px; letter-spacing: .04em; color: var(--ink-soft);
+  background: none; border: 1px solid rgba(255, 255, 255, .22); border-radius: 999px; padding: 7px 15px; cursor: pointer;
   transition: color .18s ease, border-color .18s ease, background .18s ease;
 }
-.btag:hover { color: var(--ink); border-color: var(--ink-soft); }
+.btag:hover { color: var(--ink); border-color: var(--ink); }
 .btag.is-on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 
 .blog-card-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
-.blog-card-tag { font-family: var(--ff-mono); font-size: 10px; letter-spacing: .05em; color: var(--muted-2); border: 1px solid var(--line-soft); border-radius: 999px; padding: 3px 9px; }
+.blog-card-tag {
+  font-family: var(--ff-mono); font-size: 10.5px; letter-spacing: .06em;
+  color: var(--ink); background: rgba(255, 255, 255, .07);
+  border: 1px solid rgba(255, 255, 255, .22); border-radius: 999px; padding: 3px 10px;
+}
 
 .btags-empty { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .btag-reset { font-family: var(--ff-mono); font-size: 12px; color: var(--ink); background: none; border: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
