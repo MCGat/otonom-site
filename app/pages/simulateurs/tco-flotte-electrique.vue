@@ -1189,6 +1189,75 @@ const v2 = computed(() => {
 })
 
 /* ── Lead ────────────────────────────────────────────────────────────────── */
+
+/**
+ * Ce que le prospect a saisi, rangé comme dans le formulaire.
+ * Sans cela, l'email de lead ne contient qu'un nom et un email — et l'on rappelle
+ * quelqu'un sans savoir de quoi lui parler.
+ */
+function sectionsLead() {
+  const v = r.value!
+  const i = v.input
+  const enLoc = i.financement === 'lld' || i.financement === 'loa'
+  const services = [
+    inclut.entretien ? 'entretien' : null,
+    inclut.pneus ? 'pneumatiques' : null,
+    inclut.assurance ? 'assurance' : null
+  ].filter(Boolean)
+
+  const sections: { titre: string; lignes: [string, string][] }[] = [
+    { titre: 'Flotte', lignes: [
+      ['Véhicules à électrifier', nombreFr(i.nbVehicules)],
+      ['Type dominant', LABELS_CATEGORIE[i.categorie]],
+      ['Kilométrage annuel par véhicule', `${nombreFr(i.kmAn)} km`],
+      ['Durée de détention', `${v.dureeMois} mois`]
+    ] },
+    { titre: 'Financement & recharge', lignes: [
+      ['Mode de financement', LABELS_FINANCEMENT[i.financement || 'lld']],
+      ...(i.financement === 'loa'
+        ? [['Option d\'achat levée en fin de contrat', i.optionAchatLevee ? 'Oui' : 'Non'] as [string, string]] : []),
+      ['Profil de recharge', LABELS_PROFIL[i.profilRecharge || 'depot-nuit']],
+      ...(enLoc
+        ? [['Services compris dans le loyer', services.length ? services.join(', ') : 'Aucun'] as [string, string]] : [])
+    ] },
+    { titre: 'Infrastructure de recharge', lignes: [
+      ['Sites à équiper', nombreFr(Number(i.nbSites || 1))],
+      ['Points de charge calculés', nombreFr(v.nbPoints)],
+      ['Investissement infrastructure', eurosExact(v.investInfraTotal)],
+      // Non renseigné = la valeur par défaut du simulateur, pas « rien ».
+      ['Mise en service', String(i.moisDebut || moisCourant())]
+    ] }
+  ]
+
+  if (taiActif.value) {
+    sections.push({ titre: 'Taxe annuelle incitative', lignes: [
+      ['Flotte totale taxable', nombreFr(tai.flotteTaxable)],
+      ['Véhicules à faibles émissions actuels', nombreFr(tai.vfeActuels)],
+      ['Taux de renouvellement annuel', `${tai.tauxRenouvellementPct} %`]
+    ] })
+  }
+
+  sections.push(
+    { titre: 'Hypothèses', lignes: [
+      ['Valeurs du simulateur', aDesSurcharges.value ? 'MODIFIÉES par le prospect' : 'Valeurs OTONOM par défaut'],
+      ...(aDesSurcharges.value
+        ? [['Détail des modifications', Object.entries({ ...hyp, ...mix }).map(([k, val]) => `${k} = ${val}`).join(' · ')] as [string, string]]
+        : [])
+    ] },
+    { titre: 'Résultat calculé', lignes: [
+      ['TCO opérationnel électrique', eurosExact(v.elec.tcoOperationnel)],
+      ['TCO opérationnel thermique', eurosExact(v.therm.tcoOperationnel)],
+      ['Écart', `${eurosExact(v.ecart)} (${Math.round(v.ecartPct * 100)} %)`],
+      ['Par véhicule et par mois', `${eurosExact(v.tcoMensuelParVehiculeElec)} contre ${eurosExact(v.tcoMensuelParVehiculeTherm)}`],
+      ['Prix de revient kilométrique', `${v.prkElec.toFixed(2).replace('.', ',')} €/km contre ${v.prkTherm.toFixed(2).replace('.', ',')} €/km`],
+      ['Bascule économique', v.basculeEco.atteinte ? `mois ${(v.basculeEco.valeur ?? 0) + 1}` : 'non atteinte'],
+      ['Bascule de trésorerie', v.basculeTreso.atteinte ? `mois ${(v.basculeTreso.valeur ?? 0) + 1}` : 'non atteinte'],
+      ['Suramortissement', v.elec.suramortissement > 0 ? eurosExact(v.elec.suramortissement) : 'Aucun (location simple)']
+    ] }
+  )
+  return sections
+}
+
 const unlocked = ref(false)
 const g = reactive({ nom: '', email: '', entreprise: '', tel: '', optinCommercial: false, honey: '' })
 const sending = ref(false)
@@ -1212,14 +1281,8 @@ async function sendGate() {
     const res = await $fetch<{ ok: boolean }>('/api/lead', {
       method: 'POST',
       body: corpsLead('tco-flotte', contact, resumeTco(v), {
-        potDeMielRempli: potRempli,
-        tcoElec: Math.round(v.elec.tcoOperationnel),
-        tcoTherm: Math.round(v.therm.tcoOperationnel),
-        ecart: Math.round(v.ecart),
-        investInfra: Math.round(v.investInfraTotal),
-        nbVehicules: v.input.nbVehicules,
-        dureeMois: v.dureeMois,
-        hypothesesModifiees: aDesSurcharges.value
+        sections: sectionsLead(),
+        potDeMielRempli: potRempli
       })
     })
     if (res?.ok) {
