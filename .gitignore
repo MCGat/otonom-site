@@ -43,4 +43,4 @@ logs
 !.env.example
 
 # Export de travail des articles (régénéré, ne pas versionner)
-ARTICLES-A-VERIFIER.md
+ARTICLES-A-VERIFIER*.md
