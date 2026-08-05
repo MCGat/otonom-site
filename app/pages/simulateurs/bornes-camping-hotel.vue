@@ -493,8 +493,11 @@ function onCalculer() {
    sinon un formulaire vide produirait un chiffre. */
 watch(f, () => { if (r.value && valider()) r.value = calculerBornes({ ...f }) }, { deep: true })
 
+/* « Pilotage contraint » alarmait plus que la réalité : avec 28 kW de marge pour
+   7 kW de besoin énergétique, le pilotage suffit très largement. Le mot dit
+   désormais ce qui est vrai — il en faut un — sans laisser croire à une limite. */
 const labelVerdict = computed(() => ({
-  confortable: 'Compatible', contraint: 'Pilotage contraint', insuffisant: 'Renforcement'
+  confortable: 'Compatible', contraint: 'Pilotage nécessaire', insuffisant: 'Capacité insuffisante'
 }[r.value?.verdictPuissance || 'confortable']))
 
 const tagPuissance = computed(() => ({
@@ -506,8 +509,14 @@ const texteVerdict = computed(() => {
   if (!v) return ''
   if (v.margeDisponible === null) return "Puissance souscrite non renseignée&nbsp;: nous ne pouvons pas trancher. Le besoin énergétique ci-dessous reste valable, il suffit de le comparer à votre marge réelle."
   if (v.verdictPuissance === 'confortable') return "Votre abonnement absorbe l'installation. Un pilotage de charge reste recommandé pour lisser l'appel du soir, mais aucun renforcement n'est nécessaire."
-  if (v.verdictPuissance === 'contraint') return "Votre marge suffit à délivrer l'énergie de la nuit, mais pas à alimenter tous les points à pleine puissance en même temps. Le pilotage de charge devient <strong>indispensable</strong>&nbsp;: il étale la charge sur la nuit."
-  return "Votre marge ne permet pas de délivrer l'énergie nécessaire dans la fenêtre nocturne, même en pilotant. Trois issues&nbsp;: renforcer le raccordement, réduire le nombre de points, ou allonger la fenêtre de charge."
+  if (v.verdictPuissance === 'contraint') {
+    const aise = v.margeDisponible! / v.puissanceMiniEnergie
+    return `Votre marge ne permet pas d'alimenter tous les points à pleine puissance en même temps&nbsp;: un pilotage de charge est nécessaire pour étaler la charge sur la nuit. `
+      + (aise >= 2
+        ? `Mais l'énergie, elle, passe largement — vous disposez de ${nombre(v.margeDisponible!)} kW pour un besoin de ${nombre(v.puissanceMiniEnergie)} kW, soit ${aise.toFixed(1)} fois la marge nécessaire. Le pilotage sera confortable.`
+        : `La marge reste serrée&nbsp;: ${nombre(v.margeDisponible!)} kW disponibles pour un besoin énergétique de ${nombre(v.puissanceMiniEnergie)} kW.`)
+  }
+  return "Dans les conditions actuelles, votre marge ne permet pas de délivrer l'énergie nécessaire dans la fenêtre nocturne, même en pilotant. Plusieurs issues avant d'envisager des travaux&nbsp;: déplacer d'autres usages hors de la fenêtre de recharge, allonger cette fenêtre, réduire le nombre de points, adapter votre puissance souscrite — et, en dernier recours, renforcer le raccordement."
 })
 
 /* ── Lead ──────────────────────────────────────────────────────────────── */

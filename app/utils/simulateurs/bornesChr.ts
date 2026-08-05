@@ -372,7 +372,11 @@ export function calculerBornes(i: BornesInput): BornesResult {
   const genieCivilForfait = CONFIG.couts.forfaitChantier
   const genieCivilTranchee = Math.round(metresTranchee * CONFIG.couts.tranchee)
   const investGenieCivil = genieCivilForfait + genieCivilTranchee
-  const investPilotage = verdict !== 'confortable' || marge !== null ? CONFIG.couts.pilotage : 0
+  /* Le pilotage n'est facturé que s'il sert. Le `||` d'origine rendait la
+     condition toujours vraie dès que la marge était connue : 3 500 € ajoutés à
+     un site dont le plafond égale déjà la puissance appelée, donc qui n'a rien à
+     plafonner. Un devis gonflé fait renoncer aussi sûrement qu'un devis faux. */
+  const investPilotage = verdict !== 'confortable' ? CONFIG.couts.pilotage : 0
   const investRenforcement = renforcement ? CONFIG.couts.renforcement : 0
   const investPreEquipement = preEquiper * CONFIG.couts.preEquipement
   const investTotal = investPoints + investGenieCivil + investPilotage + investRenforcement + investPreEquipement
@@ -415,7 +419,11 @@ export function calculerBornes(i: BornesInput): BornesResult {
      nécessaires. */
   const margeNuitee = prixNuitee * CONFIG.margeContributiveNuitee
   const H = CONFIG.horizonRemboursementAns
-  const nonRembourse = retourAns === null || retourAns > H ? resteACharge - Math.max(0, margeAn) * H : 0
+  /* Sans le `Math.max(0, …)` d'origine, une exploitation déficitaire s'ajoute
+     bien à ce qu'il faut rembourser. Le plancher à zéro effaçait la perte : deux
+     scénarios perdant 234 € et 4 000 € par an rendaient le même nombre de
+     nuitées, ce qui rendait la comparaison offert/facturé sans objet. */
+  const nonRembourse = retourAns === null || retourAns > H ? resteACharge - margeAn * H : 0
   const nuiteesSupplementaires = nonRembourse > 0 ? Math.ceil(nonRembourse / margeNuitee / H) : null
   // Côté batterie : le rendement de charge joue ici, et seulement ici.
   const kmParArrivee = Math.round(CONFIG.energie.arrivee * CONFIG.nuit.rendement / CONFIG.energie.consoKwh100 * 100)
