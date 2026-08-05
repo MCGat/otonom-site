@@ -96,10 +96,20 @@ console.log('\n=== PUISSANCE ET ÉNERGIE ===')
 {
   const r = calculerBornes({ ...CAMPING, puissanceSouscrite: 400, pointeEtablissement: 100 })
   // C'est LA correction n° 4 : le besoin énergétique existe indépendamment de la pointe.
-  t('la puissance mini d’énergie découle des kWh de la nuit',
-    proche(r.puissanceMiniEnergie, r.kWhNuit / (CONFIG.nuit.fenetreH * CONFIG.nuit.rendement)))
+  // Les kWh étant comptés AU COMPTEUR de la borne, le rendement de charge du
+  // véhicule joue en aval et n'entre pas dans le dimensionnement.
+  t('la puissance mini d’énergie découle des kWh de la nuit, sans rendement',
+    proche(r.puissanceMiniEnergie, r.kWhNuit / CONFIG.nuit.fenetreH))
   t('le plafond de pilotage est calculé, pas choisi', r.plafondPilotage >= r.puissanceMiniEnergie)
   t('le plafond piloté reste sous la puissance installée', r.plafondPilotage <= r.puissanceInstallee)
+}
+{
+  // Un plafond au-dessus de la marge serait une promesse intenable.
+  const etroit = calculerBornes({ ...CAMPING, puissanceSouscrite: 100, pointeEtablissement: 90 })
+  t('le plafond ne dépasse JAMAIS la marge disponible',
+    etroit.plafondPilotage <= (etroit.margeDisponible ?? Infinity),
+    `${etroit.plafondPilotage} > ${etroit.margeDisponible}`)
+  t('et le verdict dit alors que l’énergie ne passe pas', etroit.verdictPuissance === 'insuffisant')
 }
 
 console.log('\n=== ÉNERGIE : arrivée et appoint restent distincts ===')

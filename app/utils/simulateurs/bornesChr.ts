@@ -77,14 +77,24 @@ export const CONFIG = {
   ambition: { essentiel: 0.7, confort: 1.0, premium: 1.4 } as Record<Ambition, number>,
 
   /**
-   * Énergie par session, en kWh. Arrivée et appoint n'ont rien à voir.
-   * `consoKwh100` sert uniquement à traduire ces kWh en kilomètres rendus, pour
-   * que le gérant puisse juger de l'hypothèse au lieu de la subir. [HYPOTHÈSE]
+   * Énergie par session, en kWh **MESURÉS AU COMPTEUR DE LA BORNE**.
+   * Cette convention lève une ambiguïté qui rendait le modèle incohérent : ce
+   * sont les kWh facturés au client ET ceux que l'installation doit délivrer.
+   * Le rendement de charge ne s'applique donc qu'en aval, pour dire ce que la
+   * batterie reçoit réellement — jamais dans le dimensionnement. [HYPOTHÈSE]
    */
   energie: { arrivee: 30, appoint: 12, consoKwh100: 17.5 },
 
   /** Durée sur laquelle on juge le remboursement de l'investissement. [HYPOTHÈSE] */
   horizonRemboursementAns: 8,
+
+  /**
+   * Part du prix d'une nuitée qui reste réellement disponible pour rembourser
+   * l'installation, une fois retirés TVA, commissions, ménage, fluides et
+   * personnel. Raisonner sur le prix affiché revenait à supposer qu'une nuitée
+   * supplémentaire ne coûte rien à produire. [HYPOTHÈSE]
+   */
+  margeContributiveNuitee: 0.60,
 
   /** Recharge de nuit : fenêtre et rendement. [HYPOTHÈSE] */
   nuit: { fenetreH: 12, rendement: 0.90 },
@@ -237,6 +247,8 @@ export interface BornesResult {
   /** De quoi rendre la marge traçable au lieu de l'imposer. */
   margeKwh: number
   prixNuitee: number
+  margeNuitee: number
+  ratioOccupationMoyenne: number
   horizonRemboursementAns: number
   kmParArrivee: number
   /** Réglementaire */
@@ -334,7 +346,10 @@ export function calculerBornes(i: BornesInput): BornesResult {
   else if (pointe === undefined) avert.push('Pointe du site estimée à 80 % de la puissance active souscrite, faute de relevé.')
 
   const kWhNuit = court.kWh
-  const pMiniEnergie = kWhNuit / (CONFIG.nuit.fenetreH * CONFIG.nuit.rendement)
+  /* Les kWh sont comptés au compteur de la borne : la puissance nécessaire pour
+     les délivrer ne dépend donc PAS du rendement de charge du véhicule, qui joue
+     en aval. L'appliquer ici gonflait le besoin de 11 % sans raison. */
+  const pMiniEnergie = kWhNuit / CONFIG.nuit.fenetreH
 
   let verdict: VerdictPuissance = 'confortable'
   if (marge !== null) {
@@ -342,10 +357,12 @@ export function calculerBornes(i: BornesInput): BornesResult {
     else if (marge < pAppelee) verdict = 'contraint'
   }
   const renforcement = verdict === 'insuffisant'
-  // Le plafond de pilotage se CALCULE : besoin énergétique d'un côté, marge de l'autre.
-  const plafondPilotage = marge !== null
-    ? Math.max(pMiniEnergie, Math.min(pAppelee, marge))
-    : pAppelee
+  /* Le plafond de pilotage se CALCULE : il ne peut jamais dépasser la marge
+     réellement disponible. Quand le besoin énergétique excède cette marge, il
+     n'existe pas de plafond valable — c'est précisément le verdict
+     « insuffisant », et afficher un plafond au-dessus de la marge serait une
+     promesse que l'installation ne peut pas tenir. */
+  const plafondPilotage = marge !== null ? Math.min(pAppelee, marge) : pAppelee
 
   /* — Investissement — */
   const coutPoint = CONFIG.couts.point[pUnit] ?? CONFIG.couts.point[CONFIG.puissanceParDefaut]!
@@ -392,10 +409,16 @@ export function calculerBornes(i: BornesInput): BornesResult {
   /* Ce que la vente d'électricité ne rembourse pas, exprimé en nuitées :
      un gérant sait lire ce chiffre, et nous n'inventons aucune prévision. */
   const prixNuitee = type === 'camping' ? 35 : type === 'hotel' ? 95 : 70   // [HYPOTHÈSE]
+  /* Une nuitée supplémentaire ne rembourse pas son prix de vente : il en part en
+     TVA, commissions, ménage, fluides et personnel. C'est la MARGE qui rembourse.
+     Raisonner sur le prix affiché sous-estimait franchement le nombre de nuitées
+     nécessaires. */
+  const margeNuitee = prixNuitee * CONFIG.margeContributiveNuitee
   const H = CONFIG.horizonRemboursementAns
   const nonRembourse = retourAns === null || retourAns > H ? resteACharge - Math.max(0, margeAn) * H : 0
-  const nuiteesSupplementaires = nonRembourse > 0 ? Math.ceil(nonRembourse / prixNuitee / H) : null
-  const kmParArrivee = Math.round(CONFIG.energie.arrivee / CONFIG.energie.consoKwh100 * 100)
+  const nuiteesSupplementaires = nonRembourse > 0 ? Math.ceil(nonRembourse / margeNuitee / H) : null
+  // Côté batterie : le rendement de charge joue ici, et seulement ici.
+  const kmParArrivee = Math.round(CONFIG.energie.arrivee * CONFIG.nuit.rendement / CONFIG.energie.consoKwh100 * 100)
 
   /* — Réglementaire — */
   const places = Math.max(1, num(i.places, capacite))
@@ -447,7 +470,14 @@ export function calculerBornes(i: BornesInput): BornesResult {
       label: 'Marge sur le kilowattheure',
       valeur: `${e2(CONFIG.prix.revente)} € facturés − ${e2(CONFIG.prix.achat)} € d’achat − ${e2(CONFIG.prix.fraisVariables)} € de monétique et supervision = ${e2(margeKwh)} € de marge`
     },
-    { label: 'Prix moyen d’une nuitée', valeur: `${prixNuitee} € — sert à convertir le solde en réservations` }
+    {
+      label: 'Ce qu’une nuitée rembourse vraiment',
+      valeur: `${prixNuitee} € facturés, dont ${Math.round(CONFIG.margeContributiveNuitee * 100)} % de marge contributive = ${Math.round(margeNuitee)} € — le reste part en TVA, commissions, ménage et fluides`
+    },
+    {
+      label: 'Occupation moyenne rapportée à la haute saison',
+      valeur: `× ${ratioOcc} — c’est ce qui ramène ${Math.round(kWhNuit)} kWh d’une nuit pleine à ${Math.round(kWhAn).toLocaleString("fr-FR")} kWh sur l’année`
+    }
   ]
 
   return {
@@ -463,7 +493,8 @@ export function calculerBornes(i: BornesInput): BornesResult {
     investPilotage, investRenforcement, investPreEquipement, investTotal,
     aideEstimee: aide, aideCommentaire: aideCom,
     kWhAn, recetteAn, chargesAn, margeAn, retourAns, nuiteesSupplementaires,
-    margeKwh, prixNuitee, horizonRemboursementAns: H, kmParArrivee,
+    margeKwh, prixNuitee, margeNuitee, ratioOccupationMoyenne: ratioOcc,
+    horizonRemboursementAns: H, kmParArrivee,
     statutPme: pme, minimumReglementaire: minimum, texteReglementaire: texte,
     etudeConceptionObligatoire: etudeObligatoire,
     hypotheses, avertissements: avert
