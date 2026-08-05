@@ -62,7 +62,11 @@ p{margin:0}
 .nav-actions{display:flex;align-items:center;gap:14px}
 .nav-toggle{display:none;background:none;border:0;color:var(--ink);cursor:pointer;padding:8px}
 @media(max-width:880px){
-  .nav-links{position:fixed;inset:72px 0 auto 0;flex-direction:column;gap:0;background:var(--bg-1);border-bottom:1px solid var(--line);padding:8px var(--pad) 20px;transform:translateY(-130%);transition:transform .35s cubic-bezier(.4,0,.2,1)}
+  /* Le menu déplié peut dépasser l'écran — surtout quand le sous-menu des
+     simulateurs s'ouvre : « Contact » sortait du champ sans moyen d'y accéder.
+     On borne la hauteur et on rend le panneau défilant. `dvh` tient compte des
+     barres mobiles qui apparaissent et disparaissent au défilement. */
+  .nav-links{position:fixed;inset:72px 0 auto 0;flex-direction:column;gap:0;background:var(--bg-1);border-bottom:1px solid var(--line);padding:8px var(--pad) 20px;transform:translateY(-130%);transition:transform .35s cubic-bezier(.4,0,.2,1);max-height:calc(100vh - 72px);max-height:calc(100dvh - 72px);overflow-y:auto;overscroll-behavior:contain}
   .nav-links.open{transform:translateY(0)}
   .nav-links a{padding:14px 0;border-bottom:1px solid var(--line-soft);width:100%;font-size:16px}
   .nav-toggle{display:block}

@@ -303,6 +303,7 @@
           {{ sending ? 'Affichage…' : 'Afficher le détail complet' }}
           <svg v-if="!sending" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
         </button>
+        <p v-if="gateMsg" class="sim-gate-msg" role="alert">{{ gateMsg }}</p>
         <p v-if="gateError" class="sim-gate-msg" role="alert">Une erreur est survenue. Réessayez, ou écrivez-nous à <a href="mailto:e.barlet@mc-groupe.com">e.barlet@mc-groupe.com</a>.</p>
         <p class="sim-gate-consent">Affichage immédiat, sans engagement. Vos coordonnées restent confidentielles — <NuxtLink to="/confidentialite">politique de confidentialité</NuxtLink>.</p>
       </form>
@@ -471,11 +472,22 @@ const unlocked = ref(false)
 const g = reactive({ nom: '', email: '', entreprise: '', tel: '', optinCommercial: false, honey: '' })
 const sending = ref(false)
 const gateError = ref(false)
+const gateMsg = ref('')
+
+const estEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
 
 async function sendGate() {
   if (sending.value || !r.value) return
   if (g.honey) { unlocked.value = true; return }
   gateError.value = false
+  gateMsg.value = ''
+
+  /* Le formulaire est en `novalidate` : sans ce contrôle, un champ vide part au
+     serveur, revient en 400, et l'utilisateur ne lit qu'un « une erreur est
+     survenue » qui ne lui dit pas quoi corriger. */
+  if (!g.nom.trim()) { gateMsg.value = 'Indiquez votre nom pour afficher le détail.'; return }
+  if (!estEmail(g.email.trim())) { gateMsg.value = 'Indiquez un email professionnel valide.'; return }
+
   sending.value = true
   try {
     const v = r.value

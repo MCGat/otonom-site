@@ -11,8 +11,8 @@
         <div
           class="nav-sim"
           :class="{ 'is-open': simOpen }"
-          @mouseenter="ouvrir"
-          @mouseleave="fermer"
+          @mouseenter="ouvrirSurvol"
+          @mouseleave="fermerSurvol"
         >
           <NuxtLink
             ref="declencheur"
@@ -132,14 +132,31 @@ const surSimulateur = computed(() => route.path.startsWith('/simulateurs'))
 
 // Le survol ouvre au pointeur ; le clic sert au tactile et au clavier.
 let fermeture: ReturnType<typeof setTimeout> | null = null
-function ouvrir() {
+
+/**
+ * Sur un écran tactile, toucher le chevron déclenche un survol SYNTHÉTIQUE juste
+ * avant le clic : le menu s'ouvrait au faux survol, puis le clic le refermait —
+ * et le premier appui semblait sans effet.
+ *
+ * On se fie au pointeur qui a réellement produit l'événement (`pointerType`), et
+ * non à `matchMedia('(hover: hover)')` : beaucoup d'appareils tactiles — portables
+ * à écran tactile, certains Android — se déclarent survolables à tort.
+ */
+function ouvrirSurvol(e: PointerEvent) {
+  if (e.pointerType !== 'mouse') return
   if (fermeture) { clearTimeout(fermeture); fermeture = null }
   simOpen.value = true
 }
-function fermer() {
+function fermerSurvol(e: PointerEvent) {
+  if (e.pointerType !== 'mouse') return
   // Petit délai : sans lui, traverser l'espace entre le bouton et le panneau
   // referait disparaître le menu sous le curseur.
   fermeture = setTimeout(() => { simOpen.value = false }, 120)
+}
+/** Fermeture explicite (clic, échappement) : elle vaut sur tous les appareils. */
+function fermer() {
+  if (fermeture) { clearTimeout(fermeture); fermeture = null }
+  simOpen.value = false
 }
 watch(() => route.path, () => {
   menuOpen.value = false
