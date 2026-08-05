@@ -98,7 +98,10 @@ const formatDate = (iso?: string) => {
 .lies-nav button:hover { color: var(--ink); border-color: var(--ink); }
 .lies-nav svg { width: 17px; height: 17px; }
 
-.lies-piste { list-style: none; margin: 0; padding: 0 0 6px; display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+/* `overflow-x: auto` empêche l'axe vertical de rester visible : sans réserve en
+   haut, le soulèvement de 2 px au survol se retrouve rogné. On la crée en
+   rembourrage et on l'annule en marge, pour ne pas décaler la mise en page. */
+.lies-piste { list-style: none; margin: -8px 0 0; padding: 8px 0 6px; display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
 .lies-piste::-webkit-scrollbar { display: none; }
 .lies-piste > li { flex: 0 0 clamp(240px, 74%, 300px); scroll-snap-align: start; }
 /* Trois articles ou moins : pas de défilement, une grille qui remplit la largeur. */
