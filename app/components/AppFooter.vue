@@ -35,7 +35,6 @@
           <ul>
             <li><NuxtLink to="/simulateurs/transition">Simulateur de transition</NuxtLink></li>
             <li><NuxtLink to="/simulateurs/tco-flotte-electrique">TCO flotte électrique</NuxtLink></li>
-            <li><NuxtLink to="/simulateurs">Tous les simulateurs</NuxtLink></li>
           </ul>
         </div>
       </div>
