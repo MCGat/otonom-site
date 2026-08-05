@@ -4,6 +4,10 @@
       <NuxtLink to="/admin/blog" class="back">← Articles</NuxtLink>
       <div class="editor-actions">
         <a v-if="isLive && !isNew" :href="`/blog/${form.slug}`" target="_blank" rel="noopener" class="ed-view">Voir ↗</a>
+        <!-- Résumé du maillage, visible sans quitter le haut de page. -->
+        <span class="ed-links" :class="{ 'is-bad': liensCasses.length }">
+          {{ liensInternes.length }} int · {{ liensExternes.length }} ext<template v-if="liensCasses.length"> · {{ liensCasses.length }} cassé{{ liensCasses.length > 1 ? 's' : '' }}</template>
+        </span>
         <span class="ed-state" :class="`ed-state--${form.status}`">{{ stateLabel }}</span>
         <button type="button" class="btn btn--primary" :disabled="saving" @click="save()">{{ saveLabel }}</button>
       </div>
@@ -30,59 +34,6 @@
 
         <div ref="bodyEl" class="article-body ed-body" contenteditable="true" @input="onBodyInput" />
 
-        <!-- Inspecteur de liens : se recalcule à chaque frappe, pour voir en un
-             coup d'œil ce qui est maillé et ce qui pointe dans le vide. -->
-        <section class="lk-panel">
-          <header class="lk-panel-h">
-            <h2>Liens de l'article</h2>
-            <span class="lk-count">{{ liens.length }} lien{{ liens.length > 1 ? 's' : '' }}</span>
-          </header>
-
-          <p v-if="liensCasses.length" class="lk-alert">
-            {{ liensCasses.length }} lien{{ liensCasses.length > 1 ? 's' : '' }} interne{{ liensCasses.length > 1 ? 's' : '' }}
-            ne répond{{ liensCasses.length > 1 ? 'ent' : '' }} pas — l'article publié enverrait le lecteur sur une 404.
-          </p>
-
-          <div class="lk-cols">
-            <div class="lk-col">
-              <div class="lk-col-h"><span>Liens internes</span><span class="lk-n">{{ liensInternes.length }}</span></div>
-              <ul v-if="liensInternes.length" class="lk-list">
-                <li v-for="l in liensInternes" :key="l.href" class="lk-item" :class="`is-${l.etat}`">
-                  <div class="lk-line">
-                    <a :href="l.href" target="_blank" rel="noopener" class="lk-href">{{ l.href }}</a>
-                    <span v-if="l.n > 1" class="lk-x">×{{ l.n }}</span>
-                  </div>
-                  <div class="lk-meta">
-                    <span class="lk-dot" />{{ l.note }}
-                    <span class="lk-anchor">« {{ l.libelle }} »</span>
-                  </div>
-                </li>
-              </ul>
-              <p v-else class="lk-empty">Aucun lien interne. Un article isolé ne fait pas de cocon.</p>
-            </div>
-
-            <div class="lk-col">
-              <div class="lk-col-h"><span>Liens externes</span><span class="lk-n">{{ liensExternes.length }}</span></div>
-              <ul v-if="liensExternes.length" class="lk-list">
-                <li v-for="l in liensExternes" :key="l.href" class="lk-item">
-                  <div class="lk-line">
-                    <a :href="l.href" target="_blank" rel="noopener" class="lk-href">{{ l.hote }}</a>
-                    <span v-if="l.officiel" class="lk-off">Officiel</span>
-                    <span v-if="l.n > 1" class="lk-x">×{{ l.n }}</span>
-                  </div>
-                  <div class="lk-meta">
-                    <span class="lk-anchor">« {{ l.libelle }} »</span>
-                  </div>
-                </li>
-              </ul>
-              <p v-else class="lk-empty">Aucun lien externe. Une source officielle citée renforce la crédibilité.</p>
-            </div>
-          </div>
-
-          <ul v-if="liensAutres.length" class="lk-autres">
-            <li v-for="l in liensAutres" :key="l.href"><code>{{ l.href }}</code> — {{ l.note }}</li>
-          </ul>
-        </section>
       </div>
 
       <aside class="editor-side">
@@ -129,6 +80,54 @@
 
         <p v-if="error" class="ed-error">{{ error }}</p>
         <p v-if="saved" class="ed-saved">Enregistré ✓</p>
+
+        <!-- Inspecteur de liens : relu à chaque frappe. Il vit dans la colonne
+             collante — sous le corps de l'article, il aurait été à des milliers
+             de pixels du regard sur un texte de 2 000 mots. -->
+        <div class="lk">
+          <div class="ed-label lk-h">
+            <span>Liens de l'article</span>
+            <span class="lk-tot">{{ liens.length }}</span>
+          </div>
+
+          <p v-if="liensCasses.length" class="lk-alert">
+            {{ liensCasses.length === 1 ? 'Un lien interne ne répond pas' : `${liensCasses.length} liens internes ne répondent pas` }} — publié tel quel, l'article enverrait le lecteur sur une 404.
+          </p>
+
+          <div class="lk-sec">
+            <span class="lk-sec-h">Internes <b>{{ liensInternes.length }}</b></span>
+            <ul v-if="liensInternes.length" class="lk-list">
+              <li v-for="l in liensInternes" :key="l.href" class="lk-item" :class="`is-${l.etat}`">
+                <a :href="l.href" target="_blank" rel="noopener" class="lk-href">{{ l.href }}<span v-if="l.n > 1" class="lk-x">×{{ l.n }}</span></a>
+                <span class="lk-meta"><span class="lk-dot" />{{ l.note }}</span>
+                <span class="lk-anchor">« {{ l.libelle }} »</span>
+              </li>
+            </ul>
+            <p v-else class="lk-empty">Aucun. Un article isolé ne fait pas de cocon.</p>
+          </div>
+
+          <div class="lk-sec">
+            <span class="lk-sec-h">Externes <b>{{ liensExternes.length }}</b></span>
+            <ul v-if="liensExternes.length" class="lk-list">
+              <li v-for="l in liensExternes" :key="l.href" class="lk-item">
+                <a :href="l.href" target="_blank" rel="noopener" class="lk-href">{{ l.hote }}<span v-if="l.n > 1" class="lk-x">×{{ l.n }}</span></a>
+                <span v-if="l.officiel" class="lk-off">Source officielle</span>
+                <span class="lk-anchor">« {{ l.libelle }} »</span>
+              </li>
+            </ul>
+            <p v-else class="lk-empty">Aucun. Une source officielle citée renforce la crédibilité.</p>
+          </div>
+
+          <div v-if="liensAutres.length" class="lk-sec">
+            <span class="lk-sec-h">Autres <b>{{ liensAutres.length }}</b></span>
+            <ul class="lk-list">
+              <li v-for="l in liensAutres" :key="l.href" class="lk-item">
+                <span class="lk-href">{{ l.href }}</span>
+                <span class="lk-meta">{{ l.note }}</span>
+              </li>
+            </ul>
+          </div>
+        </div>
       </aside>
     </div>
   </div>
@@ -413,7 +412,7 @@ async function save() {
 .ed-help { font-size: 11.5px; line-height: 1.5; color: var(--muted-2); margin: 6px 0 0; }
 .ed-help--warn { color: var(--ink-soft); }
 
-.editor-grid { display: grid; grid-template-columns: 1fr 300px; gap: 30px; align-items: start; }
+.editor-grid { display: grid; grid-template-columns: 1fr 340px; gap: 30px; align-items: start; }
 .ed-title { width: 100%; font-family: var(--ff-display); font-size: clamp(24px, 3vw, 34px); font-weight: 600; color: var(--ink); background: none; border: 0; border-bottom: 1px solid var(--line); padding: 6px 0 14px; letter-spacing: -.01em; }
 .ed-title:focus { outline: none; border-color: var(--ink); }
 
@@ -425,7 +424,9 @@ async function save() {
 .ed-body { max-width: none; margin-top: 0; min-height: 320px; border: 1px solid var(--line); border-radius: var(--radius); padding: clamp(20px, 3vw, 34px); background: var(--bg-1); }
 .ed-body:focus { outline: none; border-color: var(--ink-soft); }
 
-.editor-side { display: grid; gap: 8px; border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; background: var(--bg-1); position: sticky; top: 132px; }
+/* La colonne défile sur elle-même : la liste de liens peut être longue sans
+   pour autant casser le collage ni obliger à faire défiler tout l'article. */
+.editor-side { display: grid; gap: 8px; align-content: start; border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; background: var(--bg-1); position: sticky; top: 132px; max-height: calc(100vh - 156px); overflow-y: auto; }
 .ed-label { font-family: var(--ff-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted-2); margin-top: 14px; }
 .ed-label:first-child { margin-top: 0; }
 .ed-label small { text-transform: none; letter-spacing: 0; color: var(--muted-2); }
@@ -438,29 +439,30 @@ textarea.ed-input { resize: vertical; }
 .ed-tag-add { font-family: var(--ff-mono); font-size: 10.5px; color: var(--muted-2); background: none; border: 0; padding: 2px 5px 2px 0; cursor: pointer; }
 .ed-tag-add:hover { color: var(--ink); }
 
-/* ── Inspecteur de liens ── */
-.lk-panel { margin-top: 26px; border: 1px solid var(--line); border-radius: var(--radius); padding: 20px clamp(16px, 2.4vw, 26px); background: var(--bg-1); }
-.lk-panel-h { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; }
-.lk-panel-h h2 { font-size: 15px; letter-spacing: -.01em; }
-.lk-count { font-family: var(--ff-mono); font-size: 11px; color: var(--muted-2); }
+/* ── Inspecteur de liens (colonne latérale, donc compact) ── */
+.ed-links { font-family: var(--ff-mono); font-size: 11px; letter-spacing: .04em; color: var(--muted-2); border: 1px solid var(--line); border-radius: 999px; padding: 4px 11px; white-space: nowrap; }
+.ed-links.is-bad { color: var(--ink); border-color: var(--ink); }
 
-.lk-alert { font-size: 12.5px; line-height: 1.55; color: var(--ink); border-left: 2px solid var(--ink); padding-left: 11px; margin-top: 14px; }
+.lk { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); }
+.lk-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 0; }
+.lk-tot { color: var(--ink); }
 
-.lk-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; margin-top: 18px; }
-.lk-col-h { display: flex; align-items: center; justify-content: space-between; font-family: var(--ff-mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted-2); padding-bottom: 9px; border-bottom: 1px solid var(--line); }
-.lk-n { color: var(--ink); }
+.lk-alert { font-size: 11.5px; line-height: 1.5; color: var(--ink); border-left: 2px solid var(--ink); padding-left: 9px; margin: 10px 0 0; }
+
+.lk-sec { margin-top: 15px; }
+.lk-sec-h { display: block; font-family: var(--ff-mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted-2); padding-bottom: 7px; border-bottom: 1px solid var(--line-soft); }
+.lk-sec-h b { color: var(--ink); font-weight: 400; margin-left: 3px; }
 
 .lk-list { list-style: none; margin: 0; padding: 0; }
-.lk-item { padding: 11px 0; border-bottom: 1px solid var(--line-soft); }
+.lk-item { display: grid; gap: 3px; padding: 9px 0; border-bottom: 1px solid var(--line-soft); }
 .lk-item:last-child { border-bottom: 0; }
-.lk-line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.lk-href { font-family: var(--ff-mono); font-size: 12px; color: var(--ink); word-break: break-all; }
-.lk-href:hover { text-decoration: underline; text-underline-offset: 3px; }
-.lk-x { font-family: var(--ff-mono); font-size: 10px; color: var(--muted-2); }
-.lk-off { font-family: var(--ff-mono); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 2px 7px; }
+.lk-href { font-family: var(--ff-mono); font-size: 11.5px; color: var(--ink); word-break: break-all; line-height: 1.4; }
+a.lk-href:hover { text-decoration: underline; text-underline-offset: 3px; }
+.lk-x { font-family: var(--ff-mono); font-size: 9.5px; color: var(--muted-2); margin-left: 6px; }
+.lk-off { justify-self: start; font-family: var(--ff-mono); font-size: 8.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 2px 7px; }
 
-.lk-meta { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; font-size: 11.5px; color: var(--muted-2); margin-top: 5px; }
-.lk-anchor { font-style: italic; opacity: .75; }
+.lk-meta { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted-2); line-height: 1.4; }
+.lk-anchor { font-size: 11px; font-style: italic; color: var(--muted-2); opacity: .8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* Pastille d'état : pleine = OK, creuse = brouillon, barrée = introuvable.
    Aucune couleur — la forme suffit, et la DA l'impose. */
 .lk-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ink); flex: none; opacity: .5; }
@@ -470,14 +472,10 @@ textarea.ed-input { resize: vertical; }
 .is-introuvable .lk-dot::after { content: ''; position: absolute; inset: -2px auto -2px 2px; width: 1px; background: var(--ink); transform: rotate(45deg); }
 .is-introuvable .lk-href { text-decoration: line-through; text-decoration-thickness: 1px; }
 
-.lk-empty { font-size: 12px; color: var(--muted-2); line-height: 1.55; padding: 12px 0; }
-.lk-autres { list-style: none; margin: 16px 0 0; padding: 13px 0 0; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--muted-2); display: grid; gap: 5px; }
-.lk-autres code { font-family: var(--ff-mono); color: var(--muted); }
-
-@media (max-width: 720px) { .lk-cols { grid-template-columns: 1fr; gap: 20px; } }
+.lk-empty { font-size: 11.5px; color: var(--muted-2); line-height: 1.5; padding: 9px 0 0; }
 
 .ed-error { font-size: 13px; color: var(--ink-soft); border-left: 2px solid var(--ink); padding-left: 10px; }
 .ed-saved { font-family: var(--ff-mono); font-size: 12px; color: var(--muted); }
 
-@media (max-width: 860px) { .editor-grid { grid-template-columns: 1fr; } .editor-side { position: static; } }
+@media (max-width: 860px) { .editor-grid { grid-template-columns: 1fr; } .editor-side { position: static; max-height: none; overflow: visible; } }
 </style>
