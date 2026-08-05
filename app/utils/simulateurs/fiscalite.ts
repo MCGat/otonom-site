@@ -11,6 +11,11 @@
  * Étiquettes : [BARÈME] officiel · [MARCHÉ] ordre de grandeur · [HYPOTHÈSE] ratio
  * Statut : `provisoire: true` = barème non encore publié/vérifié, reconduit depuis
  * l'année précédente. L'interface DOIT le signaler à l'utilisateur.
+ * Le drapeau est posé à l'année entière, mais il ne vise en pratique que les
+ * barèmes **CO₂ et polluants** : les quotas et tarifs de la taxe incitative
+ * 2027-2030 sont inscrits en dur dans la loi (CIBS art. L. 421-132-3 et -4,
+ * vérifiés le 05/08/2026). Le message affiché doit rester précis là-dessus,
+ * sous peine de faire douter d'un chiffre qui, lui, est certain.
  *
  * Sources et points restant à confirmer : voir SPEC-SIMULATEUR-TCO.md §15.
  */

@@ -441,7 +441,7 @@
           <ul>
             <li>Les <strong>valeurs de revente</strong> sont l'hypothèse la plus déterminante et la plus incertaine du calcul.</li>
             <li>Les coûts d'infrastructure dépendent fortement de votre site&nbsp;: distance au tableau électrique, génie civil, raccordement.</li>
-            <li v-if="r.millesimesProvisoires.length">Les barèmes {{ r.millesimesProvisoires.join(', ') }} ne sont pas encore publiés&nbsp;: ils sont reconduits à titre provisoire.</li>
+            <li v-if="r.millesimesProvisoires.length">Pour {{ r.millesimesProvisoires.join(', ') }}, les <strong>barèmes CO₂ et polluants</strong> ne sont pas encore publiés&nbsp;: ils sont reconduits à titre provisoire. Les quotas et tarifs de la taxe annuelle incitative, eux, sont déjà inscrits dans la loi.</li>
             <li v-if="!taiActif">La <strong>taxe annuelle incitative</strong> n'est pas chiffrée&nbsp;: son montant exige vos données de renouvellement de flotte.</li>
             <li>La <strong>fiscalité de cession</strong> (plus ou moins-value à la revente) n'est pas modélisée.</li>
             <li>Le <strong>taux financier du loueur</strong> est une hypothèse, à calibrer sur des offres réelles.</li>
