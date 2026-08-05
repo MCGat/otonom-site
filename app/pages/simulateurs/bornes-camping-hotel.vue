@@ -1,6 +1,6 @@
 <template>
   <section class="page-intro section--light"><div class="wrap">
-    <span class="kicker reveal">Simulateur</span>
+    <span class="kicker reveal">Simulateur de bornes camping &amp; hôtel</span>
     <h1 class="reveal">Combien de bornes de recharge pour mon camping ou mon hôtel&nbsp;?</h1>
     <p class="lede reveal">Le nombre de points de recharge adapté à votre capacité réelle, la puissance à prévoir, le déploiement par étapes et les aides réellement mobilisables.</p>
     <p class="sim-note reveal">Calcul immédiat dans votre navigateur. <strong>Estimation préalable</strong>, en aucun cas une étude électrique.</p>
@@ -506,7 +506,8 @@ async function sendGate() {
 .chr-aide { margin-top: 14px; font-size: 12.5px; color: var(--muted-2); line-height: 1.6; max-width: 70ch; }
 
 /* ── Le nombre, en très grand ── */
-.chr-hero { border: 1px solid var(--line); border-radius: var(--radius); padding: clamp(28px, 4vw, 44px); background: var(--bg-1); }
+/* .sec-head n'a pas de marge basse : sans celle-ci, le bloc colle au titre. */
+.chr-hero { margin-top: clamp(26px, 3.5vw, 40px); border: 1px solid var(--line); border-radius: var(--radius); padding: clamp(28px, 4vw, 44px); background: var(--bg-1); }
 .chr-eyebrow { font-family: var(--ff-mono); font-size: 11.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
 .chr-num { font-family: var(--ff-display); font-size: clamp(64px, 13vw, 132px); line-height: .95; font-weight: 600; letter-spacing: -.03em; margin-top: 14px; }
 .chr-sub { font-size: clamp(16px, 1.9vw, 20px); color: var(--ink-soft); margin-top: 10px; }
@@ -537,6 +538,8 @@ async function sendGate() {
 .chr-unlock .chr-optin { margin: 2px 0 0; display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: var(--muted); line-height: 1.5; }
 
 .chr-warn { margin-top: 26px; border-left: 2px solid var(--ink); padding-left: 16px; }
+/* .cta-block n'a pas de marge propre : il chevaucherait les avertissements. */
+.cta-block { margin-top: clamp(40px, 5vw, 64px); }
 .chr-warn ul { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 10px; }
 .chr-warn li { font-size: 13.5px; color: var(--muted); line-height: 1.6; max-width: 76ch; }
 
