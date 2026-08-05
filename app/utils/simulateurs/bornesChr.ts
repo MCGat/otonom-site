@@ -76,8 +76,15 @@ export const CONFIG = {
   /** Coefficients d'ambition appliqués au besoin calculé. */
   ambition: { essentiel: 0.7, confort: 1.0, premium: 1.4 } as Record<Ambition, number>,
 
-  /** Énergie par session, en kWh. Arrivée et appoint n'ont rien à voir. [HYPOTHÈSE] */
-  energie: { arrivee: 30, appoint: 12 },
+  /**
+   * Énergie par session, en kWh. Arrivée et appoint n'ont rien à voir.
+   * `consoKwh100` sert uniquement à traduire ces kWh en kilomètres rendus, pour
+   * que le gérant puisse juger de l'hypothèse au lieu de la subir. [HYPOTHÈSE]
+   */
+  energie: { arrivee: 30, appoint: 12, consoKwh100: 17.5 },
+
+  /** Durée sur laquelle on juge le remboursement de l'investissement. [HYPOTHÈSE] */
+  horizonRemboursementAns: 8,
 
   /** Recharge de nuit : fenêtre et rendement. [HYPOTHÈSE] */
   nuit: { fenetreH: 12, rendement: 0.90 },
@@ -128,11 +135,22 @@ export const CONFIG = {
     seuilEtudeConception: 50   // étude obligatoire dès 50 places (décret 2021-546)
   },
 
-  /** ADVENIR : plus aucun guichet en métropole pour ce cas. [BARÈME au 05/08/2026] */
+  /**
+   * ADVENIR. [BARÈME vérifié sur advenir.mobi le 05/08/2026]
+   * Métropole : plus aucun guichet pour un parking de véhicules légers ouvert au
+   * public — celui-ci est fermé depuis le 30/06/2023. Les primes encore ouvertes
+   * visent l'immeuble collectif, les poids lourds et autocars, et la voirie.
+   * Zones non interconnectées : guichets maintenus, avec pilotage EDF-SEI
+   * OBLIGATOIRE, d'où la surprime qui le compense.
+   */
   aides: {
     metropole: null,
-    zni: { ouvertAuPublic: { taux: 0.30, plafond: null as number | null },
-           clientsSeuls: { taux: 0.20, plafond: 900 } }
+    zni: {
+      ouvertAuPublic: { taux: 0.30, plafond: 3000 },
+      clientsSeuls: { taux: 0.20, plafond: 900 },
+      surprimePilotageParPoint: 300,
+      puissanceMaxKw: 25
+    }
   }
 }
 
@@ -200,6 +218,10 @@ export interface BornesResult {
   /** Argent */
   investPoints: number
   investGenieCivil: number
+  /** Décomposition du génie civil : un montant global fait peur sans s'expliquer. */
+  genieCivilForfait: number
+  genieCivilTranchee: number
+  metresTranchee: number
   investPilotage: number
   investRenforcement: number
   investPreEquipement: number
@@ -212,6 +234,11 @@ export interface BornesResult {
   margeAn: number
   retourAns: number | null
   nuiteesSupplementaires: number | null
+  /** De quoi rendre la marge traçable au lieu de l'imposer. */
+  margeKwh: number
+  prixNuitee: number
+  horizonRemboursementAns: number
+  kmParArrivee: number
   /** Réglementaire */
   statutPme: StatutPme
   minimumReglementaire: number | null
@@ -324,7 +351,10 @@ export function calculerBornes(i: BornesInput): BornesResult {
   const coutPoint = CONFIG.couts.point[pUnit] ?? CONFIG.couts.point[CONFIG.puissanceParDefaut]!
   const brutPoints = pointsCourt * coutPoint
   const investPoints = Math.round(brutPoints * (1 - CONFIG.couts.remiseBorneDouble * (bornesDoubles * 2) / pointsCourt))
-  const investGenieCivil = Math.round(CONFIG.couts.forfaitChantier + num(i.distanceTableau, 60) * CONFIG.couts.tranchee)
+  const metresTranchee = num(i.distanceTableau, 60)
+  const genieCivilForfait = CONFIG.couts.forfaitChantier
+  const genieCivilTranchee = Math.round(metresTranchee * CONFIG.couts.tranchee)
+  const investGenieCivil = genieCivilForfait + genieCivilTranchee
   const investPilotage = verdict !== 'confortable' || marge !== null ? CONFIG.couts.pilotage : 0
   const investRenforcement = renforcement ? CONFIG.couts.renforcement : 0
   const investPreEquipement = preEquiper * CONFIG.couts.preEquipement
@@ -332,12 +362,15 @@ export function calculerBornes(i: BornesInput): BornesResult {
 
   /* — Aides — */
   let aide = 0
-  let aideCom = "Aucune prime nationale identifiée pour ce cas au 05/08/2026 : le guichet ADVENIR « parking privé ouvert au public » est fermé depuis le 30 juin 2023. Des dispositifs régionaux peuvent exister — à vérifier avant d'engager la dépense."
+  let aideCom = "Aucune prime nationale pour ce cas au 05/08/2026. Le guichet ADVENIR « point de recharge ouvert à tout public sur parking privé », celui qui couvrait hôtels et commerces, est fermé depuis le 30 juin 2023 — beaucoup d'articles le citent encore à tort. Les primes encore ouvertes visent l'immeuble collectif, les poids lourds et autocars, et la voirie publique. Des dispositifs régionaux peuvent exister : à vérifier avant d'engager la dépense."
   if (zone === 'corse-om') {
-    const g = usage === 'ouvert' ? CONFIG.aides.zni.ouvertAuPublic : CONFIG.aides.zni.clientsSeuls
-    const brut = (investPoints + investGenieCivil) * g.taux
-    aide = Math.round(g.plafond ? Math.min(brut, g.plafond * pointsCourt) : brut)
-    aideCom = `Zone non interconnectée : un guichet ADVENIR reste ouvert (${Math.round(g.taux * 100)} %${g.plafond ? `, plafonné à ${g.plafond} € par point` : ''}). Le pilotage par le signal EDF-SEI y est obligatoire. Montant à confirmer avant dépôt.`
+    const z = CONFIG.aides.zni
+    const g = usage === 'ouvert' ? z.ouvertAuPublic : z.clientsSeuls
+    const brut = Math.min((investPoints + investGenieCivil) * g.taux, g.plafond * pointsCourt)
+    // La surprime compense le dispositif de pilotage rendu obligatoire en ZNI.
+    aide = Math.round(brut + z.surprimePilotageParPoint * pointsCourt)
+    aideCom = `Zone non interconnectée : le guichet ADVENIR reste ouvert — ${Math.round(g.taux * 100)} % plafonnés à ${g.plafond} € par point, plus ${z.surprimePilotageParPoint} € de surprime par point. Le pilotage par le signal EDF-SEI y est obligatoire, et la puissance est limitée à ${z.puissanceMaxKw} kW par point. Montant à confirmer avant dépôt.`
+    if (pUnit > z.puissanceMaxKw) avert.push(`En zone non interconnectée, la prime ADVENIR limite la puissance à ${z.puissanceMaxKw} kW par point : votre choix de ${pUnit} kW la rendrait inéligible.`)
   }
 
   /* — Recettes — */
@@ -359,8 +392,10 @@ export function calculerBornes(i: BornesInput): BornesResult {
   /* Ce que la vente d'électricité ne rembourse pas, exprimé en nuitées :
      un gérant sait lire ce chiffre, et nous n'inventons aucune prévision. */
   const prixNuitee = type === 'camping' ? 35 : type === 'hotel' ? 95 : 70   // [HYPOTHÈSE]
-  const nonRembourse = retourAns === null || retourAns > 8 ? resteACharge - Math.max(0, margeAn) * 8 : 0
-  const nuiteesSupplementaires = nonRembourse > 0 ? Math.ceil(nonRembourse / prixNuitee / 8) : null
+  const H = CONFIG.horizonRemboursementAns
+  const nonRembourse = retourAns === null || retourAns > H ? resteACharge - Math.max(0, margeAn) * H : 0
+  const nuiteesSupplementaires = nonRembourse > 0 ? Math.ceil(nonRembourse / prixNuitee / H) : null
+  const kmParArrivee = Math.round(CONFIG.energie.arrivee / CONFIG.energie.consoKwh100 * 100)
 
   /* — Réglementaire — */
   const places = Math.max(1, num(i.places, capacite))
@@ -396,15 +431,23 @@ export function calculerBornes(i: BornesInput): BornesResult {
   if (etudeObligatoire) avert.push(`Parc d'au moins ${CONFIG.reglementaire.seuilEtudeConception} places : une étude de conception électrique par un professionnel qualifié IRVE est obligatoire avant travaux.`)
   if (usage === 'ouvert') avert.push("Ouverture au public : la demande des visiteurs extérieurs n'est PAS intégrée à cette estimation — elle exige une étude de fréquentation. S'y ajoutent des obligations de données, de continuité de service et un contrôle au moins annuel.")
 
+  const e2 = (v: number) => v.toFixed(2).replace('.', ',')
   const hypotheses = [
-    { label: 'Parc rechargeable en circulation', valeur: `${(court.partVe * 100).toFixed(1)} % en ${horizonCourt} (base ${(CONFIG.parc.reference.part * 100).toFixed(1)} % en 2026, SDES)` },
+    { label: 'Parc rechargeable en circulation', valeur: `${(court.partVe * 100).toFixed(1)} % en ${horizonCourt} — base ${(CONFIG.parc.reference.part * 100).toFixed(1)} % au 01/01/2026 (SDES), majorée de ${Math.round(CONFIG.parc.progressionAnnuelle * 100 * 10) / 10} point par an` },
     { label: 'Véhicules par ' + UNITE[type].replace(/s$/, ''), valeur: String(CONFIG.vehiculesParUnite[type]) },
-    { label: 'Recharge à l’arrivée', valeur: `${Math.round(CONFIG.tauxRechargeArrivee * 100)} % des arrivants` },
-    { label: 'Recharge d’appoint en séjour', valeur: `${Math.round(CONFIG.tauxAppoint[type] * 100)} %` },
-    { label: 'Facteur de pointe des arrivées', valeur: `× ${CONFIG.facteurPointe}` },
-    { label: 'Énergie par session', valeur: `${CONFIG.energie.arrivee} kWh à l’arrivée, ${CONFIG.energie.appoint} kWh en appoint` },
+    { label: 'Recharge à l’arrivée', valeur: `${Math.round(CONFIG.tauxRechargeArrivee * 100)} % des arrivants — ils viennent de rouler` },
+    { label: 'Recharge d’appoint en séjour', valeur: `${Math.round(CONFIG.tauxAppoint[type] * 100)} % des véhicules déjà sur place, pour leurs excursions` },
+    {
+      label: 'Ce que recharge une voiture',
+      valeur: `${CONFIG.energie.arrivee} kWh à l’arrivée, soit environ ${kmParArrivee} km rendus à ${e2(CONFIG.energie.consoKwh100)} kWh/100 km · ${CONFIG.energie.appoint} kWh pour un appoint`
+    },
+    { label: 'Facteur de pointe des arrivées', valeur: `× ${CONFIG.facteurPointe} — le samedi du camping n’est pas un mardi` },
     { label: 'Fenêtre de recharge nocturne', valeur: `${CONFIG.nuit.fenetreH} h, rendement ${Math.round(CONFIG.nuit.rendement * 100)} %` },
-    { label: 'Marge sur l’électricité revendue', valeur: `${margeKwh.toFixed(2)} €/kWh` }
+    {
+      label: 'Marge sur le kilowattheure',
+      valeur: `${e2(CONFIG.prix.revente)} € facturés − ${e2(CONFIG.prix.achat)} € d’achat − ${e2(CONFIG.prix.fraisVariables)} € de monétique et supervision = ${e2(margeKwh)} € de marge`
+    },
+    { label: 'Prix moyen d’une nuitée', valeur: `${prixNuitee} € — sert à convertir le solde en réservations` }
   ]
 
   return {
@@ -416,9 +459,11 @@ export function calculerBornes(i: BornesInput): BornesResult {
     puissanceUnitaire: pUnit, puissanceInstallee: pInstallee, puissanceAppelee: pAppelee,
     margeDisponible: marge, kWhNuit, puissanceMiniEnergie: pMiniEnergie,
     plafondPilotage, verdictPuissance: verdict, renforcementNecessaire: renforcement,
-    investPoints, investGenieCivil, investPilotage, investRenforcement, investPreEquipement, investTotal,
+    investPoints, investGenieCivil, genieCivilForfait, genieCivilTranchee, metresTranchee,
+    investPilotage, investRenforcement, investPreEquipement, investTotal,
     aideEstimee: aide, aideCommentaire: aideCom,
     kWhAn, recetteAn, chargesAn, margeAn, retourAns, nuiteesSupplementaires,
+    margeKwh, prixNuitee, horizonRemboursementAns: H, kmParArrivee,
     statutPme: pme, minimumReglementaire: minimum, texteReglementaire: texte,
     etudeConceptionObligatoire: etudeObligatoire,
     hypotheses, avertissements: avert

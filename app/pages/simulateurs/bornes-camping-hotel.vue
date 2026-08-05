@@ -241,8 +241,10 @@
           <article class="sim-block">
             <header><h3>Votre investissement</h3><span class="sim-tag sim-tag--ind">{{ eurosExact(r.investTotal) }} HT</span></header>
             <div class="sim-block-b">
+              <p class="sim-lead">Le poste qui surprend le plus est la <strong>tranchée</strong>&nbsp;: {{ eurosExact(CONFIG.couts.tranchee) }} le mètre, et vous avez indiqué <strong>{{ r.metresTranchee }} m</strong> entre le tableau électrique et le parking. Rapprocher les bornes du tableau, ou les regrouper en un seul point, est le levier d'économie le plus efficace de tout le projet — bien avant le choix du matériel.</p>
               <div class="sim-kv"><span>Points de charge</span><b class="tabnum">{{ eurosExact(r.investPoints) }}</b></div>
-              <div class="sim-kv"><span>Génie civil et raccordement</span><b class="tabnum">{{ eurosExact(r.investGenieCivil) }}</b></div>
+              <div class="sim-kv"><span>Génie civil — forfait de chantier</span><b class="tabnum">{{ eurosExact(r.genieCivilForfait) }}</b></div>
+              <div class="sim-kv"><span>Génie civil — tranchée sur {{ r.metresTranchee }} m</span><b class="tabnum">{{ eurosExact(r.genieCivilTranchee) }}</b></div>
               <div v-if="r.investPilotage" class="sim-kv"><span>Pilotage de charge</span><b class="tabnum">{{ eurosExact(r.investPilotage) }}</b></div>
               <div v-if="r.investRenforcement" class="sim-kv"><span>Renforcement du raccordement</span><b class="tabnum">{{ eurosExact(r.investRenforcement) }}</b></div>
               <div v-if="r.investPreEquipement" class="sim-kv"><span>Pré-équipement de {{ r.preEquiper }} places de stationnement</span><b class="tabnum">{{ eurosExact(r.investPreEquipement) }}</b></div>
@@ -251,14 +253,43 @@
           </article>
 
           <article class="sim-block">
-            <header><h3>Ce que la recharge rapporte</h3><span class="sim-tag sim-tag--ind">{{ r.retourAns ? r.retourAns + ' ans' : 'À affiner' }}</span></header>
+            <header><h3>Ce que la recharge rapporte</h3><span class="sim-tag" :class="r.margeAn >= 0 ? 'sim-tag--ind' : 'sim-tag--audit'">{{ r.margeAn >= 0 ? 'À l’équilibre' : 'Ne s’autofinance pas' }}</span></header>
             <div class="sim-block-b">
-              <p class="sim-lead">Le vrai gain d'une borne n'est pas le kilowattheure vendu, c'est la réservation qui ne vous échappe pas. Nous ne savons pas prévoir la seconde&nbsp;: voici la première, et le seuil à franchir pour le reste.</p>
-              <div class="sim-kv"><span>Énergie vendue par an</span><b class="tabnum">{{ nombre(r.kWhAn) }} kWh</b></div>
-              <div class="sim-kv"><span>Recette brute</span><b class="tabnum">{{ eurosExact(r.recetteAn) }}</b></div>
-              <div class="sim-kv"><span>Supervision et maintenance</span><b class="tabnum">− {{ eurosExact(r.chargesAn) }}</b></div>
-              <div class="sim-kv"><span>Marge nette annuelle</span><b class="tabnum is-strong">{{ eurosExact(r.margeAn) }}</b></div>
-              <div v-if="r.nuiteesSupplementaires" class="sim-kv"><span>Nuitées supplémentaires par an pour rembourser le solde</span><b class="tabnum is-strong">{{ r.nuiteesSupplementaires }}</b></div>
+              <p class="sim-lead"><strong>Une borne ne se rentabilise pas en vendant de l'électricité.</strong> Elle se rentabilise en réservations. Voici les deux calculs, séparés — parce que les confondre est la faute qui fait renoncer les gérants.</p>
+
+              <div class="chr-calc">
+                <span class="chr-calc-t">1. La vente d'électricité, à elle seule</span>
+                <div class="sim-kv"><span>Énergie vendue par an</span><b class="tabnum">{{ nombre(r.kWhAn) }} kWh</b></div>
+                <div class="sim-kv"><span>Marge encaissée <small>({{ eurosExact(r.margeKwh * 100) .replace('€','') }}c par kWh)</small></span><b class="tabnum">{{ eurosExact(r.recetteAn) }}</b></div>
+                <div class="sim-kv"><span>Supervision, maintenance, monétique</span><b class="tabnum">− {{ eurosExact(r.chargesAn) }}</b></div>
+                <div class="sim-kv"><span>Résultat annuel</span><b class="tabnum is-strong">{{ eurosExact(r.margeAn) }}</b></div>
+                <p class="chr-calc-p">
+                  <template v-if="r.margeAn < 0">
+                    <strong>Vous perdez {{ eurosExact(Math.abs(r.margeAn)) }} par an</strong> sur l'exploitation seule. Ce n'est pas une anomalie&nbsp;: sur {{ f.saisonnier === false ? 'une exploitation à l\'année' : `${f.moisOuverts} mois d'ouverture` }}, la supervision et la maintenance se paient douze mois sur douze, alors que les bornes ne servent qu'une partie de l'année. Facturer plus cher ne réglerait rien — vos clients iraient se brancher ailleurs.
+                  </template>
+                  <template v-else>
+                    L'exploitation s'autofinance et dégage {{ eurosExact(r.margeAn) }} par an. C'est peu au regard de l'investissement&nbsp;: le kilowattheure n'est pas le modèle économique d'une borne.
+                  </template>
+                </p>
+              </div>
+
+              <div class="chr-calc">
+                <span class="chr-calc-t">2. Ce qui rembourse vraiment&nbsp;: les réservations</span>
+                <div class="sim-kv"><span>Reste à charge après aides</span><b class="tabnum">{{ eurosExact(r.investTotal - r.aideEstimee) }}</b></div>
+                <div class="sim-kv"><span>Durée de vie retenue</span><b class="tabnum">{{ r.horizonRemboursementAns }} ans</b></div>
+                <div class="sim-kv"><span>Prix moyen d'une nuitée</span><b class="tabnum">{{ eurosExact(r.prixNuitee) }}</b></div>
+                <div v-if="r.nuiteesSupplementaires" class="sim-kv"><span>Nuitées supplémentaires à gagner, par an</span><b class="tabnum is-strong">{{ r.nuiteesSupplementaires }}</b></div>
+                <p class="chr-calc-p">
+                  <template v-if="r.nuiteesSupplementaires">
+                    Autrement dit&nbsp;: si vos bornes vous font gagner <strong>{{ r.nuiteesSupplementaires }} nuitées de plus par an</strong> — soit environ {{ Math.ceil(r.nuiteesSupplementaires / (f.saisonnier === false ? 52 : (f.moisOuverts || 5) * 4.3)) }} par semaine d'ouverture — l'installation est remboursée sur sa durée de vie, exploitation comprise. À vous de juger si c'est atteignable chez vous&nbsp;: nous ne connaissons pas votre marché, et nous ne prétendrons pas le prévoir.
+                  </template>
+                  <template v-else>
+                    La vente d'électricité suffit ici à rembourser l'installation sur sa durée de vie. Toute réservation gagnée grâce aux bornes s'ajoute à ce résultat.
+                  </template>
+                </p>
+              </div>
+
+              <p class="chr-calc-note">Pourquoi ce détour&nbsp;? Parce que les plateformes de réservation proposent un filtre « borne de recharge »&nbsp;: un établissement non équipé disparaît des résultats pour cette clientèle. Le gain se compte en séjours, pas en kilowattheures — mais nous refusons de vous vendre une prévision de fréquentation que personne ne sait établir.</p>
             </div>
           </article>
 
@@ -396,7 +427,7 @@
 
 <script setup lang="ts">
 import {
-  calculerBornes, resumeBornes, LABELS_ETAB, LABELS_AMBITION, UNITE,
+  calculerBornes, resumeBornes, LABELS_ETAB, LABELS_AMBITION, UNITE, CONFIG,
   type BornesInput, type BornesResult, type TypeEtab
 } from '~/utils/simulateurs/bornesChr'
 import { eurosExact, nombre as nombreFr, corpsLead } from '~/utils/simulateurs/core'
@@ -624,6 +655,15 @@ async function sendGate() {
 .chr-unlock .sim-gate-copy > p { margin-top: 14px; }
 .chr-unlock-why { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--line-soft); font-size: 13px; color: var(--muted-2); line-height: 1.6; }
 .chr-unlock .chr-optin { margin: 2px 0 0; display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+/* Les deux calculs de rentabilité, séparés visuellement : les confondre est
+   précisément la faute qui fait renoncer les gérants. */
+.chr-calc { margin-top: 20px; padding: 18px 20px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); }
+.chr-calc + .chr-calc { margin-top: 14px; }
+.chr-calc-t { display: block; font-family: var(--ff-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink); margin-bottom: 12px; }
+.chr-calc-p { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line-soft); font-size: 13.5px; line-height: 1.65; color: var(--muted); }
+.chr-calc-p strong { color: var(--ink); }
+.chr-calc-note { margin-top: 18px; font-size: 13px; line-height: 1.65; color: var(--muted-2); }
 
 .chr-warn { margin-top: 26px; border-left: 2px solid var(--ink); padding-left: 16px; }
 /* .cta-block n'a pas de marge propre : il chevaucherait les avertissements. */
