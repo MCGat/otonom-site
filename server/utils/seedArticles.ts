@@ -5,18 +5,20 @@
 import { getArticleBySlug, listArticles, upsertArticle, type Article } from './db'
 
 /**
- * Slugs dont le contenu du seed DOIT écraser celui de la production.
+ * REPRISE PONCTUELLE — le seed écrase l'existant au lieu de le préserver.
  *
- * ⚠️ À VIDER UNE FOIS LE DÉPLOIEMENT VÉRIFIÉ. Tant qu'un slug figure ici, toute
- * modification faite dans l'admin en ligne sera écrasée au prochain redémarrage
- * du serveur. C'est voulu pour une reprise ponctuelle, jamais comme régime normal.
+ * Contexte du 05/08/2026 : la production portait encore SIX articles insérés par
+ * un seed antérieur — cinq restés en brouillon et l'article fiscalité dans sa
+ * version d'avant l'audit factuel. Le seed ne touchant jamais à un article déjà
+ * présent, ils y seraient restés figés : ancien contenu, ancien statut, ni tags
+ * ni cocon. Ce drapeau force la reprise de TOUS les articles, ce qui garantit que
+ * la production reflète exactement la base locale, quel que soit son état de départ.
  *
- * 05/08/2026 — l'article fiscalité était en ligne dans une version antérieure à
- * l'audit factuel ; le patron a autorisé son écrasement.
+ * ⚠️ À REPASSER À `false` UNE FOIS LE DÉPLOIEMENT VÉRIFIÉ. Tant qu'il vaut `true`,
+ * toute modification faite dans l'admin en ligne est écrasée au redémarrage du
+ * serveur. C'est acceptable pour une reprise, jamais comme régime permanent.
  */
-const FORCER_MAJ = new Set<string>([
-  'fiscalite-vehicule-electrique-2026'
-])
+const FORCER_MAJ_TOUS = true
 
 const SEED_ARTICLES: Article[] = [
   {
@@ -160,9 +162,9 @@ export async function seedArticles(): Promise<void> {
       if (!existing) {
         await upsertArticle(a)
         console.log('[seed] article inséré :', a.slug)
-      } else if (FORCER_MAJ.has(a.slug)) {
+      } else if (FORCER_MAJ_TOUS) {
         await upsertArticle({ ...a, id: existing.id })
-        console.warn('[seed] article ÉCRASÉ (FORCER_MAJ) :', a.slug)
+        console.warn('[seed] article ÉCRASÉ (reprise ponctuelle) :', a.slug)
       }
     } catch (e) {
       console.error('[seed] échec pour', a.slug, e)
