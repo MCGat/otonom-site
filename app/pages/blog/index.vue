@@ -15,8 +15,8 @@
         @click="choisir(t)">{{ t }}</button>
     </nav>
 
-    <div v-if="visibles.length" class="blog-grid">
-      <NuxtLink v-for="a in visibles" :key="a.slug" class="blog-card" :to="`/blog/${a.slug}`">
+    <div v-if="affiches.length" class="blog-grid">
+      <NuxtLink v-for="a in affiches" :key="a.slug" class="blog-card" :to="`/blog/${a.slug}`">
         <div v-if="a.cover" class="blog-card-cover"><img :src="a.cover" :alt="a.title" loading="lazy"></div>
         <div class="blog-card-body">
           <span class="blog-card-date">{{ formatDate(a.publishedAt || a.createdAt) }}</span>
@@ -32,11 +32,26 @@
       </NuxtLink>
     </div>
 
-    <p v-else-if="articles.length" class="muted btags-empty">
+    <nav v-if="nbPages > 1" class="bpage" aria-label="Pages d'articles">
+      <button type="button" class="bpage-fl" :disabled="page <= 1" @click="allerPage(page - 1)" aria-label="Page précédente">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M15 6l-6 6 6 6" /></svg>
+      </button>
+      <button
+        v-for="n in nbPages" :key="n" type="button"
+        class="bpage-n" :class="{ 'is-on': n === page }"
+        :aria-current="n === page ? 'page' : undefined"
+        @click="allerPage(n)">{{ n }}</button>
+      <button type="button" class="bpage-fl" :disabled="page >= nbPages" @click="allerPage(page + 1)" aria-label="Page suivante">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 6l6 6-6 6" /></svg>
+      </button>
+      <span class="bpage-c">{{ visibles.length }} article{{ visibles.length > 1 ? 's' : '' }}</span>
+    </nav>
+
+    <p v-if="!visibles.length && articles.length" class="muted btags-empty">
       Aucun article sur ce sujet pour le moment.
       <button type="button" class="btag-reset" @click="choisir('')">Voir tous les articles</button>
     </p>
-    <p v-else class="muted">Les premiers articles arrivent bientôt.</p>
+    <p v-if="!articles.length" class="muted">Les premiers articles arrivent bientôt.</p>
   </div></section>
 </template>
 
@@ -62,14 +77,33 @@ const tagActif = computed(() => {
   return tags.value.find((t) => t.toLowerCase() === brut) || ''
 })
 
+/* Changer de sujet renvoie en page 1 : rester en page 3 d'une liste qui n'en a
+   plus qu'une afficherait un écran vide. */
 const choisir = (t: string) =>
-  router.replace({ query: { ...route.query, sujet: t || undefined } })
+  router.replace({ query: { ...route.query, sujet: t || undefined, page: undefined } })
 
 const visibles = computed(() => {
   if (!tagActif.value) return articles.value
   const cle = tagActif.value.toLowerCase()
   return articles.value.filter((a) => tagsDe(a).some((t) => t.toLowerCase() === cle))
 })
+
+/* ── Pagination ── */
+const PAR_PAGE = 6
+const nbPages = computed(() => Math.max(1, Math.ceil(visibles.value.length / PAR_PAGE)))
+/* La page vit dans l'URL et se borne à ce qui existe : ?page=99 retombe sur la dernière. */
+const page = computed(() => {
+  const n = Number.parseInt(String(route.query.page || '1'), 10)
+  return Number.isFinite(n) ? Math.min(Math.max(1, n), nbPages.value) : 1
+})
+const affiches = computed(() => visibles.value.slice((page.value - 1) * PAR_PAGE, page.value * PAR_PAGE))
+
+function allerPage(n: number) {
+  const cible = Math.min(Math.max(1, n), nbPages.value)
+  if (cible === page.value) return
+  router.replace({ query: { ...route.query, page: cible === 1 ? undefined : cible } })
+  if (import.meta.client) document.querySelector('.blog-grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
 
 useSeoMeta({
   title: () => tagActif.value
@@ -102,6 +136,21 @@ const formatDate = (iso?: string) => {
   color: var(--ink); background: rgba(255, 255, 255, .07);
   border: 1px solid rgba(255, 255, 255, .22); border-radius: 999px; padding: 3px 10px;
 }
+
+/* ── Pagination ── */
+.bpage { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: clamp(32px, 4vw, 48px); }
+.bpage-n, .bpage-fl {
+  font-family: var(--ff-mono); font-size: 13px; color: var(--ink-soft);
+  background: none; border: 1px solid rgba(255, 255, 255, .22); border-radius: 10px;
+  min-width: 40px; height: 40px; padding: 0 12px; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: color .18s ease, border-color .18s ease, background .18s ease;
+}
+.bpage-n:hover, .bpage-fl:not(:disabled):hover { color: var(--ink); border-color: var(--ink); }
+.bpage-n.is-on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.bpage-fl svg { width: 16px; height: 16px; }
+.bpage-fl:disabled { opacity: .3; cursor: default; }
+.bpage-c { font-family: var(--ff-mono); font-size: 11.5px; color: var(--muted-2); margin-left: auto; }
 
 .btags-empty { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .btag-reset { font-family: var(--ff-mono); font-size: 12px; color: var(--ink); background: none; border: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }

@@ -21,6 +21,7 @@
       </nav>
       <!-- eslint-disable-next-line vue/no-v-html -->
       <div class="article-body" v-html="processedHtml"></div>
+      <ArticlesLies :slug="article.slug" :cocon="article.cocon" />
       <div class="article-back"><NuxtLink class="btn btn--ghost" to="/blog">← Tous les articles</NuxtLink></div>
     </div></section>
 
