@@ -443,7 +443,11 @@ const nombre = (v: number) => nombreFr(v)
 
 const f = reactive<BornesInput>({
   type: 'camping', capacite: undefined as unknown as number, places: undefined,
-  occupationHaute: 0.8, dureeSejour: 7, partEtrangere: 0.25,
+  /* Majoration « clientèle étrangère » à 1,0 par défaut : le lien entre part
+     d'étrangers et taux d'électrification n'est pas sourcé, et un coefficient
+     invérifiable ne doit pas gonfler le chiffre de tête à l'insu du gérant.
+     Celui qui connaît sa clientèle peut le relever lui-même. */
+  occupationHaute: 0.8, dureeSejour: 7, partEtrangere: 0,
   saisonnier: true, moisOuverts: 5,
   usage: 'clients', ambition: 'confort', horizonCourt: 2030, horizonLong: 2034,
   puissanceUnitaire: 11, distanceTableau: 60,
