@@ -479,7 +479,7 @@
       </div>
 
       <form class="sim-gate-form" novalidate @submit.prevent="sendGate">
-        <input v-model="g.honey" type="text" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <input v-model="g.honey" type="text" class="hp" name="url-site" tabindex="-1" autocomplete="off" aria-hidden="true" readonly>
         <div class="field"><label for="tNom">Nom <span class="req" aria-hidden="true">*</span></label><input id="tNom" v-model="g.nom" type="text" autocomplete="name" required></div>
         <div class="field"><label for="tEmail">Email professionnel <span class="req" aria-hidden="true">*</span></label><input id="tEmail" v-model="g.email" type="email" autocomplete="email" required></div>
         <div class="field"><label for="tEnt">Entreprise</label><input id="tEnt" v-model="g.entreprise" type="text" autocomplete="organization"></div>
@@ -1196,14 +1196,23 @@ const gateError = ref(false)
 
 async function sendGate() {
   if (sending.value || !r.value) return
-  if (g.honey) { unlocked.value = true; return }
   gateError.value = false
+
+  /* Pot de miel : rempli avec un nom et un email plausibles, c'est presque
+     toujours un gestionnaire de mots de passe, pas un robot. Déverrouiller sans
+     rien envoyer perdrait un lead qualifié en silence — on l'envoie, signalé. */
+  const potRempli = !!g.honey
+  const humainCredible = !!g.nom.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(g.email.trim())
+  if (potRempli && !humainCredible) { unlocked.value = true; return }
+  const contact = { ...g, honey: '' }
+
   sending.value = true
   try {
     const v = r.value
     const res = await $fetch<{ ok: boolean }>('/api/lead', {
       method: 'POST',
-      body: corpsLead('tco-flotte', g, resumeTco(v), {
+      body: corpsLead('tco-flotte', contact, resumeTco(v), {
+        potDeMielRempli: potRempli,
         tcoElec: Math.round(v.elec.tcoOperationnel),
         tcoTherm: Math.round(v.therm.tcoOperationnel),
         ecart: Math.round(v.ecart),

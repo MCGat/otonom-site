@@ -110,7 +110,7 @@
         </ul>
       </div>
       <form class="sim-gate-form" novalidate @submit.prevent="sendGate">
-        <input v-model="g.honey" type="text" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <input v-model="g.honey" type="text" class="hp" name="url-site" tabindex="-1" autocomplete="off" aria-hidden="true" readonly>
         <div class="field"><label for="gNom">Nom <span class="req" aria-hidden="true">*</span></label><input id="gNom" v-model="g.nom" type="text" autocomplete="name" required></div>
         <div class="field"><label for="gEmail">Email professionnel <span class="req" aria-hidden="true">*</span></label><input id="gEmail" v-model="g.email" type="email" autocomplete="email" required></div>
         <div class="field"><label for="gEntreprise">Entreprise</label><input id="gEntreprise" v-model="g.entreprise" type="text" autocomplete="organization"></div>
@@ -273,17 +273,24 @@ function onCalculer() {
 
 async function sendGate() {
   if (sending.value || !result.value) return
-  if (g.honey) { unlocked.value = true; return }
   gateError.value = false
+
+  /* Pot de miel : rempli avec un nom et un email plausibles, c'est presque
+     toujours un gestionnaire de mots de passe, pas un robot. Déverrouiller sans
+     rien envoyer perdrait un lead qualifié en silence — on l'envoie, signalé. */
+  const potRempli = !!g.honey
+  const humainCredible = !!g.nom.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(g.email.trim())
+  if (potRempli && !humainCredible) { unlocked.value = true; return }
+
   sending.value = true
   try {
     const res = await $fetch<{ ok: boolean }>('/api/lead', {
       method: 'POST',
       body: {
-        _form: 'simulateur', _honey: g.honey,
+        _form: 'simulateur', _honey: '',
         nom: g.nom, email: g.email, entreprise: g.entreprise, telephone: g.tel,
         message: resumeSimulateur(result.value),
-        meta: { gain: result.value.synth.gainGlobal, roi: result.value.synth.roiAns, invest: result.value.synth.investissement }
+        meta: { potDeMielRempli: potRempli, gain: result.value.synth.gainGlobal, roi: result.value.synth.roiAns, invest: result.value.synth.investissement }
       }
     })
     if (res?.ok) {

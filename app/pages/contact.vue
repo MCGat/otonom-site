@@ -14,7 +14,7 @@
         <p v-if="error" class="form-alert">Une erreur est survenue lors de l'envoi. Vérifiez vos informations et réessayez, ou écrivez-nous à <a href="mailto:e.barlet@mc-groupe.com">e.barlet@mc-groupe.com</a>.</p>
 
         <form class="form" novalidate @submit.prevent="submit">
-          <input v-model="f.honey" type="text" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <input v-model="f.honey" type="text" class="hp" name="url-site" tabindex="-1" autocomplete="off" aria-hidden="true" readonly>
           <div class="form-row">
             <div class="field"><label for="nom">Nom <span class="req">*</span></label><input id="nom" v-model="f.nom" type="text" autocomplete="name" required></div>
             <div class="field"><label for="entreprise">Entreprise</label><input id="entreprise" v-model="f.entreprise" type="text" autocomplete="organization"></div>
@@ -74,15 +74,23 @@ const error = ref(false)
 async function submit() {
   if (sending.value) return
   error.value = false
+
+  /* Pot de miel : rempli avec un nom et un email plausibles, c'est presque
+     toujours un gestionnaire de mots de passe, pas un robot. Le laisser filtrer
+     perdrait un lead qualifié en silence — on l'envoie, signalé dans les métas. */
+  const potRempli = !!f.honey
+  const humainCredible = !!f.nom.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.trim())
+  if (potRempli && !humainCredible) { await navigateTo('/merci'); return }
+
   sending.value = true
   try {
     const message = f.message + (f.flotte ? `\n\nTaille de flotte : ${f.flotte}` : '')
     const res = await $fetch<{ ok: boolean }>('/api/lead', {
       method: 'POST',
       body: {
-        _form: 'contact', _honey: f.honey,
+        _form: 'contact', _honey: '',
         nom: f.nom, email: f.email, entreprise: f.entreprise, telephone: f.tel,
-        message, meta: { 'Taille de flotte': f.flotte }
+        message, meta: { potDeMielRempli: potRempli, 'Taille de flotte': f.flotte }
       }
     })
     if (res?.ok) await navigateTo('/merci')

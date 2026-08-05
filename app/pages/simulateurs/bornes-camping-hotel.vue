@@ -293,7 +293,7 @@
       </div>
 
       <form class="sim-gate-form" novalidate @submit.prevent="sendGate">
-        <input v-model="g.honey" type="text" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <input v-model="g.honey" type="text" class="hp" name="url-site" tabindex="-1" autocomplete="off" aria-hidden="true" readonly>
         <div class="field"><label for="cNom">Nom <span class="req" aria-hidden="true">*</span></label><input id="cNom" v-model="g.nom" type="text" autocomplete="name" required></div>
         <div class="field"><label for="cEmail">Email professionnel <span class="req" aria-hidden="true">*</span></label><input id="cEmail" v-model="g.email" type="email" autocomplete="email" required></div>
         <div class="field"><label for="cEnt">Établissement</label><input id="cEnt" v-model="g.entreprise" type="text" autocomplete="organization"></div>
@@ -478,7 +478,6 @@ const estEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
 
 async function sendGate() {
   if (sending.value || !r.value) return
-  if (g.honey) { unlocked.value = true; return }
   gateError.value = false
   gateMsg.value = ''
 
@@ -488,12 +487,22 @@ async function sendGate() {
   if (!g.nom.trim()) { gateMsg.value = 'Indiquez votre nom pour afficher le détail.'; return }
   if (!estEmail(g.email.trim())) { gateMsg.value = 'Indiquez un email professionnel valide.'; return }
 
+  /* Pot de miel anti-robot. S'il est rempli ALORS QUE le nom et l'email viennent
+     de passer la validation, c'est presque toujours un gestionnaire de mots de
+     passe qui a rempli le champ caché — pas un robot. Le comportement d'origine
+     (déverrouiller sans rien envoyer) perdait alors un lead qualifié, en silence
+     et sans le moindre signe à l'écran. On préfère un lead de trop à un lead
+     perdu : on l'envoie en le signalant dans les métadonnées. */
+  const potRempli = !!g.honey
+  const contact = { ...g, honey: '' }
+
   sending.value = true
   try {
     const v = r.value
     const res = await $fetch<{ ok: boolean }>('/api/lead', {
       method: 'POST',
-      body: corpsLead('bornes-chr', g, resumeBornes(v), {
+      body: corpsLead('bornes-chr', contact, resumeBornes(v), {
+        potDeMielRempli: potRempli,
         type: v.input.type,
         capacite: v.input.capacite,
         points: v.pointsCourt,
