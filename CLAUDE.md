@@ -83,6 +83,11 @@ Copier `.env.example` → `.env` et remplir le SMTP pour tester l'envoi réel de
 Le build de prod (`npm run build` → `.output/server/index.mjs`) est vérifié fonctionnel.
 
 ## À compléter
+**Le backlog complet vit dans `FEATURES-A-VENIR.md`** — chantiers identifiés, corrections du
+moteur en attente, hypothèses à caler avec OTONOM, contenu et nouveaux simulateurs. À lire
+avant de proposer un développement, et à tenir à jour en fin de session.
+
+Les deux points les plus anciens :
 - Données légales dans `app/pages/mentions-legales.vue` + `app/pages/confidentialite.vue` (placeholders `[À COMPLÉTER]` :
   raison sociale, SIREN/RCS, adresse, capital, directeur de publication, hébergeur).
 - **Recalibrer les coefficients du simulateur** (`SIM_CONFIG` dans `app/utils/simulateur.ts`) avec OTONOM (ROI un peu agressif).
