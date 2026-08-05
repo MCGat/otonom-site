@@ -45,6 +45,12 @@ export const COCONS: Cocon[] = [
     cle: 'flotte',
     label: 'Verdissement de flotte',
     indices: ['verdissement', 'lom', 'flotte-entreprise', 'quota']
+  },
+  {
+    cle: 'tourisme',
+    label: 'Camping, hôtel & tourisme',
+    pilier: 'combien-de-bornes-camping',
+    indices: ['camping', 'hotel', 'hebergement', 'tourisme', 'emplacement', 'plein-air']
   }
 ]
 

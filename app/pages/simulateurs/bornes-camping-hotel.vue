@@ -19,7 +19,7 @@
             </select>
           </div>
           <div class="field" :class="{ 'is-invalid': erreurs.capacite }">
-            <label for="cap">Nombre d'{{ UNITE[f.type] }} <span class="req" aria-hidden="true">*</span></label>
+            <label for="cap">{{ labelCapacite }} <span class="req" aria-hidden="true">*</span></label>
             <input id="cap" v-model.number="f.capacite" type="number" min="1" max="3000" step="1" inputmode="numeric" placeholder="ex. 150"
                    :aria-invalid="!!erreurs.capacite" @input="erreurs.capacite = ''">
             <span v-if="erreurs.capacite" class="chr-err">{{ erreurs.capacite }}</span>
@@ -183,7 +183,7 @@
 
       <div class="chr-deploy">
         <div><b class="tabnum">{{ r.pointsCourt }}</b><span>à installer maintenant</span></div>
-        <div v-if="r.preEquiper"><b class="tabnum">{{ r.preEquiper }}</b><span>emplacements à pré-équiper</span></div>
+        <div v-if="r.preEquiper"><b class="tabnum">{{ r.preEquiper }}</b><span>places à pré-équiper</span></div>
         <div><b class="tabnum">{{ r.puissanceUnitaire }} kW</b><span>par point de charge</span></div>
       </div>
 
@@ -245,7 +245,7 @@
               <div class="sim-kv"><span>Génie civil et raccordement</span><b class="tabnum">{{ eurosExact(r.investGenieCivil) }}</b></div>
               <div v-if="r.investPilotage" class="sim-kv"><span>Pilotage de charge</span><b class="tabnum">{{ eurosExact(r.investPilotage) }}</b></div>
               <div v-if="r.investRenforcement" class="sim-kv"><span>Renforcement du raccordement</span><b class="tabnum">{{ eurosExact(r.investRenforcement) }}</b></div>
-              <div v-if="r.investPreEquipement" class="sim-kv"><span>Pré-équipement de {{ r.preEquiper }} emplacements</span><b class="tabnum">{{ eurosExact(r.investPreEquipement) }}</b></div>
+              <div v-if="r.investPreEquipement" class="sim-kv"><span>Pré-équipement de {{ r.preEquiper }} places de stationnement</span><b class="tabnum">{{ eurosExact(r.investPreEquipement) }}</b></div>
               <div class="sim-kv"><span>Reste à charge après aides</span><b class="tabnum is-strong">{{ eurosExact(r.investTotal - r.aideEstimee) }}</b></div>
             </div>
           </article>
@@ -421,6 +421,14 @@ const f = reactive<BornesInput>({
   moins250: 'inconnu', caSup50M: 'inconnu', bilanSup43M: 'inconnu', groupeLie: 'inconnu'
 })
 
+/* « Nombre d'emplacements » mais « Nombre de chambres » : l'élision ne vaut que
+   devant une voyelle. Le libellé se déduit du mot, il n'y a donc rien à tenir
+   à jour le jour où un type d'établissement s'ajoute. */
+const labelCapacite = computed(() => {
+  const u = UNITE[f.type]
+  return /^[aeiouyéèêëàâîïôöûü]/i.test(u) ? `Nombre d'${u}` : `Nombre de ${u}`
+})
+
 /* Changer de type ajuste la durée de séjour par défaut — un hôtel n'a rien à
    voir avec un camping, et laisser 7 nuits fausserait tout le calcul. */
 function onType() {
@@ -522,7 +530,7 @@ function sectionsLead() {
     ] },
     { titre: 'Résultat calculé', lignes: [
       ['Points de recharge', `${v.pointsCourt} (soit ${v.bornesDoubles} borne(s) double(s)${v.bornesSimples ? ' + 1 simple' : ''})`],
-      ['Emplacements à pré-équiper', String(v.preEquiper)],
+      ['Places à pré-équiper', String(v.preEquiper)],
       ['Puissance installée', `${nombre(v.puissanceInstallee)} kW, plafond piloté ${nombre(v.plafondPilotage)} kW`],
       ['Verdict électrique', L_VERDICT[v.verdictPuissance]!],
       ['Investissement', `${eurosExact(v.investTotal)} HT`],

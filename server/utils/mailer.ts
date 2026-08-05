@@ -15,9 +15,13 @@ function ligne(label: string, valeur?: string, lien?: string) {
   const affiche = lien
     ? `<a href="${esc(lien)}" style="color:#0b0b0d;text-decoration:none;border-bottom:1px solid #cfcfca;">${esc(v)}</a>`
     : esc(v)
+  /* `word-break` sur les deux colonnes : sans lui, une adresse email ou un
+     libellé long élargit le tableau au-delà de l'écran, et le mail défile
+     latéralement sur téléphone. */
+  const coupe = 'word-break:break-word;overflow-wrap:break-word;'
   return '<tr>'
-    + `<td width="36%" style="padding:12px 0;border-bottom:1px solid #eeeeeb;font-family:Arial,Helvetica,sans-serif;font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#86868c;vertical-align:top;">${esc(label)}</td>`
-    + `<td style="padding:12px 0 12px 16px;border-bottom:1px solid #eeeeeb;font-family:Arial,Helvetica,sans-serif;font-size:15.5px;line-height:1.5;color:#0b0b0d;vertical-align:top;">${affiche}</td>`
+    + `<td width="36%" style="padding:12px 0;border-bottom:1px solid #eeeeeb;font-family:Arial,Helvetica,sans-serif;font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#86868c;vertical-align:top;${coupe}">${esc(label)}</td>`
+    + `<td style="padding:12px 0 12px 16px;border-bottom:1px solid #eeeeeb;font-family:Arial,Helvetica,sans-serif;font-size:15.5px;line-height:1.5;color:#0b0b0d;vertical-align:top;${coupe}">${affiche}</td>`
     + '</tr>'
 }
 
@@ -62,7 +66,7 @@ function detailsMeta(meta?: string): { html: string; texte: string } {
   }
   if (!html) return { html: '', texte: '' }
   return {
-    html: '<tr><td style="padding:8px 34px 6px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">' + html + '</table></td></tr>',
+    html: '<tr><td style="padding:8px 34px 6px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="table-layout:fixed;">' + html + '</table></td></tr>',
     texte
   }
 }
@@ -85,7 +89,7 @@ export function buildHtml(lead: Lead, kicker: string): string {
     + `<div style="font-family:Arial,Helvetica,sans-serif;font-size:11.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#86868c;margin-bottom:14px;">${esc(kicker)}</div>`
     + `<div style="font-family:Arial,Helvetica,sans-serif;font-weight:600;font-size:23px;line-height:1.25;color:#0b0b0d;">Un prospect souhaite être recontacté.</div>`
     + '</td></tr>'
-    + '<tr><td style="padding:24px 34px 6px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">'
+    + '<tr><td style="padding:24px 34px 6px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="table-layout:fixed;">'
     + ligne('Nom', lead.nom)
     + ligne('Entreprise', lead.entreprise)
     + ligne('Email', lead.email, 'mailto:' + lead.email)
