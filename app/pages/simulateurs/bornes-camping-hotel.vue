@@ -468,6 +468,71 @@ const texteVerdict = computed(() => {
 })
 
 /* ── Lead ──────────────────────────────────────────────────────────────── */
+
+/**
+ * Ce que le prospect a saisi, rangé comme dans le formulaire.
+ * Sans cela, l'email de lead ne contient qu'un nom et un email — et l'on rappelle
+ * quelqu'un sans savoir de quoi lui parler.
+ */
+const OUI_NON: Record<string, string> = { oui: 'Oui', non: 'Non', inconnu: 'Ne sait pas' }
+const L_USAGE: Record<string, string> = { clients: 'Clients uniquement', ouvert: 'Ouvert aux visiteurs extérieurs' }
+const L_ZONE: Record<string, string> = { metropole: 'France métropolitaine', 'corse-om': 'Corse ou Outre-mer' }
+const L_PARK: Record<string, string> = { existant: 'Existant', neuf: 'Neuf', renovation: 'Rénovation importante' }
+const L_PME: Record<string, string> = { pme: 'PME au sens européen', 'non-pme': 'Hors périmètre PME', indetermine: 'Indéterminé' }
+const L_VERDICT: Record<string, string> = { confortable: 'Compatible', contraint: 'Pilotage contraint', insuffisant: 'Renforcement nécessaire' }
+
+function sectionsLead() {
+  const v = r.value!
+  const u = UNITE[f.type]
+  const ouSaisi = (x: number | undefined, suffixe = '') => (x || x === 0 ? `${nombre(x)}${suffixe}` : 'Non renseigné')
+
+  return [
+    { titre: 'Établissement', lignes: [
+      ['Type', LABELS_ETAB[f.type]],
+      ['Capacité', `${nombre(f.capacite)} ${u}`],
+      ['Places de stationnement', ouSaisi(f.places) === 'Non renseigné' ? `${nombre(f.capacite)} (par défaut)` : nombre(f.places!)]
+    ] },
+    { titre: 'Fréquentation', lignes: [
+      ['Occupation en haute saison', `${Math.round((f.occupationHaute || 0) * 100)} %`],
+      ['Durée moyenne de séjour', `${f.dureeSejour} nuits`],
+      ['Clientèle étrangère', `${Math.round((f.partEtrangere || 0) * 100)} %`],
+      ['Ouverture', f.saisonnier === false ? "Toute l'année" : `Saisonnière — ${f.moisOuverts} mois`]
+    ] },
+    { titre: 'Service visé', lignes: [
+      ['Qui pourra recharger', L_USAGE[f.usage || 'clients']!],
+      ['Niveau de service', LABELS_AMBITION[f.ambition || 'confort']],
+      ['Horizon de dimensionnement', String(f.horizonCourt)]
+    ] },
+    { titre: 'Installation électrique', lignes: [
+      ['Puissance souscrite', ouSaisi(f.puissanceSouscrite, ' kVA')],
+      ['Pointe actuelle du site', ouSaisi(f.pointeEtablissement, ' kW')],
+      ['Puissance par point', `${f.puissanceUnitaire} kW`],
+      ['Distance au tableau', ouSaisi(f.distanceTableau, ' m')]
+    ] },
+    { titre: 'Situation réglementaire', lignes: [
+      ['Localisation', L_ZONE[f.zone || 'metropole']!],
+      ['État du parking', L_PARK[f.etatParking || 'existant']!],
+      ['Propriétaire des murs et du parking', OUI_NON[f.proprietaire || 'inconnu']!],
+      ['Occupant du bâtiment', OUI_NON[f.occupant || 'inconnu']!],
+      ['Moins de 250 salariés', OUI_NON[f.moins250 || 'inconnu']!],
+      ['CA supérieur à 50 M€', OUI_NON[f.caSup50M || 'inconnu']!],
+      ['Bilan supérieur à 43 M€', OUI_NON[f.bilanSup43M || 'inconnu']!],
+      ['Groupe ou sociétés liées', OUI_NON[f.groupeLie || 'inconnu']!],
+      ['Statut retenu', L_PME[v.statutPme]!]
+    ] },
+    { titre: 'Résultat calculé', lignes: [
+      ['Points de recharge', `${v.pointsCourt} (soit ${v.bornesDoubles} borne(s) double(s)${v.bornesSimples ? ' + 1 simple' : ''})`],
+      ['Emplacements à pré-équiper', String(v.preEquiper)],
+      ['Puissance installée', `${nombre(v.puissanceInstallee)} kW, plafond piloté ${nombre(v.plafondPilotage)} kW`],
+      ['Verdict électrique', L_VERDICT[v.verdictPuissance]!],
+      ['Investissement', `${eurosExact(v.investTotal)} HT`],
+      ['Aide estimée', v.aideEstimee > 0 ? eurosExact(v.aideEstimee) : 'Aucune'],
+      ['Marge nette annuelle', eurosExact(v.margeAn)],
+      ['Retour sur investissement', v.retourAns ? `${v.retourAns} ans` : 'À affiner'],
+      ['Minimum réglementaire', v.minimumReglementaire === null ? 'À vérifier' : `${v.minimumReglementaire} point(s)`]
+    ] }
+  ]
+}
 const unlocked = ref(false)
 const g = reactive({ nom: '', email: '', entreprise: '', tel: '', optinCommercial: false, honey: '' })
 const sending = ref(false)
@@ -497,20 +562,14 @@ async function sendGate() {
   const contact = { ...g, honey: '' }
 
   sending.value = true
+  const sections = sectionsLead()
   try {
     const v = r.value
     const res = await $fetch<{ ok: boolean }>('/api/lead', {
       method: 'POST',
       body: corpsLead('bornes-chr', contact, resumeBornes(v), {
-        potDeMielRempli: potRempli,
-        type: v.input.type,
-        capacite: v.input.capacite,
-        points: v.pointsCourt,
-        preEquiper: v.preEquiper,
-        investTotal: Math.round(v.investTotal),
-        verdictPuissance: v.verdictPuissance,
-        minimumReglementaire: v.minimumReglementaire,
-        zone: v.input.zone
+        sections,
+        potDeMielRempli: potRempli
       })
     })
     if (res?.ok) {

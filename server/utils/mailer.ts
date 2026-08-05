@@ -21,6 +21,52 @@ function ligne(label: string, valeur?: string, lien?: string) {
     + '</tr>'
 }
 
+/** Titre de section dans le corps de l'email. */
+function titreSection(t: string) {
+  return `<tr><td colspan="2" style="padding:22px 0 6px;font-family:'Space Mono','Courier New',monospace;font-size:10.5px;letter-spacing:2px;text-transform:uppercase;color:#0b0b0d;border-bottom:2px solid #0b0b0d;">${esc(t)}</td></tr>`
+}
+
+interface Section { titre: string; lignes: [string, string][] }
+
+/**
+ * Les données du simulateur, telles que le prospect les a saisies.
+ * Sans elles, l'email ne contient qu'un nom et un email : on ne sait pas de quoi
+ * parler en rappelant. Deux formats acceptés — `sections` pour un rendu
+ * catégorisé comme le formulaire, sinon un simple objet à plat.
+ */
+function detailsMeta(meta?: string): { html: string; texte: string } {
+  if (!meta) return { html: '', texte: '' }
+  let data: any
+  try { data = typeof meta === 'string' ? JSON.parse(meta) : meta } catch { return { html: '', texte: '' } }
+  if (!data || typeof data !== 'object') return { html: '', texte: '' }
+
+  const sections: Section[] = Array.isArray(data.sections) && data.sections.length
+    ? data.sections
+    : [{
+        titre: 'Détail',
+        lignes: Object.entries(data)
+          .filter(([, v]) => v !== null && v !== undefined && v !== '')
+          .map(([k, v]) => [k, String(v)] as [string, string])
+      }]
+
+  let html = ''
+  let texte = ''
+  for (const s of sections) {
+    if (!s?.lignes?.length) continue
+    html += titreSection(s.titre)
+    texte += `\n${s.titre.toUpperCase()}\n`
+    for (const [l, v] of s.lignes) {
+      html += ligne(l, v)
+      texte += `  ${l} : ${v}\n`
+    }
+  }
+  if (!html) return { html: '', texte: '' }
+  return {
+    html: '<tr><td style="padding:8px 34px 6px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">' + html + '</table></td></tr>',
+    texte
+  }
+}
+
 function buildHtml(lead: Lead, kicker: string): string {
   const date = new Date().toLocaleString('fr-FR', { timeZone: 'Europe/Paris', dateStyle: 'short', timeStyle: 'short' })
   const messageHtml = lead.message && lead.message.trim()
@@ -45,6 +91,7 @@ function buildHtml(lead: Lead, kicker: string): string {
     + ligne('Email', lead.email, 'mailto:' + lead.email)
     + ligne('Téléphone', lead.telephone, tel ? 'tel:' + tel : undefined)
     + '</table></td></tr>'
+    + detailsMeta(lead.meta).html
     + '<tr><td style="padding:16px 34px 34px;">'
     + `<div style="font-family:'Space Mono','Courier New',monospace;font-size:10.5px;letter-spacing:2px;text-transform:uppercase;color:#86868c;margin-bottom:10px;">Message</div>`
     + `<div style="border:1px solid #e2e2de;border-radius:12px;padding:16px 18px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.65;color:#2a2a2e;background:#fafaf8;white-space:normal;">${messageHtml}</div>`
@@ -60,8 +107,9 @@ function buildText(lead: Lead, kicker: string): string {
     + `Nom : ${lead.nom}\n`
     + `Entreprise : ${lead.entreprise || '—'}\n`
     + `Email : ${lead.email}\n`
-    + `Téléphone : ${lead.telephone || '—'}\n\n`
-    + `Message :\n${lead.message || '—'}\n`
+    + `Téléphone : ${lead.telephone || '—'}\n`
+    + detailsMeta(lead.meta).texte
+    + `\nMessage :\n${lead.message || '—'}\n`
 }
 
 /** Envoie l'email de lead aux destinataires. Renvoie true si envoyé. */
@@ -72,8 +120,9 @@ export async function sendLeadEmail(lead: Lead, recipients: string): Promise<boo
     console.warn('OTONOM mailer: SMTP non configuré ou aucun destinataire — email non envoyé')
     return false
   }
-  const kicker = lead.formKey === 'simulateur' ? 'Lead simulateur de transition'
-    : lead.formKey === 'tco-flotte' ? 'Lead simulateur TCO' : 'Nouvelle demande'
+  /* La source vient du libellé saisi dans l'admin, pas d'une liste en dur :
+     un nouveau formulaire porte son nom dès sa création. */
+  const kicker = await getFormLabel(lead.formKey)
   const transport = nodemailer.createTransport({
     host: s.host,
     port: Number(s.port) || 465,
@@ -81,14 +130,11 @@ export async function sendLeadEmail(lead: Lead, recipients: string): Promise<boo
     auth: { user: s.user, pass: s.pass },
     tls: { minVersion: 'TLSv1.2' }
   })
-  const sujetBase = lead.formKey === 'simulateur' ? 'Simulateur de transition — lead qualifié'
-    : lead.formKey === 'tco-flotte' ? 'Simulateur TCO flotte électrique — lead qualifié'
-      : "Nouvelle demande d'audit"
   await transport.sendMail({
     from: `"${s.fromName}" <${s.from}>`,
     to: recipients,
     replyTo: `"${lead.nom}" <${lead.email}>`,
-    subject: `${sujetBase} — ${lead.nom}${lead.entreprise ? ` (${lead.entreprise})` : ''}`,
+    subject: `${kicker} — ${lead.nom}${lead.entreprise ? ` (${lead.entreprise})` : ''}`,
     html: buildHtml(lead, kicker),
     text: buildText(lead, kicker)
   })

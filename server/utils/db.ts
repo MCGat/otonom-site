@@ -257,6 +257,17 @@ export async function listForms() {
 }
 
 /** Destinataires d'un formulaire (repli sur les destinataires par défaut). */
+/**
+ * Libellé du formulaire, tel que le patron l'a nommé dans l'admin.
+ * L'email s'en sert pour dire d'où vient le lead : ainsi un nouveau formulaire
+ * porte son nom dès sa création, sans qu'on ait à toucher au code de l'email.
+ */
+export async function getFormLabel(formKey: string): Promise<string> {
+  await ensureReady()
+  const row = await get(`SELECT label FROM form_settings WHERE form_key = ?`, [formKey])
+  return (row?.label && String(row.label).trim()) ? String(row.label).trim() : formKey
+}
+
 export async function getRecipients(formKey: string): Promise<string> {
   await ensureReady()
   const row = await get(`SELECT recipients FROM form_settings WHERE form_key = ?`, [formKey])
