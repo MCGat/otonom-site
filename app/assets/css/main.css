@@ -583,8 +583,20 @@ a.persona .more svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-
 .sim-muted{color:var(--muted)}
 .sim-kv{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:10px 0;border-top:1px solid var(--line-soft)}
 .sim-kv span{color:var(--muted);font-size:14px}
-.sim-kv b{font-family:var(--ff-mono);font-variant-numeric:tabular-nums;font-size:15px;color:var(--ink);font-weight:400;text-align:right;white-space:nowrap}
+.sim-kv b{font-family:var(--ff-mono);font-variant-numeric:tabular-nums;font-size:15px;color:var(--ink);font-weight:400;text-align:right}
+/* Le `nowrap` n'existe que pour empêcher « 21 908 € » de se couper en deux :
+   il est donc réservé aux valeurs chiffrées, qui portent toutes `tabnum`.
+   Appliqué à toutes les valeurs, il élargissait la page entière dès qu'une
+   valeur devenait une phrase (hypothèses du simulateur camping). */
+.sim-kv b.tabnum{white-space:nowrap}
+.sim-kv b:not(.tabnum){overflow-wrap:break-word;min-width:0;line-height:1.5}
 .sim-kv b.is-strong{font-size:17px;font-weight:700}
+/* Une valeur en toutes lettres n'est pas lisible dans une colonne étroite :
+   sur petit écran, elle passe sous son libellé. */
+@media (max-width:560px){
+  .sim-kv:has(b:not(.tabnum)){flex-direction:column;align-items:stretch;gap:4px}
+  .sim-kv b:not(.tabnum){text-align:left}
+}
 .sim-disclaimer{margin-top:clamp(40px,5vw,60px)}
 
 @media(max-width:760px){
