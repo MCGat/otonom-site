@@ -14,7 +14,7 @@ const LASTMOD = '2026-07-08'
 const ROUTES: Array<{ loc: string; priority: string; freq: string }> = [
   { loc: '/', priority: '1.0', freq: 'weekly' },
   { loc: '/simulateurs', priority: '0.8', freq: 'monthly' },
-  { loc: '/simulateurs/transition', priority: '0.9', freq: 'monthly' },
+  { loc: '/simulateurs/economies-et-roi', priority: '0.9', freq: 'monthly' },
   { loc: '/simulateurs/tco-flotte-electrique', priority: '0.9', freq: 'monthly' },
   { loc: '/simulateurs/bornes-camping-hotel', priority: '0.9', freq: 'monthly' },
   { loc: '/blog', priority: '0.8', freq: 'weekly' },

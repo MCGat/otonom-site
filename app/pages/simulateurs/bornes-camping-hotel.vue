@@ -433,8 +433,8 @@ import {
 import { eurosExact, nombre as nombreFr, corpsLead } from '~/utils/simulateurs/core'
 
 useSeoMeta({
-  title: 'Combien de bornes pour un camping ou un hôtel ? Simulateur — OTONOM',
-  description: "Estimez le nombre de points de recharge, la puissance nécessaire, le déploiement par étapes et les aides réellement mobilisables pour votre camping, hôtel ou résidence de tourisme."
+  title: 'Simulateur : combien de bornes pour un camping ou un hôtel ?',
+  description: "Simulateur gratuit : combien de points de recharge pour votre camping ou votre hôtel, quelle puissance, quel déploiement par étapes et quelles aides."
 })
 
 const TRIPLE = [{ v: 'inconnu', l: 'Je ne sais pas' }, { v: 'oui', l: 'Oui' }, { v: 'non', l: 'Non' }]

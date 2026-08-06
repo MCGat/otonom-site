@@ -181,20 +181,26 @@ async function seedDefaults(cfg: any) {
     ? `INSERT IGNORE INTO form_settings (form_key, label, recipients, updated_at) VALUES (?, ?, ?, ?)`
     : `INSERT OR IGNORE INTO form_settings (form_key, label, recipients, updated_at) VALUES (?, ?, ?, ?)`
   await run(ins, ['contact', 'Formulaire de contact', def, now])
-  await run(ins, ['simulateur', 'Simulateur de transition', def, now])
+  await run(ins, ['simulateur', "Simulateur d'économies et de ROI", def, now])
   await run(ins, ['tco-flotte', 'Simulateur de TCO flotte électrique', def, now])
   await run(ins, ['bornes-chr', 'Simulateur bornes camping & hôtel', def, now])
   // Les simulateurs ont changé d'URL : on suit les pages déjà renseignées,
   // sinon les destinataires resteraient attachés à une adresse qui n'existe plus.
-  await run(`UPDATE form_settings SET pages = ? WHERE pages = ?`, ['/simulateurs/transition', '/simulateur'])
+  await run(`UPDATE form_settings SET pages = ? WHERE pages = ?`, ['/simulateurs/economies-et-roi', '/simulateur'])
   await run(`UPDATE form_settings SET pages = ? WHERE pages = ?`, ['/simulateurs/tco-flotte-electrique', '/simulateur-tco'])
   // Renommage du simulateur : ne touche que l'ancien libellé par défaut,
   // jamais un nom personnalisé depuis l'admin.
   await run(`UPDATE form_settings SET label = ? WHERE form_key = ? AND label = ?`,
-    ['Simulateur de transition', 'simulateur', 'Simulateur (lead qualifié)'])
+    ["Simulateur d'économies et de ROI", 'simulateur', 'Simulateur (lead qualifié)'])
+  // 06/08/2026 — « transition » ne disait pas ce que la page calcule. Même
+  // précaution : un libellé retouché dans l'admin n'est pas écrasé.
+  await run(`UPDATE form_settings SET label = ? WHERE form_key = ? AND label = ?`,
+    ["Simulateur d'économies et de ROI", 'simulateur', 'Simulateur de transition'])
+  await run(`UPDATE form_settings SET pages = ? WHERE pages = ?`,
+    ['/simulateurs/economies-et-roi', '/simulateurs/transition'])
   // Pages connues par défaut (uniquement si pas encore renseignées)
   await run(`UPDATE form_settings SET pages = ? WHERE form_key = ? AND (pages IS NULL OR pages = '')`, ['/contact', 'contact'])
-  await run(`UPDATE form_settings SET pages = ? WHERE form_key = ? AND (pages IS NULL OR pages = '')`, ['/simulateurs/transition', 'simulateur'])
+  await run(`UPDATE form_settings SET pages = ? WHERE form_key = ? AND (pages IS NULL OR pages = '')`, ['/simulateurs/economies-et-roi', 'simulateur'])
   await run(`UPDATE form_settings SET pages = ? WHERE form_key = ? AND (pages IS NULL OR pages = '')`, ['/simulateurs/tco-flotte-electrique', 'tco-flotte'])
   await run(`UPDATE form_settings SET pages = ? WHERE form_key = ? AND (pages IS NULL OR pages = '')`, ['/simulateurs/bornes-camping-hotel', 'bornes-chr'])
 }

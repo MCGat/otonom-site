@@ -451,7 +451,7 @@
 
       <p class="disclaimer sim-disclaimer">Estimations en ordres de grandeur, établies sur les barèmes des millésimes {{ r.anneeDebut }}–{{ r.anneeFin }}, données à titre indicatif et non contractuel — à confirmer avec votre expert-comptable. Les montants réels dépendent de votre situation et sont affinés lors de l'audit gratuit OTONOM.</p>
 
-      <p class="tco-cross">Vous cherchez une vue plus large — mobilité, recharge <em>et</em> énergie&nbsp;? Passez par le <NuxtLink to="/simulateurs/transition">simulateur de transition</NuxtLink>.</p>
+      <p class="tco-cross">Vous cherchez une vue plus large — mobilité, recharge <em>et</em> énergie&nbsp;? Passez par le <NuxtLink to="/simulateurs/economies-et-roi">simulateur d'économies et de ROI</NuxtLink>.</p>
 
       <div class="cta-block">
         <h2>Transformons ce calcul en trajectoire.</h2>
@@ -590,8 +590,8 @@ import {
 import { euros, eurosExact, ecart as fmtEcart, nombre as nombreFr, corpsLead, SCENARIO_LABELS, type ScenarioKey } from '~/utils/simulateurs/core'
 
 useSeoMeta({
-  title: 'Simulateur de TCO flotte électrique — OTONOM | Recharge & infra comprises',
-  description: "Calculez le coût total de possession de votre flotte électrique, bornes et raccordement compris, comparé au thermique. Point de bascule, coût au km, impact fiscal."
+  title: "Simulateur de TCO d'une flotte électrique — OTONOM",
+  description: "Simulateur gratuit de coût total de possession : flotte électrique contre thermique, bornes et raccordement compris. Point de bascule et coût au km."
 })
 
 /* ── État ────────────────────────────────────────────────────────────────── */

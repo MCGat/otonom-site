@@ -105,7 +105,7 @@ const error = ref('')
 const NAMES: Record<string, string> = {
   '/': 'Accueil', '/expertises': 'Expertises', '/methode': 'Méthode',
   '/a-propos': 'À propos', '/contact': 'Contact', '/simulateurs': 'Simulateurs (page pilier)',
-  '/simulateurs/transition': 'Simulateur de transition',
+  '/simulateurs/economies-et-roi': "Simulateur d'économies et de ROI",
   '/simulateurs/tco-flotte-electrique': 'Simulateur de TCO flotte électrique',
   '/blog': 'Blog (liste des articles)', '/dirigeants': 'Dirigeants', '/daf': 'DAF',
   '/drh': 'DRH', '/services-generaux': 'Services généraux',
@@ -115,7 +115,7 @@ const NAMES: Record<string, string> = {
 const GROUPS: Array<{ key: string; label: string; paths: string[]; note?: string }> = [
   { key: 'main', label: 'Pages principales', paths: ['/', '/expertises', '/methode', '/a-propos', '/contact'] },
   { key: 'persona', label: 'Pages personas', paths: ['/dirigeants', '/daf', '/drh', '/services-generaux'] },
-  { key: 'tools', label: 'Outils', paths: ['/simulateurs', '/simulateurs/transition', '/simulateurs/tco-flotte-electrique'] },
+  { key: 'tools', label: 'Outils', paths: ['/simulateurs', '/simulateurs/economies-et-roi', '/simulateurs/tco-flotte-electrique'] },
   { key: 'content', label: 'Contenu', paths: ['/blog'], note: 'Désindexer le blog désindexe aussi tous ses articles. Le statut brouillon/publié de chaque article se gère dans l’onglet Blog.' },
   { key: 'legal', label: 'Pages légales', paths: ['/mentions-legales', '/confidentialite'] }
 ]

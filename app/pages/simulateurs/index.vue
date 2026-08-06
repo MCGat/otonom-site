@@ -68,14 +68,14 @@
 
 <script setup lang="ts">
 useSeoMeta({
-  title: 'Simulateurs — OTONOM | Chiffrez votre transition mobilité & énergie',
-  description: "Quatre simulateurs pour chiffrer votre transition : économies et ROI, coût total de possession d'une flotte électrique, refacturation de la recharge, dimensionnement des bornes."
+  title: 'Simulateurs gratuits — mobilité, recharge & énergie | OTONOM',
+  description: "Quatre simulateurs en ligne pour chiffrer votre projet avant de décider : économies et ROI, TCO d'une flotte électrique, nombre de bornes en camping ou hôtel."
 })
 
 const simulateurs = [
   {
-    url: '/simulateurs/transition',
-    titre: 'Simulateur de transition',
+    url: '/simulateurs/economies-et-roi',
+    titre: "Simulateur d'économies et de ROI",
     description: "Le diagnostic large : ce que votre transition mobilité, recharge et énergie peut vous rapporter, et où vous en êtes aujourd'hui.",
     points: [
       'Économies annuelles et argent laissé sur la table',

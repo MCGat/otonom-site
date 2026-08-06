@@ -1,6 +1,6 @@
 /**
  * OTONOM — Moteur du simulateur d'économies & ROI (fonctions pures, sans DOM).
- * Auto-importé par Nuxt (dossier app/utils). Consommé par app/pages/simulateurs/transition.vue.
+ * Auto-importé par Nuxt (dossier app/utils). Consommé par app/pages/simulateurs/economies-et-roi.vue.
  *
  * Résultats = ORDRES DE GRANDEUR INDICATIFS, à confirmer lors de l'audit.
  * Toute la « science » est dans SIM_CONFIG : un seul endroit, daté, commenté, modifiable.

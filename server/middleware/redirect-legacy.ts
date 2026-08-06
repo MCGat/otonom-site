@@ -10,7 +10,8 @@ const KNOWN = new Set([
   '/', '/a-propos', '/expertises', '/methode', '/contact',
   '/dirigeants', '/daf', '/drh', '/services-generaux',
   '/mentions-legales', '/confidentialite',
-  '/simulateurs', '/simulateurs/transition', '/simulateurs/tco-flotte-electrique'
+  '/simulateurs', '/simulateurs/economies-et-roi', '/simulateurs/tco-flotte-electrique',
+  '/simulateurs/bornes-camping-hotel'
 ])
 
 /**
@@ -22,7 +23,12 @@ const LEGACY: Record<string, string> = {
   // Les simulateurs sont passés sous une arborescence commune : un seul
   // simulateur ne justifiait pas de niveau, quatre si.
   '/simulateur-tco': '/simulateurs/tco-flotte-electrique',
-  '/simulateur': '/simulateurs/transition'
+  // Pointe directement sur la cible finale : une redirection qui en appelle une
+  // autre dilue le référencement et rallonge le premier affichage.
+  '/simulateur': '/simulateurs/economies-et-roi',
+  // « transition » ne disait pas ce que la page calcule. Renommée le 06/08/2026 ;
+  // l'ancienne adresse a été indexée, elle doit survivre indéfiniment.
+  '/simulateurs/transition': '/simulateurs/economies-et-roi'
 }
 
 /** Minuscule + sans slash final (le query/hash n'est pas dans pathname). */

@@ -1,6 +1,6 @@
 <template>
   <section class="page-intro section--light"><div class="wrap">
-    <span class="kicker reveal">Simulateur de transition</span>
+    <span class="kicker reveal">Simulateur d'économies et de ROI</span>
     <h1 class="reveal">Combien votre transition peut-elle vous rapporter&nbsp;?</h1>
     <p class="lede reveal">Un diagnostic en moins de 5&nbsp;minutes&nbsp;: économies annuelles, investissement, aides mobilisables, retour sur investissement, CO₂ évité et score de maturité. Calcul instantané, sans engagement.</p>
     <p class="sim-note reveal">Résultats en <strong>ordres de grandeur indicatifs</strong>, établis sur des barèmes au 01/01/2026 — à confirmer lors de votre audit gratuit.</p>
@@ -244,8 +244,8 @@
 import { calculerSimulateur, construireVueSimulateur, resumeSimulateur, type SimResult, type SimInput, type TagKind } from '~/utils/simulateur'
 
 useSeoMeta({
-  title: 'Simulateur de transition — OTONOM | Économies, ROI & maturité',
-  description: "En moins de 5 minutes, estimez vos économies annuelles, votre investissement, vos aides mobilisables, votre ROI et votre score de maturité énergétique. Ordres de grandeur indicatifs."
+  title: "Simulateur d'économies et de ROI — OTONOM",
+  description: "Simulateur gratuit : estimez en 5 minutes les économies annuelles de votre transition mobilité et énergie, l'investissement, les aides et votre ROI."
 })
 
 const TAG_LABELS: Record<TagKind, string> = {

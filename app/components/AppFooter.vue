@@ -33,7 +33,7 @@
         <div>
           <h4>Simulateurs</h4>
           <ul>
-            <li><NuxtLink to="/simulateurs/transition">Simulateur de transition</NuxtLink></li>
+            <li><NuxtLink to="/simulateurs/economies-et-roi">Simulateur d'économies et de ROI</NuxtLink></li>
             <li><NuxtLink to="/simulateurs/tco-flotte-electrique">TCO flotte électrique</NuxtLink></li>
           </ul>
         </div>
