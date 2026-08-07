@@ -11,8 +11,8 @@
         <div
           class="nav-sim"
           :class="{ 'is-open': simOpen }"
-          @mouseenter="ouvrirSurvol"
-          @mouseleave="fermerSurvol"
+          @pointerenter="ouvrirSurvol"
+          @pointerleave="fermerSurvol"
         >
           <NuxtLink
             ref="declencheur"
@@ -141,14 +141,19 @@ let fermeture: ReturnType<typeof setTimeout> | null = null
  * On se fie au pointeur qui a réellement produit l'événement (`pointerType`), et
  * non à `matchMedia('(hover: hover)')` : beaucoup d'appareils tactiles — portables
  * à écran tactile, certains Android — se déclarent survolables à tort.
+ *
+ * La condition exclut le tactile au lieu d'exiger la souris, et ce sens compte :
+ * écrite « seulement si souris », elle a tué le menu sur ordinateur le jour où
+ * elle a reçu un MouseEvent, dépourvu de `pointerType`. Écrite ainsi, un pointeur
+ * inconnu ouvre le menu — on préfère un menu qui s'ouvre de trop à un menu mort.
  */
 function ouvrirSurvol(e: PointerEvent) {
-  if (e.pointerType !== 'mouse') return
+  if (e.pointerType === 'touch') return
   if (fermeture) { clearTimeout(fermeture); fermeture = null }
   simOpen.value = true
 }
 function fermerSurvol(e: PointerEvent) {
-  if (e.pointerType !== 'mouse') return
+  if (e.pointerType === 'touch') return
   // Petit délai : sans lui, traverser l'espace entre le bouton et le panneau
   // referait disparaître le menu sous le curseur.
   fermeture = setTimeout(() => { simOpen.value = false }, 120)
