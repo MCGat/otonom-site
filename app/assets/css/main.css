@@ -693,9 +693,15 @@ a.persona .more svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-
   .blog-card:hover{border-color:var(--ink)}
   .blog-card:hover::after{
     clip-path:circle(150% at var(--mx,50%) var(--my,50%));
-    /* Un peu plus lent qu'un simple survol, et décéléré en fin de course :
-       le front couvre vite la zone proche du curseur puis vient se poser. */
-    transition:clip-path .68s cubic-bezier(.22,.61,.36,1)
+    /* La courbe compte plus que la durée. Décélérée, elle était la plus rapide
+       au départ — précisément quand le disque est petit et qu'on devrait voir
+       d'où il part : l'œil n'attrapait que la fin, d'où l'impression d'un
+       remplissage venu du centre.
+       Ici le départ est retenu sans être mort : ~15 px de rayon à 60 ms (on voit
+       le disque naître sous le curseur), et ~200 ms avant qu'il ne dépasse
+       120 px, contre 61 ms auparavant. Trop lent au départ — testé — et l'effet
+       ne se lit plus comme une intention mais comme une latence. */
+    transition:clip-path .85s cubic-bezier(.35,.08,.3,1)
   }
 }
 /* Le clavier n'a pas de position de curseur : on inverse d'un bloc, sans onde. */
