@@ -16,7 +16,9 @@
     </nav>
 
     <div v-if="affiches.length" class="blog-grid">
-      <NuxtLink v-for="a in affiches" :key="a.slug" class="blog-card" :to="`/blog/${a.slug}`">
+      <NuxtLink
+        v-for="a in affiches" :key="a.slug" class="blog-card" :to="`/blog/${a.slug}`"
+        @pointerenter="poserOrigine" @pointerleave="poserOrigine">
         <div v-if="a.cover" class="blog-card-cover"><img :src="a.cover" :alt="a.title" loading="lazy"></div>
         <div class="blog-card-body">
           <span class="blog-card-date">{{ formatDate(a.publishedAt || a.createdAt) }}</span>
@@ -103,6 +105,20 @@ function allerPage(n: number) {
   if (cible === page.value) return
   router.replace({ query: { ...route.query, page: cible === 1 ? undefined : cible } })
   if (import.meta.client) document.querySelector('.blog-grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+/**
+ * Point d'où part (et où revient) l'inversion de la carte au survol.
+ * Posé à l'entrée ET à la sortie du curseur : l'onde se rétracte alors vers
+ * l'endroit qu'on quitte, au lieu de refluer vers un centre arbitraire.
+ * Le CSS fait le reste ; sans JS, la carte s'inverse depuis son centre.
+ */
+function poserOrigine(e: PointerEvent) {
+  const el = e.currentTarget as HTMLElement | null
+  if (!el) return
+  const r = el.getBoundingClientRect()
+  el.style.setProperty('--mx', `${e.clientX - r.left}px`)
+  el.style.setProperty('--my', `${e.clientY - r.top}px`)
 }
 
 useSeoMeta({
