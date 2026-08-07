@@ -18,7 +18,7 @@
     <div v-if="affiches.length" class="blog-grid">
       <NuxtLink
         v-for="a in affiches" :key="a.slug" class="blog-card" :to="`/blog/${a.slug}`"
-        @pointerenter="poserOrigine" @pointerleave="poserOrigine">
+        @pointerenter="entrer" @pointerleave="sortir" @pointercancel="sortir">
         <div v-if="a.cover" class="blog-card-cover"><img :src="a.cover" :alt="a.title" loading="lazy"></div>
         <div class="blog-card-body">
           <span class="blog-card-date">{{ formatDate(a.publishedAt || a.createdAt) }}</span>
@@ -107,18 +107,42 @@ function allerPage(n: number) {
   if (import.meta.client) document.querySelector('.blog-grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
-/**
- * Point d'où part (et où revient) l'inversion de la carte au survol.
- * Posé à l'entrée ET à la sortie du curseur : l'onde se rétracte alors vers
- * l'endroit qu'on quitte, au lieu de refluer vers un centre arbitraire.
- * Le CSS fait le reste ; sans JS, la carte s'inverse depuis son centre.
- */
-function poserOrigine(e: PointerEvent) {
-  const el = e.currentTarget as HTMLElement | null
-  if (!el) return
+/** Position du curseur dans la carte, en pixels. */
+function poserOrigine(el: HTMLElement, e: PointerEvent) {
   const r = el.getBoundingClientRect()
   el.style.setProperty('--mx', `${e.clientX - r.left}px`)
   el.style.setProperty('--my', `${e.clientY - r.top}px`)
+}
+
+/**
+ * Entrée du curseur : l'inversion doit naître exactement sous lui.
+ *
+ * Le piège : `clip-path` interpole AUSSI le centre du cercle. Si on se contente
+ * de changer l'origine au moment où la carte s'ouvre, le disque part de
+ * l'ancien point et son centre glisse vers le nouveau en grandissant — on croit
+ * alors que l'onde naît au mauvais endroit, ou au milieu de la carte quand
+ * aucun point n'a encore été enregistré.
+ *
+ * On repose donc l'origine transition coupée (`is-fige`), on force le navigateur
+ * à l'appliquer, puis seulement on ouvre. Le disque démarre là où il doit.
+ */
+function entrer(e: PointerEvent) {
+  const el = e.currentTarget as HTMLElement | null
+  // Le tactile déclenche un faux survol avant le clic : il n'ouvre rien ici.
+  if (!el || e.pointerType === 'touch') return
+  el.classList.add('is-fige')
+  poserOrigine(el, e)
+  void el.offsetWidth // force le recalcul avant de rallumer la transition
+  el.classList.remove('is-fige')
+  el.classList.add('is-inverse')
+}
+
+/** Sortie : l'onde se rétracte vers l'endroit qu'on quitte, pas vers le centre. */
+function sortir(e: PointerEvent) {
+  const el = e.currentTarget as HTMLElement | null
+  if (!el) return
+  poserOrigine(el, e)
+  el.classList.remove('is-inverse')
 }
 
 useSeoMeta({
