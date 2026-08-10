@@ -115,18 +115,18 @@ const simulateursDisponibles = [
     sous: 'Coût total de possession, recharge et infrastructure comprises'
   },
   {
+    url: '/simulateurs/recharge-domicile-salarie',
+    titre: 'Remboursement de recharge à domicile',
+    sous: "Ce que coûte la recharge d'un salarié, et ce qu'on peut lui rembourser"
+  },
+  {
     url: '/simulateurs/bornes-camping-hotel',
     titre: 'Combien de bornes pour mon camping ou mon hôtel ?',
     sous: 'Dimensionnement, puissance et aides réellement mobilisables'
   }
 ]
 
-const simulateursAVenir = [
-  {
-    titre: 'Coût & refacturation de la recharge d\'un collaborateur',
-    sous: 'Recharge à domicile, remboursement et traitement social'
-  }
-]
+const simulateursAVenir: { titre: string; sous: string }[] = []
 
 const surSimulateur = computed(() => route.path.startsWith('/simulateurs'))
 

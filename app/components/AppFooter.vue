@@ -35,6 +35,8 @@
           <ul>
             <li><NuxtLink to="/simulateurs/economies-et-roi">Simulateur d'économies et de ROI</NuxtLink></li>
             <li><NuxtLink to="/simulateurs/tco-flotte-electrique">TCO flotte électrique</NuxtLink></li>
+            <li><NuxtLink to="/simulateurs/recharge-domicile-salarie">Recharge à domicile d'un salarié</NuxtLink></li>
+            <li><NuxtLink to="/simulateurs/bornes-camping-hotel">Bornes camping &amp; hôtel</NuxtLink></li>
           </ul>
         </div>
       </div>

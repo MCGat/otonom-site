@@ -11,7 +11,8 @@ const KNOWN = new Set([
   '/dirigeants', '/daf', '/drh', '/services-generaux',
   '/mentions-legales', '/confidentialite',
   '/simulateurs', '/simulateurs/economies-et-roi', '/simulateurs/tco-flotte-electrique',
-  '/simulateurs/bornes-camping-hotel'
+  '/simulateurs/bornes-camping-hotel',
+  '/simulateurs/recharge-domicile-salarie'
 ])
 
 /**

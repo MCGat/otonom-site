@@ -107,15 +107,15 @@ const simulateurs = [
     cta: 'Calculer mon besoin'
   },
   {
-    url: null,
-    titre: "Coût & refacturation de la recharge d'un collaborateur",
-    description: "Quand un salarié recharge chez lui, qui paie quoi ? Le coût réel, le juste remboursement et son traitement social.",
+    url: '/simulateurs/recharge-domicile-salarie',
+    titre: "Remboursement de recharge à domicile d'un salarié",
+    description: "Quand un collaborateur recharge chez lui, qui paie quoi ? Le coût réel, le juste remboursement et son traitement social.",
     points: [
       'Coût réel de la recharge à domicile, heures creuses comprises',
-      'Montant de remboursement et traitement en avantage en nature',
-      'Comparaison avec la recharge sur site et en itinérance'
+      'Montant exonéré de cotisations, et fraction soumise',
+      'Régime de la borne installée au domicile du salarié'
     ],
-    cta: null
+    cta: 'Calculer le remboursement'
   }
 ]
 </script>

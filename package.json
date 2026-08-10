@@ -10,7 +10,8 @@
     "start": "node app.js",
     "postinstall": "nuxt prepare",
     "test:tco": "esbuild test/tco.test.ts --bundle --format=esm --platform=node --outfile=node_modules/.cache/tco.test.mjs --log-level=error && node node_modules/.cache/tco.test.mjs",
-    "test:bornes": "esbuild test/bornes-chr.test.ts --bundle --format=esm --platform=node --outfile=node_modules/.cache/bornes.test.mjs --log-level=error && node node_modules/.cache/bornes.test.mjs"
+    "test:bornes": "esbuild test/bornes-chr.test.ts --bundle --format=esm --platform=node --outfile=node_modules/.cache/bornes.test.mjs --log-level=error && node node_modules/.cache/bornes.test.mjs",
+    "test:recharge": "esbuild test/recharge-collaborateur.test.ts --bundle --format=esm --platform=node --outfile=node_modules/.cache/recharge.test.mjs --log-level=error && node node_modules/.cache/recharge.test.mjs"
   },
   "dependencies": {
     "mysql2": "^3.22.6",

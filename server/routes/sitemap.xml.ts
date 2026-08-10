@@ -16,6 +16,7 @@ const ROUTES: Array<{ loc: string; priority: string; freq: string }> = [
   { loc: '/simulateurs', priority: '0.8', freq: 'monthly' },
   { loc: '/simulateurs/economies-et-roi', priority: '0.9', freq: 'monthly' },
   { loc: '/simulateurs/tco-flotte-electrique', priority: '0.9', freq: 'monthly' },
+  { loc: '/simulateurs/recharge-domicile-salarie', priority: '0.9', freq: 'monthly' },
   { loc: '/simulateurs/bornes-camping-hotel', priority: '0.9', freq: 'monthly' },
   { loc: '/blog', priority: '0.8', freq: 'weekly' },
   { loc: '/expertises', priority: '0.8', freq: 'monthly' },

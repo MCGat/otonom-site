@@ -107,6 +107,8 @@ const NAMES: Record<string, string> = {
   '/a-propos': 'À propos', '/contact': 'Contact', '/simulateurs': 'Simulateurs (page pilier)',
   '/simulateurs/economies-et-roi': "Simulateur d'économies et de ROI",
   '/simulateurs/tco-flotte-electrique': 'Simulateur de TCO flotte électrique',
+  '/simulateurs/bornes-camping-hotel': 'Simulateur bornes camping & hôtel',
+  '/simulateurs/recharge-domicile-salarie': 'Simulateur recharge collaborateur',
   '/blog': 'Blog (liste des articles)', '/dirigeants': 'Dirigeants', '/daf': 'DAF',
   '/drh': 'DRH', '/services-generaux': 'Services généraux',
   '/mentions-legales': 'Mentions légales', '/confidentialite': 'Politique de confidentialité',
@@ -115,7 +117,7 @@ const NAMES: Record<string, string> = {
 const GROUPS: Array<{ key: string; label: string; paths: string[]; note?: string }> = [
   { key: 'main', label: 'Pages principales', paths: ['/', '/expertises', '/methode', '/a-propos', '/contact'] },
   { key: 'persona', label: 'Pages personas', paths: ['/dirigeants', '/daf', '/drh', '/services-generaux'] },
-  { key: 'tools', label: 'Outils', paths: ['/simulateurs', '/simulateurs/economies-et-roi', '/simulateurs/tco-flotte-electrique'] },
+  { key: 'tools', label: 'Outils', paths: ['/simulateurs', '/simulateurs/economies-et-roi', '/simulateurs/tco-flotte-electrique', '/simulateurs/recharge-domicile-salarie'] },
   { key: 'content', label: 'Contenu', paths: ['/blog'], note: 'Désindexer le blog désindexe aussi tous ses articles. Le statut brouillon/publié de chaque article se gère dans l’onglet Blog.' },
   { key: 'legal', label: 'Pages légales', paths: ['/mentions-legales', '/confidentialite'] }
 ]

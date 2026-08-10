@@ -184,6 +184,7 @@ async function seedDefaults(cfg: any) {
   await run(ins, ['simulateur', "Simulateur d'économies et de ROI", def, now])
   await run(ins, ['tco-flotte', 'Simulateur de TCO flotte électrique', def, now])
   await run(ins, ['bornes-chr', 'Simulateur bornes camping & hôtel', def, now])
+  await run(ins, ['recharge-collaborateur', 'Simulateur recharge collaborateur', def, now])
   // Les simulateurs ont changé d'URL : on suit les pages déjà renseignées,
   // sinon les destinataires resteraient attachés à une adresse qui n'existe plus.
   await run(`UPDATE form_settings SET pages = ? WHERE pages = ?`, ['/simulateurs/economies-et-roi', '/simulateur'])
@@ -203,6 +204,7 @@ async function seedDefaults(cfg: any) {
   await run(`UPDATE form_settings SET pages = ? WHERE form_key = ? AND (pages IS NULL OR pages = '')`, ['/simulateurs/economies-et-roi', 'simulateur'])
   await run(`UPDATE form_settings SET pages = ? WHERE form_key = ? AND (pages IS NULL OR pages = '')`, ['/simulateurs/tco-flotte-electrique', 'tco-flotte'])
   await run(`UPDATE form_settings SET pages = ? WHERE form_key = ? AND (pages IS NULL OR pages = '')`, ['/simulateurs/bornes-camping-hotel', 'bornes-chr'])
+  await run(`UPDATE form_settings SET pages = ? WHERE form_key = ? AND (pages IS NULL OR pages = '')`, ['/simulateurs/recharge-domicile-salarie', 'recharge-collaborateur'])
 }
 
 /** Insère un lead, renvoie son id. */
