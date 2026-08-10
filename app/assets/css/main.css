@@ -774,6 +774,50 @@ a.persona .more svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-
 .article-tldr li::before{content:"";position:absolute;left:0;top:.62em;width:11px;height:1px;background:var(--ink);opacity:.55}
 .article-tldr li strong{color:var(--ink)}
 
+/* Renvoi vers le simulateur, posé juste après le TL;DR.
+   Îlot SOMBRE dans le corps clair de l'article : il se lit comme un outil, pas
+   comme une note éditoriale — le callout, lui, reste clair. On rebascule les
+   tokens vers le miroir --d-* et tout le contenu s'inverse de lui-même. */
+.article-simu{
+  --bg-1:var(--d-bg1);--ink:var(--d-ink);--ink-soft:var(--d-ink-soft);--muted:var(--d-muted);
+  --line:rgba(255,255,255,.14);
+  margin:0 0 clamp(30px,4vw,44px);
+  background:var(--bg-1);color:var(--ink);
+  border:1px solid var(--line);border-radius:var(--radius);
+  padding:clamp(24px,3.2vw,30px) clamp(24px,3.4vw,34px)
+}
+.article-simu-l{display:block;font-family:var(--ff-mono);font-size:10.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.article-simu-t{margin:12px 0 0;font-family:var(--ff-display);font-size:clamp(19px,2.1vw,23px);line-height:1.22;letter-spacing:-.01em;color:var(--ink)}
+.article-simu-p{margin:10px 0 0;font-size:15px;line-height:1.6;color:var(--ink-soft)}
+/* Préfixé par .article-body : sans lui, la règle générale des liens d'article
+   (`.article-body a`, plus spécifique) repeignait le libellé en --ink — donc en
+   blanc sur un bouton blanc — et le soulignait. */
+.article-body .article-simu-cta{
+  display:inline-flex;align-items:center;gap:9px;margin-top:20px;
+  background:var(--ink);color:var(--d-bg);
+  font-family:var(--ff-text);font-size:14.5px;font-weight:600;
+  border-radius:999px;padding:11px 22px;border:0;
+  text-decoration:none;box-shadow:none;
+  transition:transform .2s ease,opacity .2s ease
+}
+.article-body .article-simu-cta:hover{
+  transform:translateX(3px);opacity:.92;
+  background:var(--ink);box-shadow:none;border-radius:999px
+}
+.article-body .article-simu-cta::after{content:none}
+.article-simu-cta svg{width:16px;height:16px;flex:none}
+.article-simu-note{display:block;margin-top:14px;font-family:var(--ff-mono);font-size:11px;letter-spacing:.04em;color:var(--muted)}
+
+/* Tags en pied de hero : ils situent l'article et ramènent au blog filtré. */
+.article-hero-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.article-hero-tag{
+  font-family:var(--ff-mono);font-size:11px;letter-spacing:.06em;
+  color:var(--ink);background:rgba(255,255,255,.07);
+  border:1px solid var(--line);border-radius:999px;padding:4px 12px;
+  text-decoration:none;transition:background .2s ease,border-color .2s ease
+}
+.article-hero-tag:hover{background:rgba(255,255,255,.14);border-color:var(--ink)}
+
 /* Callout */
 .article-callout{position:relative;border:1px solid var(--line);border-radius:var(--radius);padding:clamp(24px,3.2vw,32px) clamp(26px,3.6vw,36px);background:var(--bg-1);box-shadow:0 1px 0 0 var(--line-soft)}
 .article-callout>*:first-child{margin-top:0}
