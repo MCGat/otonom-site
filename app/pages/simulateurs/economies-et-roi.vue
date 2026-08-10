@@ -111,8 +111,8 @@
       </div>
       <form class="sim-gate-form" novalidate @submit.prevent="sendGate">
         <input v-model="g.honey" type="text" class="hp" name="url-site" tabindex="-1" autocomplete="off" aria-hidden="true" readonly>
-        <div class="field"><label for="gNom">Nom <span class="req" aria-hidden="true">*</span></label><input id="gNom" v-model="g.nom" type="text" autocomplete="name" required></div>
-        <div class="field"><label for="gEmail">Email professionnel <span class="req" aria-hidden="true">*</span></label><input id="gEmail" v-model="g.email" type="email" autocomplete="email" required></div>
+        <div class="field" :class="{ 'is-invalid': gErr.nom }"><label for="gNom">Nom <span class="req" aria-hidden="true">*</span></label><input id="gNom" v-model="g.nom" type="text" autocomplete="name" required :aria-invalid="!!gErr.nom" @input="gErr.nom = ''"><span v-if="gErr.nom" class="field-err">{{ gErr.nom }}</span></div>
+        <div class="field" :class="{ 'is-invalid': gErr.email }"><label for="gEmail">Email professionnel <span class="req" aria-hidden="true">*</span></label><input id="gEmail" v-model="g.email" type="email" autocomplete="email" required :aria-invalid="!!gErr.email" @input="gErr.email = ''"><span v-if="gErr.email" class="field-err">{{ gErr.email }}</span></div>
         <div class="field"><label for="gEntreprise">Entreprise</label><input id="gEntreprise" v-model="g.entreprise" type="text" autocomplete="organization"></div>
         <div class="field"><label for="gTel">Téléphone</label><input id="gTel" v-model="g.tel" type="tel" autocomplete="tel"></div>
         <button type="submit" class="btn btn--primary btn--block btn--lg" :disabled="sending">
@@ -242,6 +242,10 @@
 
 <script setup lang="ts">
 import { calculerSimulateur, construireVueSimulateur, resumeSimulateur, type SimResult, type SimInput, type TagKind } from '~/utils/simulateur'
+/* Import explicite : `app/utils/simulateurs/core.ts` est trop profond pour
+   l'auto-import de Nuxt. Sans lui, l'appel lève une ReferenceError que Vue
+   avale — le premier champ se marquait, le second jamais, et rien ne partait. */
+import { focaliserChamp, estEmailValide } from '~/utils/simulateurs/core'
 
 useSeoMeta({
   title: "Simulateur d'économies et de ROI — OTONOM",
@@ -262,6 +266,7 @@ const unlocked = ref(false)
 const g = reactive({ nom: '', email: '', entreprise: '', tel: '', honey: '' })
 const sending = ref(false)
 const gateError = ref(false)
+const gErr = reactive({ nom: '', email: '' })
 
 const resultsEl = ref<HTMLElement | null>(null)
 const detailEl = ref<HTMLElement | null>(null)
@@ -278,6 +283,12 @@ async function sendGate() {
   /* Pot de miel : rempli avec un nom et un email plausibles, c'est presque
      toujours un gestionnaire de mots de passe, pas un robot. Déverrouiller sans
      rien envoyer perdrait un lead qualifié en silence — on l'envoie, signalé. */
+  /* Sans ce contrôle, un champ vide partait au serveur, revenait en 400, et
+     l'utilisateur ne lisait qu'une erreur générique sans savoir quoi corriger. */
+  gErr.nom = g.nom.trim() ? '' : 'Indiquez votre nom.'
+  gErr.email = estEmailValide(g.email) ? '' : 'Indiquez un email professionnel valide.'
+  if (gErr.nom || gErr.email) { focaliserChamp(gErr.nom ? 'gNom' : 'gEmail'); return }
+
   const potRempli = !!g.honey
   const humainCredible = !!g.nom.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(g.email.trim())
   if (potRempli && !humainCredible) { unlocked.value = true; return }

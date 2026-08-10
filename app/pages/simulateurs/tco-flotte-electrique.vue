@@ -480,8 +480,8 @@
 
       <form class="sim-gate-form" novalidate @submit.prevent="sendGate">
         <input v-model="g.honey" type="text" class="hp" name="url-site" tabindex="-1" autocomplete="off" aria-hidden="true" readonly>
-        <div class="field"><label for="tNom">Nom <span class="req" aria-hidden="true">*</span></label><input id="tNom" v-model="g.nom" type="text" autocomplete="name" required></div>
-        <div class="field"><label for="tEmail">Email professionnel <span class="req" aria-hidden="true">*</span></label><input id="tEmail" v-model="g.email" type="email" autocomplete="email" required></div>
+        <div class="field" :class="{ 'is-invalid': gErr.nom }"><label for="tNom">Nom <span class="req" aria-hidden="true">*</span></label><input id="tNom" v-model="g.nom" type="text" autocomplete="name" required :aria-invalid="!!gErr.nom" @input="gErr.nom = ''"><span v-if="gErr.nom" class="field-err">{{ gErr.nom }}</span></div>
+        <div class="field" :class="{ 'is-invalid': gErr.email }"><label for="tEmail">Email professionnel <span class="req" aria-hidden="true">*</span></label><input id="tEmail" v-model="g.email" type="email" autocomplete="email" required :aria-invalid="!!gErr.email" @input="gErr.email = ''"><span v-if="gErr.email" class="field-err">{{ gErr.email }}</span></div>
         <div class="field"><label for="tEnt">Entreprise</label><input id="tEnt" v-model="g.entreprise" type="text" autocomplete="organization"></div>
         <div class="field"><label for="tTel">Téléphone <small>(facultatif)</small></label><input id="tTel" v-model="g.tel" type="tel" autocomplete="tel"></div>
         <label class="tco-optin"><input v-model="g.optinCommercial" type="checkbox"> J'accepte de recevoir les actualités et offres d'OTONOM <small>(facultatif)</small></label>
@@ -587,7 +587,7 @@ import {
   LABELS_CATEGORIE, LABELS_FINANCEMENT, LABELS_PROFIL,
   type TcoInput, type TcoResult
 } from '~/utils/simulateurs/tcoFlotte'
-import { euros, eurosExact, ecart as fmtEcart, nombre as nombreFr, corpsLead, SCENARIO_LABELS, type ScenarioKey } from '~/utils/simulateurs/core'
+import { euros, eurosExact, ecart as fmtEcart, nombre as nombreFr, corpsLead, SCENARIO_LABELS, type ScenarioKey , focaliserChamp, estEmailValide } from '~/utils/simulateurs/core'
 
 useSeoMeta({
   title: "Simulateur de TCO d'une flotte électrique — OTONOM",
@@ -820,7 +820,9 @@ const resultsEl = ref<HTMLElement | null>(null)
 const detailEl = ref<HTMLElement | null>(null)
 
 function onCalculer() {
-  if (!valider()) return
+  /* Le message seul ne suffit pas : le champ fautif peut être plusieurs écrans
+     plus haut. On y amène l'utilisateur. */
+  if (!valider()) { focaliserChamp(erreurs.nbVehicules ? 'nbVeh' : 'km'); return }
   r.value = calculerTco(entree())
   nextTick(() => resultsEl.value?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
 }
@@ -1262,6 +1264,7 @@ const unlocked = ref(false)
 const g = reactive({ nom: '', email: '', entreprise: '', tel: '', optinCommercial: false, honey: '' })
 const sending = ref(false)
 const gateError = ref(false)
+const gErr = reactive({ nom: '', email: '' })
 
 async function sendGate() {
   if (sending.value || !r.value) return
@@ -1270,6 +1273,12 @@ async function sendGate() {
   /* Pot de miel : rempli avec un nom et un email plausibles, c'est presque
      toujours un gestionnaire de mots de passe, pas un robot. Déverrouiller sans
      rien envoyer perdrait un lead qualifié en silence — on l'envoie, signalé. */
+  /* Sans ce contrôle, un champ vide partait au serveur, revenait en 400, et
+     l'utilisateur ne lisait qu'une erreur générique sans savoir quoi corriger. */
+  gErr.nom = g.nom.trim() ? '' : 'Indiquez votre nom.'
+  gErr.email = estEmailValide(g.email) ? '' : 'Indiquez un email professionnel valide.'
+  if (gErr.nom || gErr.email) { focaliserChamp(gErr.nom ? 'tNom' : 'tEmail'); return }
+
   const potRempli = !!g.honey
   const humainCredible = !!g.nom.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(g.email.trim())
   if (potRempli && !humainCredible) { unlocked.value = true; return }

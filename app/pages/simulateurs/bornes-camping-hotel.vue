@@ -325,8 +325,8 @@
 
       <form class="sim-gate-form" novalidate @submit.prevent="sendGate">
         <input v-model="g.honey" type="text" class="hp" name="url-site" tabindex="-1" autocomplete="off" aria-hidden="true" readonly>
-        <div class="field"><label for="cNom">Nom <span class="req" aria-hidden="true">*</span></label><input id="cNom" v-model="g.nom" type="text" autocomplete="name" required></div>
-        <div class="field"><label for="cEmail">Email professionnel <span class="req" aria-hidden="true">*</span></label><input id="cEmail" v-model="g.email" type="email" autocomplete="email" required></div>
+        <div class="field" :class="{ 'is-invalid': gErr.nom }"><label for="cNom">Nom <span class="req" aria-hidden="true">*</span></label><input id="cNom" v-model="g.nom" type="text" autocomplete="name" required :aria-invalid="!!gErr.nom" @input="gErr.nom = ''"><span v-if="gErr.nom" class="field-err">{{ gErr.nom }}</span></div>
+        <div class="field" :class="{ 'is-invalid': gErr.email }"><label for="cEmail">Email professionnel <span class="req" aria-hidden="true">*</span></label><input id="cEmail" v-model="g.email" type="email" autocomplete="email" required :aria-invalid="!!gErr.email" @input="gErr.email = ''"><span v-if="gErr.email" class="field-err">{{ gErr.email }}</span></div>
         <div class="field"><label for="cEnt">Établissement</label><input id="cEnt" v-model="g.entreprise" type="text" autocomplete="organization"></div>
         <div class="field"><label for="cTel">Téléphone <small>(facultatif)</small></label><input id="cTel" v-model="g.tel" type="tel" autocomplete="tel"></div>
         <label class="chr-optin"><input v-model="g.optinCommercial" type="checkbox"> J'accepte de recevoir les actualités et offres d'OTONOM <small>(facultatif)</small></label>
@@ -430,7 +430,7 @@ import {
   calculerBornes, resumeBornes, LABELS_ETAB, LABELS_AMBITION, UNITE, CONFIG,
   type BornesInput, type BornesResult, type TypeEtab
 } from '~/utils/simulateurs/bornesChr'
-import { eurosExact, nombre as nombreFr, corpsLead } from '~/utils/simulateurs/core'
+import { eurosExact, nombre as nombreFr, corpsLead , focaliserChamp } from '~/utils/simulateurs/core'
 
 useSeoMeta({
   title: 'Simulateur : combien de bornes pour un camping ou un hôtel ?',
@@ -484,7 +484,9 @@ function valider(): boolean {
 }
 
 function onCalculer() {
-  if (!valider()) return
+  /* Le message seul ne suffit pas : le champ fautif peut être plusieurs écrans
+     plus haut. On y amène l'utilisateur. */
+  if (!valider()) { focaliserChamp('cap'); return }
   r.value = calculerBornes({ ...f })
   nextTick(() => resultsEl.value?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
 }
@@ -588,6 +590,7 @@ function sectionsLead() {
 const unlocked = ref(false)
 const g = reactive({ nom: '', email: '', entreprise: '', tel: '', optinCommercial: false, honey: '' })
 const sending = ref(false)
+const gErr = reactive({ nom: '', email: '' })
 const gateError = ref(false)
 const gateMsg = ref('')
 
@@ -601,8 +604,11 @@ async function sendGate() {
   /* Le formulaire est en `novalidate` : sans ce contrôle, un champ vide part au
      serveur, revient en 400, et l'utilisateur ne lit qu'un « une erreur est
      survenue » qui ne lui dit pas quoi corriger. */
-  if (!g.nom.trim()) { gateMsg.value = 'Indiquez votre nom pour afficher le détail.'; return }
-  if (!estEmail(g.email.trim())) { gateMsg.value = 'Indiquez un email professionnel valide.'; return }
+  /* On marque le champ fautif et on y amène le curseur : un message seul,
+     en bas du formulaire, laisse l'utilisateur chercher. */
+  gErr.nom = g.nom.trim() ? '' : 'Indiquez votre nom.'
+  gErr.email = estEmail(g.email.trim()) ? '' : 'Indiquez un email professionnel valide.'
+  if (gErr.nom || gErr.email) { focaliserChamp(gErr.nom ? 'cNom' : 'cEmail'); return }
 
   /* Pot de miel anti-robot. S'il est rempli ALORS QUE le nom et l'email viennent
      de passer la validation, c'est presque toujours un gestionnaire de mots de

@@ -16,11 +16,21 @@
         <form class="form" novalidate @submit.prevent="submit">
           <input v-model="f.honey" type="text" class="hp" name="url-site" tabindex="-1" autocomplete="off" aria-hidden="true" readonly>
           <div class="form-row">
-            <div class="field"><label for="nom">Nom <span class="req">*</span></label><input id="nom" v-model="f.nom" type="text" autocomplete="name" required></div>
+            <div class="field" :class="{ 'is-invalid': err.nom }">
+              <label for="nom">Nom <span class="req">*</span></label>
+              <input id="nom" v-model="f.nom" type="text" autocomplete="name" required
+                     :aria-invalid="!!err.nom" :aria-describedby="err.nom ? 'nomErr' : undefined" @input="err.nom = ''">
+              <span v-if="err.nom" id="nomErr" class="field-err">{{ err.nom }}</span>
+            </div>
             <div class="field"><label for="entreprise">Entreprise</label><input id="entreprise" v-model="f.entreprise" type="text" autocomplete="organization"></div>
           </div>
           <div class="form-row">
-            <div class="field"><label for="email">Email <span class="req">*</span></label><input id="email" v-model="f.email" type="email" autocomplete="email" required></div>
+            <div class="field" :class="{ 'is-invalid': err.email }">
+              <label for="email">Email <span class="req">*</span></label>
+              <input id="email" v-model="f.email" type="email" autocomplete="email" required
+                     :aria-invalid="!!err.email" :aria-describedby="err.email ? 'emailErr' : undefined" @input="err.email = ''">
+              <span v-if="err.email" id="emailErr" class="field-err">{{ err.email }}</span>
+            </div>
             <div class="field"><label for="tel">Téléphone</label><input id="tel" v-model="f.tel" type="tel" autocomplete="tel"></div>
           </div>
           <div class="field"><label for="flotte">Taille de flotte</label>
@@ -67,13 +77,25 @@ useSeoMeta({
   description: "Contactez OTONOM pour un diagnostic gratuit de votre flotte, recharge et énergie. Un plan chiffré, un seul interlocuteur, sans engagement."
 })
 
+import { focaliserChamp, estEmailValide } from '~/utils/simulateurs/core'
+
 const f = reactive({ nom: '', entreprise: '', email: '', tel: '', flotte: '', message: '', honey: '' })
+const err = reactive({ nom: '', email: '' })
 const sending = ref(false)
 const error = ref(false)
 
 async function submit() {
   if (sending.value) return
   error.value = false
+
+  /* Le formulaire est en `novalidate` : sans ce contrôle, un champ vide partait
+     au serveur, revenait en 400, et l'utilisateur ne lisait qu'un « une erreur
+     est survenue » qui ne disait ni quoi corriger, ni où. On marque le champ,
+     on écrit ce qui ne va pas, et on y amène le curseur. */
+  err.nom = f.nom.trim() ? '' : 'Indiquez votre nom.'
+  err.email = estEmailValide(f.email) ? '' : 'Indiquez une adresse email valide.'
+  const premier = err.nom ? 'nom' : err.email ? 'email' : ''
+  if (premier) { focaliserChamp(premier); return }
 
   /* Pot de miel : rempli avec un nom et un email plausibles, c'est presque
      toujours un gestionnaire de mots de passe, pas un robot. Le laisser filtrer

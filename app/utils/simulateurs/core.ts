@@ -235,3 +235,33 @@ export function corpsLead(
     meta: { ...meta, optinCommercial: !!contact.optinCommercial }
   }
 }
+
+/**
+ * Amène l'utilisateur sur le premier champ fautif.
+ *
+ * Tous les formulaires du site sont en `novalidate` : le navigateur ne surligne
+ * donc plus rien, et ne fait plus défiler jusqu'au champ. Un message seul —
+ * « un champ doit être complété » — laisse l'utilisateur chercher lui-même,
+ * parfois plusieurs écrans plus haut. On rétablit les deux gestes que la
+ * validation native rendait : on montre, et on met le curseur dedans.
+ *
+ * `block: 'center'` plutôt que 'start' : un champ collé sous l'en-tête fixe
+ * passerait derrière lui.
+ */
+export function focaliserChamp(id: string) {
+  if (!import.meta.client) return
+  /* `setTimeout` et non `requestAnimationFrame` : ce dernier est suspendu dans
+     un onglet en arrière-plan, et le curseur ne serait jamais posé. Le délai nul
+     suffit à laisser Vue peindre la classe d'erreur avant qu'on défile. */
+  setTimeout(() => {
+    const el = document.getElementById(id) as HTMLElement | null
+    if (!el) return
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    // `preventScroll` : le défilement doux ci-dessus fait déjà le travail,
+    // sans lui le navigateur y superpose un saut brutal.
+    try { (el as HTMLInputElement).focus({ preventScroll: true }) } catch { el.focus() }
+  })
+}
+
+/** Validité d'une adresse email, au sens « ça peut partir ». */
+export const estEmailValide = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v || '').trim())
