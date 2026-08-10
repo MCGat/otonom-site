@@ -446,8 +446,18 @@ export async function upsertArticle(a: Article): Promise<number | null> {
     if (!d || isNaN(d.getTime())) throw new Error('Date de programmation invalide.')
     publishedAt = d.toISOString()
   } else if (status === 'published') {
-    const prevAt: string | undefined = prev?.published_at
-    publishedAt = prevAt && prevAt <= now ? prevAt : now
+    /* Une date fournie fait autorité — c'est le seul moyen pour le seed de
+       corriger une date de publication en ligne (dix articles s'étaient
+       retrouvés au même jour). L'admin, lui, n'envoie `publishedAt` que pour
+       les articles programmés : sans elle, on retombe sur l'ancien
+       comportement, qui préserve la date de première mise en ligne. */
+    const fournie = a.publishedAt ? new Date(a.publishedAt) : null
+    if (fournie && !isNaN(fournie.getTime())) {
+      publishedAt = fournie.toISOString()
+    } else {
+      const prevAt: string | undefined = prev?.published_at
+      publishedAt = prevAt && prevAt <= now ? prevAt : now
+    }
   }
 
   const tags = normaliserTags(a.tags) || null
