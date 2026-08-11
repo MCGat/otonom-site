@@ -101,6 +101,11 @@ registre pour être **datées et tracées**, mais aucun script ne peut dire qu'e
   Publier **d'un seul tenant**, sinon les liens internes renvoient 404.
 - **Longueur** : `cout-recharge-flotte-entreprise` (~3 400 mots) et `cout-bornes-recharge-flotte`
   (~3 900 mots) dépassent largement la fourchette de 1 200 à 2 000. À scinder ou à assumer.
+- **Redites du cocon Collaborateurs** : le relecteur externe a demandé **deux fois** de réduire
+  le recouvrement entre `cout-recharge-domicile-salarie`, `remboursement-recharge-domicile-urssaf`
+  et `qui-paie-recharge-vehicule-fonction`, qui traitent le même régime social sous trois angles.
+  Publié en l'état le 11/08/2026, décision assumée : on observe le positionnement avant de
+  réécrire. À trancher si les trois pages se cannibalisent dans la Search Console.
 - **Images** : aucune pour l'instant, décision du 05/08/2026. À reprendre en une passe.
 - **Homogénéité des lignes de cadrage** : « au 01/01/2026 » pour le fiscal, « vérifié au
   05/08/2026 » pour le réglementaire. À fixer une fois pour tout le blog.
@@ -126,9 +131,14 @@ registre pour être **datées et tracées**, mais aucun script ne peut dire qu'e
 - **Données légales** : placeholders `[À COMPLÉTER]` dans `mentions-legales.vue` et
   `confidentialite.vue` — raison sociale, SIREN/RCS, adresse, capital, directeur de
   publication, hébergeur.
-- **Indexation en production** : `page_settings` est propre à chaque base. Les bascules faites
-  en local (`/blog` et `/simulateurs` indexables) **doivent être refaites dans l'admin en
-  ligne**, et l'article fiscalité y est encore publié.
+- **Indexation en production** : fait et vérifié le 11/08/2026 — `/blog` et `/simulateurs` sont
+  indexables en ligne, le sitemap de production liste bien les articles et les quatre
+  simulateurs. ⚠️ Le piège demeure pour toute base **neuve** : `seedPages.ts` crée `/blog` et
+  `/simulateurs` **désindexés** par défaut. Si la base est un jour reconstruite, tout le blog
+  repart en noindex sans aucun signal. À revoir si l'on migre vers MySQL N0C.
+- **`FORCER_MAJ_TOUS`** (`server/utils/seedArticles.ts`) est encore à `true` : tant qu'il y
+  reste, **toute modification faite dans l'admin en ligne est écrasée au redémarrage**. À
+  repasser à `false` une fois le déploiement du 11/08 vérifié.
 - **Métadonnées de confiance** sur les articles : auteur, `dateModified`, date de dernière
   vérification réglementaire, prochaine échéance de révision.
 - Images Open Graph par page, polices auto-hébergées, sauvegardes de la base, analytique,
