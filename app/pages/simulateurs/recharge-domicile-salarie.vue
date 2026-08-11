@@ -38,7 +38,7 @@
               </select>
             </div>
             <div v-if="f.motorisation === 'electrique' && f.usagePrive === 'oui'" class="field">
-              <label for="apres">Mis à disposition après le 01/02/2025&nbsp;?</label>
+              <label for="apres">Mis à disposition à compter du 1<sup>er</sup> février 2025&nbsp;?</label>
               <select id="apres" v-model="f.miseADispoApres2025">
                 <option v-for="o in TRIPLE" :key="o.v" :value="o.v">{{ o.l }}</option>
               </select>
@@ -157,8 +157,52 @@
         </div>
       </fieldset>
 
+      <fieldset class="sim-fieldset reveal">
+        <legend class="sim-legend"><span class="sim-legend-n">04</span> Comment mesurez-vous ces kilowattheures&nbsp;?</legend>
+        <div class="sim-grid">
+          <div class="field">
+            <label for="mes">Mode de mesure</label>
+            <select id="mes" v-model="f.mesureDomicile">
+              <option value="supervision">Borne communicante et supervision</option>
+              <option value="sous-compteur">Sous-compteur dédié</option>
+              <option value="estimation">Estimation par les kilomètres</option>
+              <option value="aucune">Aucune mesure pour l'instant</option>
+            </select>
+            <span class="rc-aide">C'est ce qui détermine la solidité de votre justificatif — et, seule la supervision rattache une session à un véhicule donné.</span>
+          </div>
+          <div v-if="f.mesureDomicile === 'supervision' || f.mesureDomicile === 'sous-compteur'" class="field">
+            <label for="kwhM">Kilowattheures relevés sur l'année</label>
+            <input id="kwhM" v-model.number="f.kWhMesuresAn" type="number" min="0" max="60000" step="10" inputmode="numeric" placeholder="ex. 2 040">
+            <span class="rc-aide">Si vous les saisissez, ils font autorité&nbsp;: le calcul ne repart pas des kilomètres.</span>
+          </div>
+          <div v-if="f.mesureDomicile === 'supervision'" class="field">
+            <label for="supType">Qui souscrit la supervision&nbsp;?</label>
+            <select id="supType" v-model="f.typeSupervision">
+              <option value="abonnement-salarie">Abonnement rattaché à la borne du salarié</option>
+              <option value="plateforme-employeur">Plateforme de flotte souscrite par l'entreprise</option>
+            </select>
+          </div>
+          <div v-if="f.mesureDomicile === 'supervision'" class="field">
+            <label for="supPay">Supervision payée par l'employeur&nbsp;?</label>
+            <select id="supPay" v-model="f.supervisionPayeeParEmployeur">
+              <option v-for="o in TRIPLE" :key="o.v" :value="o.v">{{ o.l }}</option>
+            </select>
+          </div>
+          <div v-if="f.mesureDomicile === 'supervision' && f.supervisionPayeeParEmployeur === 'oui'" class="field">
+            <label for="supCout">Abonnement de supervision <small>(€/mois par point)</small></label>
+            <input id="supCout" v-model.number="f.coutSupervisionMois" type="number" min="0" max="200" step="1" inputmode="decimal" :placeholder="String(CONFIG.supervisionMois)">
+            <span class="rc-aide">Facturé par borne, donc par collaborateur équipé — ce n'est pas un forfait entreprise.</span>
+          </div>
+          <div class="field">
+            <label for="txCh">Charges patronales <small>(%)</small></label>
+            <input id="txCh" v-model.number="tauxPct" type="number" min="0" max="80" step="1" inputmode="numeric" placeholder="42">
+            <span class="rc-aide">Appliquées à la seule fraction réintégrée. 42 % est une hypothèse modifiable, pas un calcul de paie.</span>
+          </div>
+        </div>
+      </fieldset>
+
       <fieldset v-if="f.proprietaire === 'entreprise'" class="sim-fieldset reveal">
-        <legend class="sim-legend"><span class="sim-legend-n">04</span> La borne au domicile <small>(facultatif)</small></legend>
+        <legend class="sim-legend"><span class="sim-legend-n">05</span> La borne au domicile <small>(facultatif)</small></legend>
         <div class="sim-grid">
           <div class="field">
             <label for="bfin">Financée par l'employeur&nbsp;?</label>
@@ -197,18 +241,32 @@
 
   <!-- ════════ RÉSULTAT ════════ -->
   <section v-if="r" id="rcResults" class="section section--light"><div class="wrap">
-    <div class="sec-head"><span class="kicker">Votre résultat</span><h2>Ce que ça coûte, et ce que vous pouvez rembourser.</h2></div>
+    <div class="sec-head"><span class="kicker">Votre résultat</span><h2>Ce que vous avez le droit de rembourser.</h2></div>
 
-    <div class="rc-hero">
-      <span class="rc-hero-l">Coût de la recharge à domicile</span>
-      <div class="rc-hero-n tabnum">{{ eurosExact(r.coutDomicileMois) }}<em>/mois</em></div>
+    <!-- Le verdict en tête, le montant ensuite. Le calcul du coût est trivial —
+         kilomètres × consommation × prix. Ce que ce simulateur apporte, c'est de
+         désigner LAQUELLE des sept situations est la vôtre, et ce qu'elle
+         autorise. C'est donc elle qui doit occuper la place. -->
+    <div class="rc-hero" :class="`is-${r.verdict}`">
+      <span class="rc-hero-l">{{ r.libelleBranche }}</span>
+      <div class="rc-hero-v">{{ LIBELLE_VERDICT[r.verdict] }}</div>
+      <p class="rc-hero-t">{{ r.texteVerdict }}</p>
+
+      <div class="rc-chiffres">
+        <div class="rc-chiffre">
+          <span class="rc-chiffre-l">Coût pour le salarié</span>
+          <b class="rc-chiffre-v tabnum">{{ eurosExact(r.coutDomicileMois) }}<em>/mois</em></b>
+        </div>
+        <div class="rc-chiffre">
+          <span class="rc-chiffre-l">Remboursement annuel</span>
+          <b class="rc-chiffre-v tabnum">{{ eurosExact(r.remboursementAn) }}</b>
+        </div>
+        <div class="rc-chiffre">
+          <span class="rc-chiffre-l">Dont exonéré de cotisations</span>
+          <b class="rc-chiffre-v tabnum">{{ eurosExact(r.remboursementExonereAn) }}</b>
+        </div>
+      </div>
       <p class="rc-hero-s">{{ nombre(r.kWhDomicileAn) }} kWh par an au domicile, soit {{ eurosExact(r.coutDomicileAn) }} sur l'année.</p>
-    </div>
-
-    <div class="rc-verdict" :class="`is-${r.verdict}`">
-      <span class="rc-verdict-l">{{ LIBELLE_VERDICT[r.verdict] }}</span>
-      <p class="rc-verdict-t">{{ r.texteVerdict }}</p>
-      <p class="rc-verdict-b">{{ r.libelleBranche }}</p>
     </div>
 
     <div v-if="r.avertissements.length" class="rc-warn">
@@ -230,11 +288,43 @@
             </div>
           </article>
 
+          <article class="sim-block sim-block--wide">
+            <header><h3>Ce que ça vous coûte, tout compris</h3></header>
+            <div class="sim-block-b">
+              <div class="sim-kv"><span>Électricité remboursée</span><b class="tabnum">{{ eurosExact(r.coutEmployeur.electriciteAn) }}</b></div>
+              <div v-if="r.coutEmployeur.supervisionAn" class="sim-kv"><span>Abonnement de supervision</span><b class="tabnum">{{ eurosExact(r.coutEmployeur.supervisionAn) }}</b></div>
+              <div v-if="r.coutEmployeur.chargesRecurrentesAn" class="sim-kv">
+                <span>Charges patronales sur la fraction réintégrée <small>({{ Math.round(r.coutEmployeur.tauxCharges * 100) }} %)</small></span>
+                <b class="tabnum">{{ eurosExact(r.coutEmployeur.chargesRecurrentesAn) }}</b>
+              </div>
+              <div class="sim-kv"><span>Coût récurrent, par an et par salarié</span><b class="tabnum is-strong">{{ eurosExact(r.coutEmployeur.totalRecurrentAn) }}</b></div>
+              <template v-if="r.coutEmployeur.borneUnique">
+                <div class="sim-kv"><span>Borne — dépense unique</span><b class="tabnum">{{ eurosExact(r.coutEmployeur.borneUnique) }}</b></div>
+                <div v-if="r.coutEmployeur.chargesBorneUnique" class="sim-kv"><span>Charges sur la part réintégrée de la borne</span><b class="tabnum">{{ eurosExact(r.coutEmployeur.chargesBorneUnique) }}</b></div>
+                <div class="sim-kv"><span>Total la première année</span><b class="tabnum is-strong">{{ eurosExact(r.coutEmployeur.totalPremiereAnnee) }}</b></div>
+                <div class="sim-kv"><span>Borne étalée sur 8 ans</span><b class="tabnum">{{ eurosExact(r.coutEmployeur.borneAnnualisee) }} par an</b></div>
+              </template>
+              <p class="rc-note">La fraction réintégrée coûte plus que son montant facial&nbsp;: elle entre dans l'assiette, donc elle supporte des charges patronales. Le taux réel dépend notamment du niveau de rémunération, des allègements applicables et de la situation de l'employeur. 42&nbsp;% est une hypothèse modifiable, pas un calcul de paie.</p>
+            </div>
+          </article>
+
           <article class="sim-block">
             <header><h3>La qualité de votre preuve</h3></header>
             <div class="sim-block-b">
               <div class="sim-kv is-note"><span>Méthode retenue</span><b>{{ r.preuve.texte }}</b></div>
+              <div class="sim-kv"><span>Attribution d'une session à un véhicule</span><b>{{ r.attributionSessions ? 'Possible' : 'Impossible' }}</b></div>
               <p class="rc-note">Aucune doctrine officielle n'impose de méthode de mesure. Un remboursement de frais professionnels doit en revanche correspondre à des dépenses réelles et justifiées.</p>
+            </div>
+          </article>
+
+          <article v-if="r.supervision" class="sim-block">
+            <header><h3>La supervision, et son régime propre</h3></header>
+            <div class="sim-block-b">
+              <div class="sim-kv"><span>Abonnement annuel</span><b class="tabnum">{{ eurosExact(r.supervision.coutAn) }}</b></div>
+              <div class="sim-kv"><span>Exclu de l'assiette</span><b class="tabnum is-strong">{{ eurosExact(r.supervision.exonere) }}</b></div>
+              <div class="sim-kv"><span>Soumis à cotisations</span><b class="tabnum">{{ eurosExact(r.supervision.soumis) }}</b></div>
+              <div class="sim-kv is-note"><span>Règle appliquée</span><b>{{ r.supervision.regle }}</b></div>
+              <p class="rc-note">L'électricité est exonérée en totalité, la supervision seulement de moitié. Ce n'est pas une incohérence&nbsp;: l'article 4 range l'abonnement parmi les frais liés à la borne, et précise «&nbsp;hors frais d'électricité&nbsp;» pour les séparer.</p>
             </div>
           </article>
 
@@ -323,6 +413,7 @@
         <li><strong>Borne installée au domicile</strong>&nbsp;: exonérée sans plafond si elle est retirée en fin de contrat&nbsp;; sinon 50 % dans la limite de 1&nbsp;057,10 € (cinq ans ou moins) ou 75 % dans la limite de 1&nbsp;585,50 € (plus de cinq ans), valeurs 2026.</li>
         <li><strong>Véhicule personnel</strong>&nbsp;: la recharge est déjà comprise dans le barème kilométrique, majoré de 20 % pour l'électrique. <strong>Aucun cumul</strong> avec un remboursement séparé des kilowattheures.</li>
         <li>Pour le <strong>trajet domicile-travail</strong>, la prime de transport est exonérée jusqu'à <strong>600 € par an</strong> — mais elle ne se cumule pas avec la prise en charge d'un abonnement de transports publics.</li>
+        <li><strong>La supervision, elle, n'est exonérée qu'à moitié</strong>&nbsp;: l'abonnement compte parmi les frais liés à la borne, plafonnés à 50 % des dépenses réelles. C'est pourtant la seule méthode qui rattache une session à un véhicule.</li>
       </ul>
       <p>Règles vérifiées le 11/08/2026, indicatives et non contractuelles.</p>
     </div>
@@ -349,7 +440,25 @@
     <p>Pour le <strong>trajet domicile-travail</strong>, c'est la prime de transport qui s'applique&nbsp;: les frais d'alimentation d'un véhicule électrique personnel sont exonérés jusqu'à 600 € par an. Mais le dispositif est réservé aux salariés contraints d'utiliser leur véhicule — commune non desservie par un transport collectif régulier, ou horaires particuliers — et <strong>l'article L. 3261-3 du code du travail interdit le cumul</strong> avec la prise en charge d'un abonnement de transports publics.</p>
 
     <h2>Comment justifier le remboursement&nbsp;?</h2>
-    <p>C'est la question que personne ne tranche. Aucune doctrine officielle n'impose de sous-compteur ni de borne communicante. En revanche, un remboursement de frais professionnels doit correspondre à des <strong>dépenses réelles et justifiées</strong>. Trois niveaux de preuve coexistent donc&nbsp;: le relevé de borne ou de sous-compteur, qui mesure&nbsp;; l'estimation documentée par les kilomètres, qui suppose une méthode écrite et appliquée uniformément&nbsp;; et la simulation sur moyennes, qui cadre un ordre de grandeur sans justifier quoi que ce soit.</p>
+    <p>C'est la question que personne ne tranche. Aucune doctrine officielle n'impose de sous-compteur ni de borne communicante. En revanche, un remboursement de frais professionnels doit correspondre à des <strong>dépenses réelles et justifiées</strong>. Quatre méthodes coexistent, et elles ne se valent pas.</p>
+
+    <table>
+      <thead><tr><th>Méthode</th><th>Ce qu'elle prouve</th><th>Attribue la session à un véhicule&nbsp;?</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Borne communicante et supervision</strong></td><td>Sessions horodatées, kilowattheures mesurés</td><td>Oui</td></tr>
+        <tr><td>Sous-compteur dédié</td><td>Kilowattheures mesurés au point de charge</td><td>Non</td></tr>
+        <tr><td>Estimation par les kilomètres</td><td>Un calcul, si la méthode est écrite</td><td>Non</td></tr>
+        <tr><td>Aucune mesure</td><td>Rien d'opposable</td><td>Non</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Pourquoi la supervision change la nature de la preuve</h3>
+    <p>Un sous-compteur mesure <strong>la borne</strong>, pas le véhicule. Chez un salarié dont le conjoint roule aussi en électrique, les kilowattheures ne sont plus séparables — et le remboursement devient indéfendable. La supervision, elle, identifie la session par badge ou par le véhicule, et sort un relevé mensuel par collaborateur. C'est la seule méthode qui répond à la question «&nbsp;qui a rechargé&nbsp;?&nbsp;».</p>
+
+    <div class="article-callout">
+      <span class="callout-label">Le piège de la supervision</span>
+      <p>L'électricité est exonérée <strong>en totalité</strong>. L'abonnement de supervision, <strong>non</strong>. L'article 4 de l'arrêté range ces frais parmi les «&nbsp;autres frais liés à l'utilisation&nbsp;» d'une borne installée hors du lieu de travail, et les plafonne à <strong>50&nbsp;% des dépenses réelles</strong> — sans plafond en euros, celui-ci ne valant que pour l'achat et l'installation. La parenthèse «&nbsp;hors frais d'électricité&nbsp;» du même alinéa existe précisément pour séparer les deux. Concrètement, sur 8&nbsp;€ par mois d'abonnement, environ la moitié est réintégrable — quand les 27&nbsp;€ d'électricité du même mois ne le sont pas du tout.</p>
+    </div>
 
     <div class="article-faq">
       <details><summary>Un employeur peut-il rembourser 100 % de l'électricité de recharge&nbsp;?</summary><div class="faq-a">Oui, lorsque le véhicule appartient à l'entreprise, fonctionne exclusivement à l'électricité et respecte, pour une mise à disposition postérieure au 01/02/2025, la condition de score environnemental. Les frais d'électricité sont expressément exclus du calcul de l'avantage en nature, et le plafond de 50 % ne vise que les frais de borne.</div></details>
@@ -357,6 +466,8 @@
       <details><summary>Que se passe-t-il pour un hybride rechargeable&nbsp;?</summary><div class="faq-a">Il ne fonctionne pas exclusivement au moyen de l'énergie électrique&nbsp;: le régime favorable ne lui est pas acquis. Le traitement doit être confirmé avec un conseil en paie avant de mettre en place un remboursement.</div></details>
       <details><summary>Peut-on cumuler indemnités kilométriques et remboursement de la recharge&nbsp;?</summary><div class="faq-a">Non. Pour un véhicule personnel, la location de batterie et les frais de recharge sont réputés compris dans le barème kilométrique, majoré de 20 % pour un véhicule électrique. Rembourser séparément les kilowattheures reviendrait à compter l'énergie deux fois.</div></details>
       <details><summary>Combien l'employeur peut-il financer pour une borne au domicile&nbsp;?</summary><div class="faq-a">Si la borne est retirée à la fin du contrat, la prise en charge est exclue de l'assiette sans plafond. Si le salarié la conserve, l'exclusion est de 50 % des dépenses réelles dans la limite de 1 057,10 € lorsque la borne a cinq ans ou moins, et de 75 % dans la limite de 1 585,50 € lorsqu'elle a plus de cinq ans. Valeurs 2026, revalorisées chaque 1<sup>er</sup> janvier.</div></details>
+      <details><summary>Faut-il une borne communicante pour rembourser la recharge à domicile&nbsp;?</summary><div class="faq-a">Aucun texte ne l'impose au 11/08/2026. Mais un remboursement de frais professionnels doit correspondre à des dépenses réelles et justifiées, et la supervision est la seule méthode qui rattache une session de recharge à un véhicule donné. Un sous-compteur mesure la borne, pas la voiture : si un second véhicule s'y branche, les kilowattheures ne sont plus séparables.</div></details>
+      <details><summary>L'abonnement de supervision est-il exonéré comme l'électricité&nbsp;?</summary><div class="faq-a">Non. L'électricité est exclue en totalité du calcul de l'avantage en nature. L'abonnement de supervision relève des « autres frais liés à l'utilisation » de la borne au sens de l'article 4 de l'arrêté du 25 février 2025, exclus dans la limite de 50 % des dépenses réelles. Aucun plafond en euros ne s'y applique : les plafonds de 1 057,10 € et 1 585,50 € visent l'achat et l'installation de la borne.</div></details>
       <details><summary>Qu'est-ce qu'OTONOM apporte sur ce sujet&nbsp;?</summary><div class="faq-a">OTONOM est l'orchestrateur A à Z de la transition mobilité, recharge et énergie des entreprises. Nous coordonnons la politique de recharge, l'installation des bornes et le cadrage du remboursement avec un seul interlocuteur, et nous chiffrons vos gains lors d'un audit gratuit.</div></details>
     </div>
   </div></section>
@@ -388,12 +499,17 @@ const f = reactive<EntreeRecharge>({
   kmAnnuels: undefined as unknown as number, motorisation: 'electrique',
   miseADispoApres2025: 'oui', ecoScore: 'inconnu', usagePrive: 'oui',
   usageSalarie: 'professionnel', modeRemboursement: 'kilometrique', puissanceFiscale: 5,
-  abonnementTransportPublic: 'non', contraintDUtiliserSonVehicule: 'inconnu',
+  abonnementTransportPublic: 'non', raisonVehiculePersonnel: 'inconnu',
   partDomicile: 0.8, optionTarif: 'hp-hc', partHeuresCreuses: 0.8,
+  mesureDomicile: 'estimation', supervisionPayeeParEmployeur: 'non',
+  typeSupervision: 'abonnement-salarie',
   borneFinanceeParEmployeur: 'non', borneRetireeEnFinDeContrat: 'oui'
 })
 
 const erreurs = reactive({ km: '', form: '' })
+/* Saisi en pourcentage, transmis en ratio : demander « 0,42 » à un DAF serait
+   une coquetterie de développeur. */
+const tauxPct = ref<number | undefined>(undefined)
 const r = ref<ResultatRecharge | null>(null)
 const resultsEl = ref<HTMLElement | null>(null)
 
@@ -405,7 +521,8 @@ function onCalculer() {
     focaliserChamp('km')
     return
   }
-  r.value = calculerRecharge({ ...f })
+  r.value = calculerRecharge({ ...f,
+    tauxChargesPatronales: typeof tauxPct.value === 'number' ? tauxPct.value / 100 : undefined })
   nextTick(() => document.getElementById('rcResults')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
 }
 
@@ -460,7 +577,27 @@ function sectionsLead() {
       ['Trajets', String(f.usageSalarie)],
       ['Mode de remboursement', String(f.modeRemboursement)],
       ['Abonnement transports publics pris en charge', oui(f.abonnementTransportPublic)],
-      ["Contraint d'utiliser son véhicule", oui(f.contraintDUtiliserSonVehicule)]
+      ['Raison légale invoquée', String(f.raisonVehiculePersonnel)]
+    ] })
+  }
+  s.push({ titre: 'Coût employeur', lignes: [
+    ['Électricité remboursée', eurosExact(v.coutEmployeur.electriciteAn)],
+    ['Supervision', eurosExact(v.coutEmployeur.supervisionAn)],
+    ['Charges sur la fraction réintégrée', eurosExact(v.coutEmployeur.chargesRecurrentesAn)],
+    ['Coût récurrent par an', eurosExact(v.coutEmployeur.totalRecurrentAn)],
+    ['Total première année', eurosExact(v.coutEmployeur.totalPremiereAnnee)]
+  ] })
+  s.push({ titre: 'Mesure et preuve', lignes: [
+    ['Mode de mesure', String(f.mesureDomicile)],
+    ['kWh relevés saisis', f.kWhMesuresAn ? nombre(f.kWhMesuresAn) + ' kWh' : 'non'],
+    ['Niveau de preuve', v.preuve.niveau],
+    ['Attribution des sessions', v.attributionSessions ? 'Possible' : 'Impossible']
+  ] })
+  if (v.supervision) {
+    s.push({ titre: 'Supervision', lignes: [
+      ['Abonnement annuel', eurosExact(v.supervision.coutAn)],
+      ["Exclu de l'assiette", eurosExact(v.supervision.exonere)],
+      ['Soumis à cotisations', eurosExact(v.supervision.soumis)]
     ] })
   }
   if (v.borne) {
@@ -512,21 +649,39 @@ async function sendGate() {
 .rc-aide { display: block; margin-top: 6px; font-size: 12.5px; color: var(--muted-2); line-height: 1.55; }
 .rc-note { margin-top: 14px; font-size: 13px; line-height: 1.6; color: var(--muted); }
 
-/* ── Le coût, en très grand ── */
-.rc-hero { text-align: center; padding: clamp(28px, 4vw, 44px) 0 clamp(20px, 3vw, 32px); }
-.rc-hero-l { font-family: var(--ff-mono); font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
-.rc-hero-n { font-family: var(--ff-display); font-size: clamp(52px, 9vw, 104px); line-height: 1; letter-spacing: -.03em; color: var(--ink); margin-top: 10px; }
-.rc-hero-n em { font-style: normal; font-size: .28em; letter-spacing: 0; color: var(--muted); margin-left: 4px; }
-.rc-hero-s { margin-top: 14px; color: var(--muted); font-size: 15px; }
+/* ── Le VERDICT en tête, les montants ensuite ──
+   La hiérarchie a été inversée : le coût occupait la grande place alors qu'il
+   se calcule de tête (km × conso × prix). Ce que le simulateur apporte, c'est
+   de dire laquelle des sept situations est la vôtre et ce qu'elle autorise. */
+.rc-hero {
+  border: 1px solid var(--line); border-left-width: 3px; border-radius: var(--radius);
+  background: var(--bg-1); max-width: 82ch; margin: 0 auto;
+  padding: clamp(26px, 3.4vw, 38px) clamp(24px, 3.4vw, 40px);
+}
+.rc-hero.is-favorable { border-left-color: var(--ink); }
+.rc-hero.is-encadre { border-left-color: var(--muted); }
+.rc-hero.is-prudence, .rc-hero.is-exclu { border-left-color: var(--ink); border-left-style: dashed; }
+.rc-hero-l { display: block; font-family: var(--ff-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.rc-hero-v {
+  font-family: var(--ff-display); font-size: clamp(28px, 4.4vw, 46px); line-height: 1.1;
+  letter-spacing: -.02em; color: var(--ink); margin-top: 12px;
+}
+.rc-hero-t { margin-top: 14px; font-size: 16.5px; line-height: 1.62; color: var(--ink-soft); max-width: 68ch; }
 
-/* ── Verdict social ── */
-.rc-verdict { border: 1px solid var(--line); border-left-width: 3px; border-radius: var(--radius); padding: clamp(20px, 2.6vw, 26px) clamp(22px, 3vw, 30px); background: var(--bg-1); max-width: 78ch; margin: 0 auto; }
-.rc-verdict.is-favorable { border-left-color: var(--ink); }
-.rc-verdict.is-encadre { border-left-color: var(--muted); }
-.rc-verdict.is-prudence, .rc-verdict.is-exclu { border-left-color: var(--ink); border-left-style: dashed; }
-.rc-verdict-l { font-family: var(--ff-mono); font-size: 10.5px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
-.rc-verdict-t { margin-top: 10px; font-size: 16px; line-height: 1.6; color: var(--ink); }
-.rc-verdict-b { margin-top: 10px; font-family: var(--ff-mono); font-size: 12px; color: var(--muted-2); }
+/* Les montants deviennent une rangée de métriques, pas le titre. */
+.rc-chiffres {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+  margin-top: clamp(22px, 3vw, 30px); background: var(--line);
+  border: 1px solid var(--line); border-radius: 10px; overflow: hidden;
+}
+.rc-chiffre { background: var(--bg-1); padding: 16px 18px; }
+.rc-chiffre-l { display: block; font-family: var(--ff-mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.rc-chiffre-v { display: block; margin-top: 8px; font-family: var(--ff-display); font-size: clamp(21px, 2.4vw, 27px); line-height: 1.1; color: var(--ink); font-weight: 500; }
+.rc-chiffre-v em { font-style: normal; font-size: .5em; letter-spacing: 0; color: var(--muted); margin-left: 2px; }
+.rc-hero-s { margin-top: 14px; color: var(--muted); font-size: 14px; }
+@media (max-width: 700px) {
+  .rc-chiffres { grid-template-columns: 1fr; }
+}
 
 .rc-warn { max-width: 78ch; margin: 18px auto 0; }
 .rc-warn p { font-size: 13.5px; line-height: 1.6; color: var(--muted); padding-left: 18px; position: relative; }

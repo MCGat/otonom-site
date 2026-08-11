@@ -109,6 +109,27 @@ export const CONFIG = {
   /** Rendement de charge, appliqué UNIQUEMENT à une conso « tableau de bord ». */
   rendementCharge: 0.88,
 
+  /**
+   * Abonnement de supervision, par point de charge et par mois. [HYPOTHÈSE]
+   * Facturé par borne, donc de fait par collaborateur équipé : ce n'est pas un
+   * forfait entreprise. Valeur de marché à caler sur vos devis réels.
+   */
+  supervisionMois: 8,
+
+  /**
+   * Charges patronales appliquées à la fraction réintégrée. [HYPOTHÈSE]
+   *
+   * Le taux réel dépend du niveau de rémunération, des allègements applicables
+   * et de la situation de l'employeur. On n'avance plus de seuil : la réduction
+   * générale dégressive a été refondue et l'ancien repère de 1,6 SMIC ne décrit
+   * plus le dispositif. 42 % est un ordre de grandeur modifiable, pas un calcul
+   * de paie.
+   */
+  tauxChargesPatronales: 0.42,
+
+  /** Durée sur laquelle on étale le coût d'une borne. [HYPOTHÈSE] */
+  dureeAmortissementBorneAns: 8,
+
   /** Points de comparaison — hypothèses de marché, pas des tarifs nationaux. */
   comparaison: {
     siteHC: 0.158,      // € HT/kWh
@@ -128,6 +149,38 @@ export type UsageSalarie = 'professionnel' | 'domicile-travail' | 'les-deux'
 export type ModeRemboursement = 'kilometrique' | 'frais-reels'
 export type OptionTarif = 'base' | 'hp-hc' | 'saisi'
 export type OrigineConso = 'releve' | 'wltp' | 'tableau-de-bord'
+
+/**
+ * Comment les kilowattheures du domicile sont-ils constatés ?
+ *
+ * Distinct de `origineConso`, qui dit d'où vient la VALEUR de consommation.
+ * Celui-ci dit comment on constate ce qui a réellement été consommé chez le
+ * salarié — donc ce qu'on pourra opposer en cas de contrôle.
+ */
+export type MesureDomicile = 'supervision' | 'sous-compteur' | 'estimation' | 'aucune'
+
+/** Qui souscrit la supervision, et pour quoi. Le régime n'est pas le même. */
+export type TypeSupervision = 'abonnement-salarie' | 'plateforme-employeur'
+
+/**
+ * Pourquoi le véhicule personnel est nécessaire, au sens de L. 3261-3.
+ *
+ * Demander « êtes-vous contraint ? » laissait l'utilisateur juger lui-même :
+ * beaucoup répondaient oui parce que la voiture est plus pratique, ce qui n'est
+ * pas un critère légal. On demande donc la RAISON, pas l'appréciation.
+ *
+ * Et on colle au texte : « transport inadapté » n'est pas un critère. L'article
+ * vise trois situations précises — non-desserte, hors périmètre d'un plan de
+ * mobilité obligatoire, horaires particuliers. Un salarié qui dispose d'un bus
+ * qu'il juge peu pratique n'entre dans aucune des trois.
+ */
+export type RaisonVehiculePersonnel =
+  | 'non-desservi'        // commune non desservie par un transport collectif régulier
+                          // ou par un transport organisé par l'employeur
+  | 'hors-plan-mobilite'  // hors du périmètre d'un plan de mobilité obligatoire
+  | 'horaires'            // horaires particuliers interdisant le transport collectif
+  | 'aucune'
+  | 'inconnu'
 export type Triple = 'oui' | 'non' | 'inconnu'
 export type Categorie = keyof typeof CONFIG.conso
 
@@ -155,8 +208,8 @@ export interface EntreeRecharge {
   puissanceFiscale?: number
   /** Bénéficie déjà d'une prise en charge d'abonnement de transports publics. */
   abonnementTransportPublic?: Triple
-  /** Éligible au sens de L. 3261-3 : commune non desservie, horaires particuliers. */
-  contraintDUtiliserSonVehicule?: Triple
+  /** Raison légale rendant le véhicule personnel nécessaire (L. 3261-3). */
+  raisonVehiculePersonnel?: RaisonVehiculePersonnel
 
   // ── Recharge
   partDomicile: number          // 0–1
@@ -165,6 +218,20 @@ export interface EntreeRecharge {
   partHeuresCreuses?: number
   /** Prix saisi si optionTarif = 'saisi'. */
   prixKwhSaisi?: number
+
+  // ── Mesure et supervision
+  /** Comment les kWh du domicile sont constatés. Défaut : estimation. */
+  mesureDomicile?: MesureDomicile
+  /** L'employeur prend-il en charge l'abonnement de supervision ? */
+  supervisionPayeeParEmployeur?: Triple
+  /** Abonnement rattaché à la borne du salarié, ou plateforme de flotte ? */
+  typeSupervision?: TypeSupervision
+  /** kWh RÉELLEMENT relevés sur l'année, si la mesure existe. */
+  kWhMesuresAn?: number
+  /** Coût mensuel de la supervision, par point de charge. */
+  coutSupervisionMois?: number
+  /** Taux de charges patronales, si connu. Sinon hypothèse OTONOM. */
+  tauxChargesPatronales?: number
 
   // ── Borne au domicile
   borneFinanceeParEmployeur?: Triple
@@ -215,6 +282,42 @@ export interface ResultatRecharge {
 
   // Borne
   borne: { priseEnCharge: number; exonere: number; soumis: number; regle: string } | null
+
+  /**
+   * Supervision de la recharge à domicile.
+   *
+   * Contre-intuitif, et c'est tout l'intérêt de l'isoler : l'électricité est
+   * exonérée en totalité, la supervision non. L'article 4 range l'abonnement
+   * parmi les « autres frais liés à l'utilisation » de la borne et les plafonne
+   * à 50 % — la parenthèse « hors frais d'électricité » du même alinéa sépare
+   * précisément les deux.
+   */
+  supervision: { coutAn: number; exonere: number; soumis: number; regle: string } | null
+
+  /** La méthode retenue permet-elle d'attribuer une session à UN véhicule ? */
+  attributionSessions: boolean
+
+  /**
+   * Ce que le dispositif coûte à l'employeur, tout compris.
+   *
+   * Les postes vivaient dans trois blocs séparés et personne ne les additionnait.
+   * On distingue le RÉCURRENT du PONCTUEL : la borne se paie une fois, et la
+   * fraction réintégrée ne génère des charges que l'année où elle est versée.
+   */
+  coutEmployeur: {
+    electriciteAn: number
+    supervisionAn: number
+    /** Charges patronales sur la fraction réintégrée récurrente. */
+    chargesRecurrentesAn: number
+    totalRecurrentAn: number
+    /** Borne : dépense unique, et ses charges, l'année du versement. */
+    borneUnique: number
+    chargesBorneUnique: number
+    totalPremiereAnnee: number
+    /** Quote-part annuelle de la borne, une fois étalée. */
+    borneAnnualisee: number
+    tauxCharges: number
+  }
 
   // Comparaisons, à périmètre égal (100 % de l'énergie annuelle)
   comparaison: { mode: string; coutAn: number; base: 'TTC' | 'HT' }[]
@@ -270,7 +373,14 @@ export function determinerBranche(i: EntreeRecharge): Branche {
     /* Pour une mise à disposition postérieure au 01/02/2025 s'ajoute la
        condition d'éco-score (c du 6° du I de l'art. D. 251-1 du code de
        l'énergie). Un doute suffit à sortir du verdict favorable. */
-    if (i.miseADispoApres2025 === 'oui' && i.ecoScore !== 'oui') return 'entreprise-hors-regime'
+    /* La date décide du régime applicable. Une date INCONNUE ne peut donc pas
+       retomber dans le cas favorable : on ne sait pas quel régime s'applique.
+       C'était un bug — le doute profitait au verdict, contre notre propre règle. */
+    if (i.miseADispoApres2025 !== 'non') {
+      // À compter du 01/02/2025, ou date inconnue : l'éco-score conditionne tout.
+      if (i.ecoScore !== 'oui') return 'entreprise-hors-regime'
+      if (i.miseADispoApres2025 === 'inconnu') return 'entreprise-hors-regime'
+    }
     return 'entreprise-ve-eligible'
   }
   if (i.usageSalarie === 'les-deux') return 'perso-mixte'
@@ -326,11 +436,19 @@ export function calculerRecharge(i: EntreeRecharge): ResultatRecharge {
   const avert: string[] = []
 
   const branche = determinerBranche(i)
+  /* Déclaré ici et non plus bas : le tableau des hypothèses, construit avant
+     le calcul du coût employeur, s'en sert déjà. */
+  const taux = borne01(num(i.tauxChargesPatronales, CONFIG.tauxChargesPatronales))
   const conso = consoAuReseau(i)
   const km = Math.max(0, num(i.kmAnnuels, 0))
-  const kWhAn = conso * km / 100
   const partDom = borne01(num(i.partDomicile, 0.8))
-  const kWhDom = kWhAn * partDom
+  /* Si l'utilisateur DISPOSE d'un relevé, on ne l'ignore pas pour recalculer une
+     estimation à partir des kilomètres : afficher « mesure réelle » au-dessus
+     d'un chiffre estimé était incohérent. Le relevé fait autorité. */
+  const mesureReelle: MesureDomicile[] = ['supervision', 'sous-compteur']
+  const releve = mesureReelle.includes(i.mesureDomicile || 'estimation') && num(i.kWhMesuresAn, 0) > 0
+  const kWhDom = releve ? num(i.kWhMesuresAn, 0) : (conso * km / 100) * partDom
+  const kWhAn = releve ? (partDom > 0 ? kWhDom / partDom : kWhDom) : conso * km / 100
   const prix = prixMoyenKwh(i)
   const coutDomAn = kWhDom * prix
 
@@ -406,10 +524,36 @@ export function calculerRecharge(i: EntreeRecharge): ResultatRecharge {
       verdict = 'encadre'
       texte = `Prime de transport : la prise en charge des frais d'alimentation est exonérée `
         + `jusqu'à ${plafond} € par an et par salarié.`
-      if (i.contraintDUtiliserSonVehicule !== 'oui') {
+      const raison = i.raisonVehiculePersonnel || 'inconnu'
+      /* Liste BLANCHE, pas liste noire. Écrite en « tout sauf aucune et inconnu »,
+         la règle rendait éligible n'importe quelle valeur inattendue — un libellé
+         renommé, une valeur venue d'ailleurs. On n'ouvre le dispositif que sur
+         les trois situations que le texte prévoit. */
+      const ELIGIBLES: RaisonVehiculePersonnel[] = ['non-desservi', 'hors-plan-mobilite', 'horaires']
+      if (raison !== 'aucune' && !ELIGIBLES.includes(raison)) {
         verdict = 'prudence'
-        avert.push("Éligibilité non confirmée : la prime de transport suppose une commune non "
-          + "desservie par un transport collectif régulier, ou des horaires particuliers.")
+        avert.push("Raison d'éligibilité non reconnue : la prime suppose une commune non "
+          + "desservie par un transport collectif régulier ou organisé par l'employeur, une "
+          + "résidence ou un lieu de travail hors du périmètre d'un plan de mobilité "
+          + 'obligatoire, ou des horaires particuliers interdisant le transport collectif.')
+        plafond = p.primeTransport.plafondAlimentation
+        exonere = Math.min(coutDomAn, plafond)
+        remboursement = coutDomAn
+        texte = `Prime de transport : exonérée jusqu'à ${plafond} € par an, mais l'éligibilité `
+          + "n'est pas établie."
+        break
+      }
+      if (raison === 'aucune') {
+        /* Aucune des situations de L. 3261-3 : le dispositif n'est pas ouvert.
+           Ce n'est pas une réserve, c'est une inéligibilité. */
+        verdict = 'exclu'
+        remboursement = 0
+        exonere = 0
+        plafond = null
+        texte = "Aucune des situations prévues par l'article L. 3261-3 n'est remplie : la prime "
+          + "de transport n'est pas ouverte à ce salarié. Le confort ou la commodité ne sont pas "
+          + 'des critères légaux.'
+        break
       }
       if (coutDomAn > plafond) {
         avert.push(`Au-delà de ${plafond} €, la fraction excédentaire est soumise à cotisations.`)
@@ -441,13 +585,65 @@ export function calculerRecharge(i: EntreeRecharge): ResultatRecharge {
 
   const gainHC = kWhDom * (CONFIG.tarifs.base - CONFIG.tarifs.heuresCreuses)
 
+  /* ── Supervision ──────────────────────────────────────────────────────── */
+  const mesure: MesureDomicile = i.mesureDomicile || 'estimation'
+  let supervision: ResultatRecharge['supervision'] = null
+  if (mesure === 'supervision' && i.supervisionPayeeParEmployeur === 'oui') {
+    const coutAn = num(i.coutSupervisionMois, CONFIG.supervisionMois) * 12
+    if (i.typeSupervision === 'plateforme-employeur') {
+      /* L'article 4 vise les dépenses « que le salarié aurait dû engager ». Une
+         plateforme souscrite par l'entreprise pour piloter sa flotte s'analyse
+         plutôt comme un outil de l'employeur — mais aucune doctrine ne tranche
+         cette configuration. On ne l'exonère donc pas d'office, et on ne la
+         réintègre pas non plus : on renvoie au contrat. */
+      supervision = {
+        coutAn: e2(coutAn), exonere: 0, soumis: 0,
+        regle: "Plateforme de supervision souscrite par l'entreprise pour sa flotte : le "
+          + "plafond de 50 % vise les dépenses « que le salarié aurait dû engager ». Cette "
+          + "configuration n'est pas tranchée par une doctrine publiée — traitement à vérifier "
+          + 'selon votre contrat.'
+      }
+      avert.push("Supervision souscrite par l'entreprise : son traitement social n'est pas "
+        + 'tranché par une doctrine publiée. À vérifier selon le contrat.')
+    } else {
+      /* 50 % des dépenses réelles, et AUCUN plafond en euros : les plafonds de
+         1 057,10 € et 1 585,50 € visent l'achat et l'installation, pas les frais
+         d'utilisation. Ne pas les appliquer ici. */
+      const exo = coutAn * p.borne.fraisUtilisation.taux
+      supervision = {
+        coutAn: e2(coutAn), exonere: e2(exo), soumis: e2(coutAn - exo),
+        regle: `Interprétation prudente de l'article 4, 2° b) — ce n'est pas une règle URSSAF `
+          + `certaine. Abonnement de supervision rattaché à la borne du salarié : « autres frais liés `
+          + `à l'utilisation », exclus dans la limite de `
+          + `${Math.round(p.borne.fraisUtilisation.taux * 100)} % des dépenses réelles. `
+          + `Aucun plafond en euros — celui-ci ne vaut que pour l'achat et l'installation.`
+      }
+      avert.push("L'électricité est exonérée en totalité, la supervision seulement de moitié : "
+        + "l'article 4 dit « hors frais d'électricité » pour cette raison.")
+    }
+  }
+
+  /* Seule une supervision identifie QUI a rechargé : un sous-compteur mesure la
+     borne, pas le véhicule. Chez un salarié dont le conjoint roule aussi en
+     électrique, la distinction n'est pas théorique. */
+  const attributionSessions = mesure === 'supervision'
+  if (mesure === 'sous-compteur') {
+    avert.push('Un sous-compteur mesure la borne, pas le véhicule : si un second véhicule '
+      + "s'y branche, les kilowattheures ne sont pas séparables.")
+  }
+
   /* ── Qualité de la preuve ─────────────────────────────────────────────── */
-  const preuve: ResultatRecharge['preuve'] =
-    i.origineConso === 'releve'
-      ? { niveau: 'mesure', texte: 'Relevé de borne ou de sous-compteur : la dépense est mesurée, au tarif correspondant.' }
-      : i.origineConso === 'wltp'
-        ? { niveau: 'estimation', texte: 'Estimation documentée : kilomètres × consommation homologuée × tarif. Méthode à écrire et à appliquer uniformément.' }
-        : { niveau: 'simulation', texte: 'Simulation sur hypothèses moyennes : suffisant pour cadrer un ordre de grandeur, pas pour justifier un remboursement.' }
+  const PREUVES: Record<MesureDomicile, ResultatRecharge['preuve']> = {
+    supervision: { niveau: 'mesure',
+      texte: 'Relevé de supervision : sessions horodatées et rattachées au véhicule. C\'est la trace la plus solide, et la seule qui distingue deux véhicules sur une même borne.' },
+    'sous-compteur': { niveau: 'mesure',
+      texte: 'Sous-compteur dédié : la dépense est mesurée au point de charge, mais rien ne rattache une session à un véhicule donné.' },
+    estimation: { niveau: 'estimation',
+      texte: 'Estimation documentée : kilomètres × consommation × tarif. Défendable si la méthode est écrite et appliquée uniformément à tous les salariés.' },
+    aucune: { niveau: 'simulation',
+      texte: 'Aucune mesure : suffisant pour cadrer un ordre de grandeur, pas pour justifier un remboursement en cas de contrôle.' }
+  }
+  const preuve = PREUVES[mesure]
 
   if (i.optionTarif === 'hp-hc' && num(i.partHeuresCreuses, 0.8) >= 0.99) {
     avert.push('Recharge supposée intégralement en heures creuses : vérifiez les plages réelles, '
@@ -466,8 +662,37 @@ export function calculerRecharge(i: EntreeRecharge): ResultatRecharge {
       source: 'reglementaire' },
     { label: "Prime de transport, frais d'alimentation", valeur: `${p.primeTransport.plafondAlimentation} € par an`,
       source: 'reglementaire' },
+    { label: "Plafond des frais d'utilisation de borne", valeur: `${Math.round(p.borne.fraisUtilisation.taux * 100)} % des dépenses, sans plafond en euros`, source: 'reglementaire' },
+    { label: 'Charges patronales retenues', valeur: `${Math.round(taux * 100)} % de la fraction réintégrée`, source: 'hypothese' },
     { label: 'Fin du régime dérogatoire', valeur: p.finRegime, source: 'reglementaire' }
   ]
+
+  /* ── Coût employeur, tout compris ─────────────────────────────────────
+     Le remboursement de l'électricité n'est qu'un poste sur trois. Ce qui
+     manquait, c'est la fraction réintégrée : elle est soumise à cotisations,
+     donc elle coûte plus que son montant facial. */
+  const supervisionAn = supervision ? supervision.coutAn : 0
+  const soumisRecurrent = Math.max(0, remboursement - exonere) + (supervision ? supervision.soumis : 0)
+  const chargesRecurrentes = soumisRecurrent * taux
+  const borneUnique = borne ? borne.priseEnCharge : 0
+  const chargesBorne = borne ? borne.soumis * taux : 0
+  const totalRecurrent = coutDomAn + supervisionAn + chargesRecurrentes
+  const coutEmployeur = {
+    electriciteAn: e2(coutDomAn),
+    supervisionAn: e2(supervisionAn),
+    chargesRecurrentesAn: e2(chargesRecurrentes),
+    totalRecurrentAn: e2(totalRecurrent),
+    borneUnique: e2(borneUnique),
+    chargesBorneUnique: e2(chargesBorne),
+    totalPremiereAnnee: e2(totalRecurrent + borneUnique + chargesBorne),
+    borneAnnualisee: e2(borneUnique / CONFIG.dureeAmortissementBorneAns),
+    tauxCharges: taux
+  }
+  if (soumisRecurrent > 0) {
+    avert.push(`La fraction réintégrée supporte des charges patronales : `
+      + `${Math.round(chargesRecurrentes)} € de plus par an, au taux d'hypothèse de `
+      + `${Math.round(taux * 100)} %.`)
+  }
 
   return {
     branche, libelleBranche: LIBELLES[branche], verdict, texteVerdict: texte,
@@ -480,6 +705,7 @@ export function calculerRecharge(i: EntreeRecharge): ResultatRecharge {
     remboursementSoumisAn: e2(Math.max(0, remboursement - exonere)),
     plafondApplique: plafond,
     borne,
+    supervision, attributionSessions, coutEmployeur,
     comparaison, gainHeuresCreusesAn: e2(gainHC),
     hypotheses, avertissements: avert, preuve
   }

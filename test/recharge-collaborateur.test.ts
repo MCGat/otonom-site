@@ -78,8 +78,93 @@ console.log('\n=== BRANCHE : le régime favorable a des conditions ===')
   // Avant le 01/02/2025, l'éco-score n'est pas exigé.
   t('VE mis à dispo avant 02/2025 → régime acquis sans éco-score',
     determinerBranche({ ...BASE, miseADispoApres2025: 'non', ecoScore: 'inconnu' }) === 'entreprise-ve-eligible')
+  t('date inconnue → hors régime (le doute ne profite pas au verdict)',
+    determinerBranche({ ...BASE, miseADispoApres2025: 'inconnu', ecoScore: 'oui' }) === 'entreprise-hors-regime')
   t('sans usage privé → véhicule de service',
     determinerBranche({ ...BASE, usagePrive: 'non' }) === 'entreprise-service')
+}
+
+console.log('\n=== LE DOUTE NE PROFITE JAMAIS AU VERDICT ===')
+{
+  // Bug corrigé le 11/08/2026 : une date de mise à disposition INCONNUE
+  // retombait dans le cas favorable, contre notre propre principe.
+  for (const eco of ['oui', 'non', 'inconnu'] as const) {
+    t(`date inconnue + éco-score ${eco} → hors régime`,
+      determinerBranche({ ...BASE, miseADispoApres2025: 'inconnu', ecoScore: eco }) === 'entreprise-hors-regime')
+  }
+  // Avant le 01/02/2025, l'éco-score n'est pas exigé : le régime reste acquis.
+  for (const eco of ['oui', 'non', 'inconnu'] as const) {
+    t(`date antérieure + éco-score ${eco} → régime acquis`,
+      determinerBranche({ ...BASE, miseADispoApres2025: 'non', ecoScore: eco }) === 'entreprise-ve-eligible')
+  }
+  t('seul « oui + éco-score oui » reste favorable',
+    determinerBranche({ ...BASE, miseADispoApres2025: 'oui', ecoScore: 'oui' }) === 'entreprise-ve-eligible')
+}
+
+console.log('\n=== MESURE RÉELLE : le relevé fait autorité sur l\'estimation ===')
+{
+  // Afficher « mesure réelle » au-dessus d'un chiffre calculé depuis les
+  // kilomètres était incohérent. Un relevé saisi remplace l'estimation.
+  const estime = calculerRecharge({ ...BASE, mesureDomicile: 'estimation' })
+  t('sans relevé : estimation kilométrique', proche(estime.kWhDomicileAn, 2040))
+
+  const releve = calculerRecharge({ ...BASE, mesureDomicile: 'supervision', kWhMesuresAn: 1500 })
+  t('relevé de supervision retenu tel quel', proche(releve.kWhDomicileAn, 1500))
+  t('le coût suit le relevé', proche(releve.coutDomicileAn, 1500 * 0.1589))
+  t('l\'énergie totale est déduite du relevé', proche(releve.kWhAn, 1500 / 0.8))
+
+  const sc = calculerRecharge({ ...BASE, mesureDomicile: 'sous-compteur', kWhMesuresAn: 1800 })
+  t('sous-compteur aussi', proche(sc.kWhDomicileAn, 1800))
+
+  // Sans saisie, on retombe sur l'estimation : pas de zéro silencieux.
+  const vide = calculerRecharge({ ...BASE, mesureDomicile: 'supervision' })
+  t('mesure déclarée mais non saisie → estimation', proche(vide.kWhDomicileAn, 2040))
+  // Une estimation ne doit JAMAIS consommer un relevé saisi par erreur.
+  const ignore = calculerRecharge({ ...BASE, mesureDomicile: 'estimation', kWhMesuresAn: 999 })
+  t('en mode estimation, le relevé est ignoré', proche(ignore.kWhDomicileAn, 2040))
+}
+
+console.log('\n=== PRIME DE TRANSPORT : la raison légale, pas l\'appréciation ===')
+{
+  const dt: EntreeRecharge = { ...BASE, proprietaire: 'salarie', usageSalarie: 'domicile-travail',
+    abonnementTransportPublic: 'non', kmAnnuels: 8000 }
+  // Les TROIS situations de L. 3261-3 ouvrent le dispositif, et elles seules.
+  t('non desservi → encadré',
+    calculerRecharge({ ...dt, raisonVehiculePersonnel: 'non-desservi' }).verdict === 'encadre')
+  t('hors plan de mobilité obligatoire → encadré',
+    calculerRecharge({ ...dt, raisonVehiculePersonnel: 'hors-plan-mobilite' }).verdict === 'encadre')
+  // Liste blanche : une valeur inattendue ne doit PAS ouvrir le dispositif.
+  t('valeur inconnue du moteur → prudence, pas éligibilité',
+    calculerRecharge({ ...dt, raisonVehiculePersonnel: 'pas-de-transport' as any }).verdict === 'prudence')
+  t('horaires incompatibles → encadré',
+    calculerRecharge({ ...dt, raisonVehiculePersonnel: 'horaires' }).verdict === 'encadre')
+  // « Aucune de ces situations » n'est pas une réserve : c'est une inéligibilité.
+  const non = calculerRecharge({ ...dt, raisonVehiculePersonnel: 'aucune' })
+  t('aucune situation légale → dispositif fermé', non.verdict === 'exclu')
+  t('aucune situation légale → rien d\'exonéré', proche(non.remboursementExonereAn, 0))
+  t('la commodité n\'est pas un critère', /confort|commodité/i.test(non.texteVerdict))
+  t('raison inconnue → prudence',
+    calculerRecharge({ ...dt, raisonVehiculePersonnel: 'inconnu' }).verdict === 'prudence')
+}
+
+console.log('\n=== SUPERVISION : abonnement salarié ou plateforme employeur ===')
+{
+  const base = { ...BASE, mesureDomicile: 'supervision' as const,
+    supervisionPayeeParEmployeur: 'oui' as const, coutSupervisionMois: 8 }
+  const salarie = calculerRecharge({ ...base, typeSupervision: 'abonnement-salarie' })
+  t('abonnement du salarié → 50 %', proche(salarie.supervision!.exonere, 48))
+  // On n'annonce pas une certitude URSSAF là où il n'y a qu'une lecture du texte.
+  t('le 50 % est étiqueté comme une interprétation',
+    /interprétation prudente/i.test(salarie.supervision!.regle))
+
+  // Une plateforme de flotte n'est pas une dépense « que le salarié aurait dû
+  // engager » : on ne l'exonère pas d'office, on ne la réintègre pas non plus.
+  const flotte = calculerRecharge({ ...base, typeSupervision: 'plateforme-employeur' })
+  t('plateforme employeur → ni exonérée ni réintégrée d\'office',
+    flotte.supervision!.exonere === 0 && flotte.supervision!.soumis === 0)
+  t('plateforme employeur → renvoi au contrat', /vérifier/i.test(flotte.supervision!.regle))
+  t('plateforme employeur → avertissement', flotte.avertissements.some(a => /doctrine/i.test(a)))
+  t('le coût reste affiché', proche(flotte.supervision!.coutAn, 96))
 }
 
 console.log('\n=== VERDICT : 100 % des kWh remboursables pour un VE éligible ===')
@@ -124,7 +209,7 @@ console.log('\n=== PRIME DE TRANSPORT : non-cumul avec les transports publics ==
 {
   const dt: EntreeRecharge = {
     ...BASE, proprietaire: 'salarie', usageSalarie: 'domicile-travail',
-    contraintDUtiliserSonVehicule: 'oui', abonnementTransportPublic: 'non', kmAnnuels: 8000
+    raisonVehiculePersonnel: 'non-desservi', abonnementTransportPublic: 'non', kmAnnuels: 8000
   }
   const r = calculerRecharge(dt)
   t('branche domicile-travail', r.branche === 'perso-domicile-travail')
@@ -138,7 +223,7 @@ console.log('\n=== PRIME DE TRANSPORT : non-cumul avec les transports publics ==
     proche(cumul.remboursementAn, 0))
 
   // Éligibilité non confirmée : on n'annonce pas un droit acquis.
-  const doute = calculerRecharge({ ...dt, contraintDUtiliserSonVehicule: 'inconnu' })
+  const doute = calculerRecharge({ ...dt, raisonVehiculePersonnel: 'inconnu' })
   t('éligibilité non confirmée → prudence', doute.verdict === 'prudence')
 
   // Au-delà du plafond, l'excédent est soumis.
@@ -170,14 +255,93 @@ console.log('\n=== INDEMNITÉS KILOMÉTRIQUES : pas de cumul avec les kWh ===')
     ik.avertissements.some(a => /cumul/i.test(a)))
 }
 
+console.log('\n=== SUPERVISION : exonérée de moitié, pas en totalité ===')
+{
+  const p = PARAMETRES[ANNEE_COURANTE]!
+  const avec = calculerRecharge({ ...BASE, mesureDomicile: 'supervision',
+    supervisionPayeeParEmployeur: 'oui', coutSupervisionMois: 8 })
+  t('supervision chiffrée', avec.supervision !== null)
+  t('coût annuel = 12 mois', proche(avec.supervision!.coutAn, 96))
+  // 50 % des dépenses réelles — et AUCUN plafond en euros : les 1 057,10 € et
+  // 1 585,50 € visent l'achat et l'installation, pas les frais d'utilisation.
+  t('exonérée à 50 %', proche(avec.supervision!.exonere, 48))
+  t('le reste est soumis', proche(avec.supervision!.soumis, 48))
+  const cher = calculerRecharge({ ...BASE, mesureDomicile: 'supervision',
+    supervisionPayeeParEmployeur: 'oui', coutSupervisionMois: 400 })
+  t('aucun plafond en euros sur les frais d\'utilisation',
+    proche(cher.supervision!.exonere, 400 * 12 * 0.5))
+  t('le plafond borne ne fuit pas ici', cher.supervision!.exonere > p.borne.jeune.plafond)
+
+  // L'électricité, elle, reste exonérée en totalité : c'est tout le contraste.
+  t('électricité toujours exonérée à 100 %', proche(avec.remboursementExonereAn, avec.coutDomicileAn))
+  t('avertissement sur le contraste présent',
+    avec.avertissements.some(a => /hors frais d.électricité/i.test(a)))
+
+  const nonPayee = calculerRecharge({ ...BASE, mesureDomicile: 'supervision',
+    supervisionPayeeParEmployeur: 'non' })
+  t('supervision non prise en charge → rien à traiter', nonPayee.supervision === null)
+}
+
+console.log('\n=== COÛT EMPLOYEUR : la fraction réintégrée coûte plus que son montant ===')
+{
+  const sup = calculerRecharge({ ...BASE, mesureDomicile: 'supervision',
+    supervisionPayeeParEmployeur: 'oui', coutSupervisionMois: 8 })
+  const c = sup.coutEmployeur
+  t('électricité reportée', proche(c.electriciteAn, sup.coutDomicileAn))
+  t('supervision reportée', proche(c.supervisionAn, 96))
+  // 48 € réintégrés × 42 % = 20,16 € de charges patronales.
+  t('charges sur la fraction réintégrée', proche(c.chargesRecurrentesAn, 48 * 0.42))
+  t('total récurrent = somme des trois',
+    proche(c.totalRecurrentAn, c.electriciteAn + c.supervisionAn + c.chargesRecurrentesAn))
+  t('le total dépasse le seul remboursement', c.totalRecurrentAn > sup.remboursementAn)
+
+  // Sans rien de réintégré, aucune charge : le VE éligible sans supervision.
+  const net = calculerRecharge({ ...BASE })
+  t('rien de réintégré → aucune charge', proche(net.coutEmployeur.chargesRecurrentesAn, 0))
+  t('total récurrent = électricité seule', proche(net.coutEmployeur.totalRecurrentAn, net.coutDomicileAn))
+
+  // La borne est PONCTUELLE : elle ne pollue pas le récurrent.
+  const avecBorne = calculerRecharge({ ...BASE, borneFinanceeParEmployeur: 'oui',
+    coutBorne: 2000, borneRetireeEnFinDeContrat: 'non', ancienneteBorneAns: 2 })
+  const b = avecBorne.coutEmployeur
+  t('la borne ne gonfle pas le récurrent', proche(b.totalRecurrentAn, avecBorne.coutDomicileAn))
+  t('la borne apparaît en dépense unique', proche(b.borneUnique, 2000))
+  t('charges sur la part réintégrée de la borne', proche(b.chargesBorneUnique, 1000 * 0.42))
+  t('première année = récurrent + ponctuel',
+    proche(b.totalPremiereAnnee, b.totalRecurrentAn + b.borneUnique + b.chargesBorneUnique))
+  t('quote-part annualisée sur 8 ans', proche(b.borneAnnualisee, 250))
+
+  // Le taux est une hypothèse : il doit être surchargeable.
+  const perso = calculerRecharge({ ...BASE, mesureDomicile: 'supervision',
+    supervisionPayeeParEmployeur: 'oui', tauxChargesPatronales: 0.30 })
+  t('taux de charges surchargeable', proche(perso.coutEmployeur.chargesRecurrentesAn, 48 * 0.30))
+  t('taux reporté dans le résultat', proche(perso.coutEmployeur.tauxCharges, 0.30))
+  t('avertissement sur les charges présent',
+    sup.avertissements.some(a => /charges patronales/i.test(a)))
+}
+
+console.log('\n=== ATTRIBUTION DES SESSIONS ===')
+{
+  // Un sous-compteur mesure la BORNE ; seule la supervision rattache au véhicule.
+  t('supervision → attribution possible',
+    calculerRecharge({ ...BASE, mesureDomicile: 'supervision' }).attributionSessions === true)
+  t('sous-compteur → attribution impossible',
+    calculerRecharge({ ...BASE, mesureDomicile: 'sous-compteur' }).attributionSessions === false)
+  t('sous-compteur → le lecteur est prévenu',
+    calculerRecharge({ ...BASE, mesureDomicile: 'sous-compteur' })
+      .avertissements.some(a => /second véhicule/i.test(a)))
+}
+
 console.log('\n=== PREUVE : la méthode qualifie le remboursement ===')
 {
-  t('relevé → mesure', calculerRecharge({ ...BASE, origineConso: 'releve' }).preuve.niveau === 'mesure')
-  t('WLTP → estimation documentée', calculerRecharge({ ...BASE, origineConso: 'wltp' }).preuve.niveau === 'estimation')
-  t('tableau de bord → simulation', calculerRecharge({ ...BASE, origineConso: 'tableau-de-bord' }).preuve.niveau === 'simulation')
+  t('supervision → mesure', calculerRecharge({ ...BASE, mesureDomicile: 'supervision' }).preuve.niveau === 'mesure')
+  t('sous-compteur → mesure', calculerRecharge({ ...BASE, mesureDomicile: 'sous-compteur' }).preuve.niveau === 'mesure')
+  t('estimation → estimation documentée', calculerRecharge({ ...BASE, mesureDomicile: 'estimation' }).preuve.niveau === 'estimation')
+  t('aucune mesure → simulation', calculerRecharge({ ...BASE, mesureDomicile: 'aucune' }).preuve.niveau === 'simulation')
+  t('défaut prudent : estimation', calculerRecharge({ ...BASE }).preuve.niveau === 'estimation')
   // On n'écrit jamais « conforme URSSAF » : aucune doctrine ne fixe la méthode.
-  const tousTextes = ['releve', 'wltp', 'tableau-de-bord']
-    .map(o => calculerRecharge({ ...BASE, origineConso: o as any }).preuve.texte).join(' ')
+  const tousTextes = ['supervision', 'sous-compteur', 'estimation', 'aucune']
+    .map(o => calculerRecharge({ ...BASE, mesureDomicile: o as any }).preuve.texte).join(' ')
   t('aucune promesse de conformité', !/conforme\s+URSSAF|obligatoire/i.test(tousTextes))
 }
 
