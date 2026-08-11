@@ -259,6 +259,17 @@ export interface TcoInput {
   fraisGestionLoueurMois?: number
   coutCapitalActif?: boolean
   partVehiculesFonction?: number
+  /**
+   * Le VE de fonction remplit-il la condition de score environnemental ?
+   *
+   * Elle conditionne l'abattement de 70 % sur l'avantage en nature (plafonné à
+   * 4 641,60 € en 2026). Le simulateur la supposait acquise pour tout véhicule
+   * électrique : dès qu'on activait « véhicules de fonction », l'abattement
+   * tombait sans que personne ne l'ait affirmé. Dans le doute il n'est plus
+   * accordé — l'avantage en nature est un COÛT pour l'employeur, et le
+   * surestimer est l'erreur sûre.
+   */
+  ecoScoreVE?: 'oui' | 'non' | 'inconnu'
   /** Données de renouvellement — sans elles, aucune taxe incitative n'est chiffrée. */
   flotteTotale?: number
   taiDonnees?: { flotteTaxable: number; vfeActuels: number; tauxRenouvellement: number }
@@ -643,7 +654,8 @@ function calculerScenario(i: TcoInput, motor: Motorisation): ScenarioTco {
         + (skipAssurance ? 0 : assuranceAn / N)
       : undefined
     const aenAnnuel = partFonction > 0
-      ? avantageEnNature(prix, motor, annee, { loue: enLocation, coutGlobalAnnuel }) : 0
+      ? avantageEnNature(prix, motor, annee,
+          { loue: enLocation, coutGlobalAnnuel, ecoScore: i.ecoScoreVE === 'oui' }) : 0
     const aenM = aenAnnuel * num(i.chargesPatronales, cfg.entreprise.chargesPatronales) * N * partFonction / 12
 
     energie += energieM; entretien += entretienM; pneus += pneusM
@@ -859,7 +871,7 @@ export function calculerTco(input: TcoInput): TcoResult {
     infraCycleSuivant: Math.max(0, infraCycle2),
     avantagesNonModelises: [
       ...(cat === 'vul'
-        ? [(i.financement === 'lld' || i.financement === 'loa')
+        ? [i.financement === 'lld'
             ? "Le suramortissement des utilitaires électriques (art. 39 decies A) n'est pas attribué au locataire en LLD : son effet éventuel se répercute par le loueur, dans son loyer."
             : 'Le suramortissement des utilitaires électriques (art. 39 decies A) est intégré au résultat ci-dessus.']
         : []),

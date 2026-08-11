@@ -387,6 +387,34 @@ t('malus 133 g = 1 276 € (valeur jamais utilisée comme ancrage)', mc(133,'die
    affichait 6 537 € à la même date : on suit le texte de loi, pas la vulgarisation. */
 t('malus 157 g = 6 637 €', mc(157,'diesel','tourisme',2026) === 6637, String(mc(157,'diesel','tourisme',2026)))
 
+console.log('\n=== ÉCO-SCORE ET MESSAGE VUL ===')
+{
+  const base: TcoInput = { nbVehicules: 30, categorie: 'compacte', kmAn: 25000, dureeMois: 48,
+    financement: 'lld', profilRecharge: 'depot-nuit', moisDebut: 8, anneeDebut: 2026,
+    partVehiculesFonction: 0.5 }
+  /* L'abattement de 70 % sur l'avantage en nature suppose le score
+     environnemental. Il tombait pour tout VE dès qu'on activait « véhicules de
+     fonction », sans que personne ne l'ait affirmé. */
+  const oui = calculerTco({ ...base, ecoScoreVE: 'oui' }).elec.impactEmployeurAEN
+  const non = calculerTco({ ...base, ecoScoreVE: 'non' }).elec.impactEmployeurAEN
+  const doute = calculerTco({ ...base, ecoScoreVE: 'inconnu' }).elec.impactEmployeurAEN
+  const absent = calculerTco(base).elec.impactEmployeurAEN
+  t('éco-score confirmé → abattement appliqué', oui < non)
+  t('éco-score inconnu → pas d’abattement', Math.abs(doute - non) < 1)
+  t('champ absent → pas d’abattement non plus', Math.abs(absent - non) < 1)
+
+  /* Le message disait « pas attribué au locataire » en LOA, alors que le moteur
+     y calcule bien le suramortissement : l'interface contredisait le calcul. */
+  const msg = (f: 'lld' | 'loa' | 'credit' | 'achat') =>
+    calculerTco({ ...base, categorie: 'vul', financement: f }).avantagesNonModelises[0] || ''
+  const sur = (f: 'lld' | 'loa' | 'credit' | 'achat') =>
+    calculerTco({ ...base, categorie: 'vul', financement: f }).elec.suramortissement
+  t('LLD : aucun suramortissement, et le message le dit', sur('lld') === 0 && /pas attribué/.test(msg('lld')))
+  for (const f of ['loa', 'credit', 'achat'] as const)
+    t(`${f} : suramortissement calculé ET annoncé comme intégré`,
+      sur(f) > 0 && /est intégré/.test(msg(f)), `${sur(f)} · ${msg(f).slice(0, 50)}`)
+}
+
 console.log('\n=== BARÈMES 2027 : saisis, plus reconduits ===')
 {
   /* Le millésime 2027 reconduisait les barèmes 2026 en abaissant le seuil du

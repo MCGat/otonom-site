@@ -148,7 +148,7 @@ const MALUS_POIDS_TRANCHES: Tranche[] = [
 /**
  * Barème OFFICIEL de la taxe annuelle CO₂ à compter du 01/01/2027.
  * Source : art. L. 421-120 du CIBS, version en vigueur au 01/01/2027 (Légifrance).
- * Vérifié le 12/08/2026. Contrôle : 128 g/km → 832 € (contre 583 € au barème 2026).
+ * Vérifié le 11/08/2026. Contrôle : 128 g/km → 832 € (contre 583 € au barème 2026).
  */
 const BAREME_CO2_2027: Tranche[] = [
   { max: 40, parGramme: 1 },
@@ -163,7 +163,7 @@ const BAREME_CO2_2027: Tranche[] = [
 
 /**
  * Barème OFFICIEL du malus CO₂ à compter du 01/01/2027 (WLTP, réception UE).
- * Source : art. L. 421-62 du CIBS (Légifrance), vérifié le 12/08/2026.
+ * Source : art. L. 421-62 du CIBS (Légifrance), vérifié le 11/08/2026.
  * Les 87 valeurs, gramme par gramme. Sous 103 g/km : 0 €. Au-delà de 189 : 90 000 €.
  *
  * Ce n'est PAS le barème 2026 décalé de cinq grammes, même si les deux coïncident
@@ -202,7 +202,7 @@ export const MILLESIMES: Record<number, AnneeFiscale> = {
     aen: { abattementForfait: 0.70, plafondForfait: 4641.60, finFenetre: '2027-12-31' }
   },
   2027: {
-    /* Barèmes CO₂ et malus 2027 saisis depuis Légifrance le 12/08/2026 : ceux-là
+    /* Barèmes CO₂ et malus 2027 saisis depuis Légifrance le 11/08/2026 : ceux-là
        ne sont plus reconduits. Le drapeau reste posé pour la taxe sur les
        polluants (160 € / 800 €), non revérifiée à cette date. */
     provisoire: true,
