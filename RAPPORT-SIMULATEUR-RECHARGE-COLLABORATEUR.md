@@ -12,7 +12,7 @@ affiché. Les listes des §2 et §5 sont **extraites du code**, pas rédigées d
 mémoire.
 
 Page : `/simulateurs/recharge-domicile-salarie`
-Moteur : `app/utils/simulateurs/rechargeCollaborateur.ts` · **115 tests** automatisés.
+Moteur : `app/utils/simulateurs/rechargeCollaborateur.ts` · **130 tests** automatisés.
 
 ---
 
@@ -122,7 +122,7 @@ Propriétaire du véhicule ?
 │   ├── à compter du 01/02/2025 ET éco-score ≠ oui → « hors régime »
 │   └── sinon                             → « VE éligible » (favorable)
 └── LE SALARIÉ
-    ├── usage = les deux                  → « mixte »
+    ├── usage = les deux                  → « mixte » (aucun montant : à ventiler)
     ├── usage = domicile-travail          → prime de transport
     └── usage = professionnel
         ├── frais réels                   → « frais réels »
@@ -150,7 +150,7 @@ Chacune est gelée par au moins un test.
 | 2 | Le plafond de 50 % des frais de borne s'applique **« hors frais d'électricité »** | Même arrêté, art. 4, 2° b) | Le plafond ne touche **jamais** l'électricité |
 | 3 | Régime réservé aux véhicules « fonctionnant exclusivement au moyen de l'énergie électrique », plus l'éco-score depuis le 01/02/2025 | Art. 3, sections C et D | Hybride rechargeable et VE sans éco-score → prudence |
 | 4 | Borne conservée : 50 % / 1 057,10 € ; **« plus de cinq ans »** : 75 % / 1 585,50 € | Art. 4, 2° a), valeurs 2026 | Comparaison **strictement** supérieure à 5 |
-| 5 | La prime de transport **ne peut être cumulée** avec la prise en charge des transports publics | Code du travail, art. L. 3261-3 | Verdict « cumul interdit », remboursement à 0 |
+| 5 | La prime de transport **ne peut être cumulée** avec la prise en charge des transports publics | Code du travail, art. L. 3261-3 | Verdict « remboursement exclu », remboursement à 0 ; un abonnement **non vérifié** donne un verdict de prudence |
 | 6 | Pour un véhicule personnel, la recharge est comprise dans le barème kilométrique, majoré de 20 % | BOFiP et impots.gouv.fr | Aucun remboursement séparé des kWh |
 
 ---

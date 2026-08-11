@@ -79,11 +79,11 @@
               </select>
             </div>
             <div v-if="f.usageSalarie !== 'professionnel'" class="field">
-              <label for="contraint">Contraint d'utiliser son véhicule&nbsp;?</label>
-              <select id="contraint" v-model="f.contraintDUtiliserSonVehicule">
-                <option v-for="o in TRIPLE" :key="o.v" :value="o.v">{{ o.l }}</option>
+              <label for="raison">Pourquoi le véhicule personnel est-il nécessaire&nbsp;?</label>
+              <select id="raison" v-model="f.raisonVehiculePersonnel">
+                <option v-for="o in RAISONS" :key="o.v" :value="o.v">{{ o.l }}</option>
               </select>
-              <span class="rc-aide">Commune non desservie par un transport collectif régulier, ou horaires particuliers.</span>
+              <span class="rc-aide">L'article L.&nbsp;3261-3 ne connaît que ces trois situations. La commodité n'en est pas une.</span>
             </div>
           </template>
         </div>
@@ -102,10 +102,11 @@
             </select>
           </div>
           <div class="field" :class="{ 'is-invalid': erreurs.km }">
-            <label for="km">Kilomètres par an <span class="req" aria-hidden="true">*</span></label>
+            <label for="km">{{ labelKm }} <span class="req" aria-hidden="true">*</span></label>
             <input id="km" v-model.number="f.kmAnnuels" type="number" min="100" max="150000" step="500" inputmode="numeric" placeholder="ex. 15 000"
                    :aria-invalid="!!erreurs.km" @input="erreurs.km = ''">
             <span v-if="erreurs.km" class="rc-err">{{ erreurs.km }}</span>
+            <span v-if="aideKm" class="rc-aide">{{ aideKm }}</span>
           </div>
           <div class="field">
             <label for="origine">D'où vient la consommation&nbsp;?</label>
@@ -257,13 +258,19 @@
           <span class="rc-chiffre-l">Coût pour le salarié</span>
           <b class="rc-chiffre-v tabnum">{{ eurosExact(r.coutDomicileMois) }}<em>/mois</em></b>
         </div>
-        <div class="rc-chiffre">
+        <template v-if="r.montantChiffrable">
+          <div class="rc-chiffre">
+            <span class="rc-chiffre-l">Remboursement annuel</span>
+            <b class="rc-chiffre-v tabnum">{{ eurosExact(r.remboursementAn) }}</b>
+          </div>
+          <div class="rc-chiffre">
+            <span class="rc-chiffre-l">Dont exonéré de cotisations</span>
+            <b class="rc-chiffre-v tabnum">{{ eurosExact(r.remboursementExonereAn) }}</b>
+          </div>
+        </template>
+        <div v-else class="rc-chiffre rc-chiffre--nc">
           <span class="rc-chiffre-l">Remboursement annuel</span>
-          <b class="rc-chiffre-v tabnum">{{ eurosExact(r.remboursementAn) }}</b>
-        </div>
-        <div class="rc-chiffre">
-          <span class="rc-chiffre-l">Dont exonéré de cotisations</span>
-          <b class="rc-chiffre-v tabnum">{{ eurosExact(r.remboursementExonereAn) }}</b>
+          <b class="rc-chiffre-v">Non calculable en l'état</b>
         </div>
       </div>
       <p class="rc-hero-s">{{ nombre(r.kWhDomicileAn) }} kWh par an au domicile, soit {{ eurosExact(r.coutDomicileAn) }} sur l'année.</p>
@@ -281,10 +288,13 @@
           <article class="sim-block">
             <header><h3>Le montant à rembourser</h3></header>
             <div class="sim-block-b">
-              <div class="sim-kv"><span>Remboursement annuel</span><b class="tabnum is-strong">{{ eurosExact(r.remboursementAn) }}</b></div>
-              <div class="sim-kv"><span>Dont exonéré de cotisations</span><b class="tabnum">{{ eurosExact(r.remboursementExonereAn) }}</b></div>
-              <div class="sim-kv"><span>Dont soumis à cotisations</span><b class="tabnum">{{ eurosExact(r.remboursementSoumisAn) }}</b></div>
-              <div v-if="r.plafondApplique" class="sim-kv"><span>Plafond applicable</span><b class="tabnum">{{ eurosExact(r.plafondApplique) }} par an</b></div>
+              <template v-if="r.montantChiffrable">
+                <div class="sim-kv"><span>Remboursement annuel</span><b class="tabnum is-strong">{{ eurosExact(r.remboursementAn) }}</b></div>
+                <div class="sim-kv"><span>Dont exonéré de cotisations</span><b class="tabnum">{{ eurosExact(r.remboursementExonereAn) }}</b></div>
+                <div class="sim-kv"><span>Dont soumis à cotisations</span><b class="tabnum">{{ eurosExact(r.remboursementSoumisAn) }}</b></div>
+                <div v-if="r.plafondApplique" class="sim-kv"><span>Plafond applicable</span><b class="tabnum">{{ eurosExact(r.plafondApplique) }} par an</b></div>
+              </template>
+              <p v-else class="rc-note">Les deux usages relèvent de deux dispositifs distincts, sur deux séries de kilomètres différentes. Reprenez le simulateur une fois pour les trajets professionnels, une fois pour le domicile-travail&nbsp;: chaque calcul est exact, leur addition ne l'est pas.</p>
             </div>
           </article>
 
@@ -324,7 +334,7 @@
               <div class="sim-kv"><span>Exclu de l'assiette</span><b class="tabnum is-strong">{{ eurosExact(r.supervision.exonere) }}</b></div>
               <div class="sim-kv"><span>Soumis à cotisations</span><b class="tabnum">{{ eurosExact(r.supervision.soumis) }}</b></div>
               <div class="sim-kv is-note"><span>Règle appliquée</span><b>{{ r.supervision.regle }}</b></div>
-              <p class="rc-note">L'électricité est exonérée en totalité, la supervision seulement de moitié. Ce n'est pas une incohérence&nbsp;: l'article 4 range l'abonnement parmi les frais liés à la borne, et précise «&nbsp;hors frais d'électricité&nbsp;» pour les séparer.</p>
+              <p class="rc-note">L'électricité est exclue en totalité. Par prudence, OTONOM traite l'abonnement de supervision rattaché à la borne du salarié comme un «&nbsp;autre frais d'utilisation&nbsp;» au sens de l'article 4, donc dans la limite de 50 %. Aucune doctrine publiée ne tranche explicitement le cas de la supervision.</p>
             </div>
           </article>
 
@@ -413,7 +423,7 @@
         <li><strong>Borne installée au domicile</strong>&nbsp;: exonérée sans plafond si elle est retirée en fin de contrat&nbsp;; sinon 50 % dans la limite de 1&nbsp;057,10 € (cinq ans ou moins) ou 75 % dans la limite de 1&nbsp;585,50 € (plus de cinq ans), valeurs 2026.</li>
         <li><strong>Véhicule personnel</strong>&nbsp;: la recharge est déjà comprise dans le barème kilométrique, majoré de 20 % pour l'électrique. <strong>Aucun cumul</strong> avec un remboursement séparé des kilowattheures.</li>
         <li>Pour le <strong>trajet domicile-travail</strong>, la prime de transport est exonérée jusqu'à <strong>600 € par an</strong> — mais elle ne se cumule pas avec la prise en charge d'un abonnement de transports publics.</li>
-        <li><strong>La supervision, elle, n'est exonérée qu'à moitié</strong>&nbsp;: l'abonnement compte parmi les frais liés à la borne, plafonnés à 50 % des dépenses réelles. C'est pourtant la seule méthode qui rattache une session à un véhicule.</li>
+        <li><strong>La supervision, elle, n'est vraisemblablement exonérée qu'à moitié</strong>&nbsp;: faute de doctrine publiée sur ce point, nous rattachons l'abonnement aux frais liés à la borne, plafonnés à 50 % des dépenses réelles. C'est pourtant la méthode qui relie le plus directement une session à un véhicule.</li>
       </ul>
       <p>Règles vérifiées le 11/08/2026, indicatives et non contractuelles.</p>
     </div>
@@ -453,11 +463,11 @@
     </table>
 
     <h3>Pourquoi la supervision change la nature de la preuve</h3>
-    <p>Un sous-compteur mesure <strong>la borne</strong>, pas le véhicule. Chez un salarié dont le conjoint roule aussi en électrique, les kilowattheures ne sont plus séparables — et le remboursement devient indéfendable. La supervision, elle, identifie la session par badge ou par le véhicule, et sort un relevé mensuel par collaborateur. C'est la seule méthode qui répond à la question «&nbsp;qui a rechargé&nbsp;?&nbsp;».</p>
+    <p>Un sous-compteur mesure <strong>la borne</strong>, pas le véhicule. Chez un salarié dont le conjoint roule aussi en électrique, les kilowattheures ne sont plus séparables — et le remboursement devient indéfendable. La supervision, elle, identifie la session par badge ou par le véhicule, et sort un relevé mensuel par collaborateur. C'est la méthode qui répond le plus directement à la question «&nbsp;qui a rechargé&nbsp;?&nbsp;».</p>
 
     <div class="article-callout">
       <span class="callout-label">Le piège de la supervision</span>
-      <p>L'électricité est exonérée <strong>en totalité</strong>. L'abonnement de supervision, <strong>non</strong>. L'article 4 de l'arrêté range ces frais parmi les «&nbsp;autres frais liés à l'utilisation&nbsp;» d'une borne installée hors du lieu de travail, et les plafonne à <strong>50&nbsp;% des dépenses réelles</strong> — sans plafond en euros, celui-ci ne valant que pour l'achat et l'installation. La parenthèse «&nbsp;hors frais d'électricité&nbsp;» du même alinéa existe précisément pour séparer les deux. Concrètement, sur 8&nbsp;€ par mois d'abonnement, environ la moitié est réintégrable — quand les 27&nbsp;€ d'électricité du même mois ne le sont pas du tout.</p>
+      <p>L'électricité est exclue <strong>en totalité</strong>. L'abonnement de supervision, <strong>vraisemblablement pas</strong>. L'article 4 de l'arrêté vise les «&nbsp;autres frais liés à l'utilisation&nbsp;» d'une borne installée hors du lieu de travail et les plafonne à <strong>50&nbsp;% des dépenses réelles</strong> — sans nommer un abonnement de supervision. Par prudence, nous l'y rattachons — sans plafond en euros, celui-ci ne valant que pour l'achat et l'installation. La parenthèse «&nbsp;hors frais d'électricité&nbsp;» du même alinéa existe précisément pour séparer les deux. Concrètement, sur 8&nbsp;€ par mois d'abonnement, environ la moitié est réintégrable — quand les 27&nbsp;€ d'électricité du même mois ne le sont pas du tout.</p>
     </div>
 
     <div class="article-faq">
@@ -467,7 +477,7 @@
       <details><summary>Peut-on cumuler indemnités kilométriques et remboursement de la recharge&nbsp;?</summary><div class="faq-a">Non. Pour un véhicule personnel, la location de batterie et les frais de recharge sont réputés compris dans le barème kilométrique, majoré de 20 % pour un véhicule électrique. Rembourser séparément les kilowattheures reviendrait à compter l'énergie deux fois.</div></details>
       <details><summary>Combien l'employeur peut-il financer pour une borne au domicile&nbsp;?</summary><div class="faq-a">Si la borne est retirée à la fin du contrat, la prise en charge est exclue de l'assiette sans plafond. Si le salarié la conserve, l'exclusion est de 50 % des dépenses réelles dans la limite de 1 057,10 € lorsque la borne a cinq ans ou moins, et de 75 % dans la limite de 1 585,50 € lorsqu'elle a plus de cinq ans. Valeurs 2026, revalorisées chaque 1<sup>er</sup> janvier.</div></details>
       <details><summary>Faut-il une borne communicante pour rembourser la recharge à domicile&nbsp;?</summary><div class="faq-a">Aucun texte ne l'impose au 11/08/2026. Mais un remboursement de frais professionnels doit correspondre à des dépenses réelles et justifiées, et la supervision est la seule méthode qui rattache une session de recharge à un véhicule donné. Un sous-compteur mesure la borne, pas la voiture : si un second véhicule s'y branche, les kilowattheures ne sont plus séparables.</div></details>
-      <details><summary>L'abonnement de supervision est-il exonéré comme l'électricité&nbsp;?</summary><div class="faq-a">Non. L'électricité est exclue en totalité du calcul de l'avantage en nature. L'abonnement de supervision relève des « autres frais liés à l'utilisation » de la borne au sens de l'article 4 de l'arrêté du 25 février 2025, exclus dans la limite de 50 % des dépenses réelles. Aucun plafond en euros ne s'y applique : les plafonds de 1 057,10 € et 1 585,50 € visent l'achat et l'installation de la borne.</div></details>
+      <details><summary>L'abonnement de supervision est-il exonéré comme l'électricité&nbsp;?</summary><div class="faq-a">Vraisemblablement pas. L'électricité est exclue en totalité du calcul de l'avantage en nature. L'arrêté du 25 février 2025 ne cite pas l'abonnement de supervision : par prudence, nous le rattachons aux « autres frais liés à l'utilisation » de la borne visés à son article 4, exclus dans la limite de 50 % des dépenses réelles. Aucune doctrine publiée ne tranche ce cas précis. Aucun plafond en euros ne s'y applique : les plafonds de 1 057,10 € et 1 585,50 € visent l'achat et l'installation de la borne.</div></details>
       <details><summary>Qu'est-ce qu'OTONOM apporte sur ce sujet&nbsp;?</summary><div class="faq-a">OTONOM est l'orchestrateur A à Z de la transition mobilité, recharge et énergie des entreprises. Nous coordonnons la politique de recharge, l'installation des bornes et le cadrage du remboursement avec un seul interlocuteur, et nous chiffrons vos gains lors d'un audit gratuit.</div></details>
     </div>
   </div></section>
@@ -486,13 +496,49 @@ useSeoMeta({
 })
 
 const TRIPLE = [{ v: 'inconnu', l: 'Je ne sais pas' }, { v: 'oui', l: 'Oui' }, { v: 'non', l: 'Non' }]
+/* Les trois situations de L. 3261-3, plus le doute et l'absence. On demande la
+   RAISON et non « êtes-vous contraint ? » : à cette dernière question, beaucoup
+   répondaient oui parce que la voiture est plus pratique — ce qui n'ouvre aucun
+   droit. Les libellés reprennent le texte, pas une paraphrase. */
+const RAISONS = [
+  { v: 'inconnu', l: 'Je ne sais pas' },
+  { v: 'non-desservi', l: 'Commune non desservie par un transport collectif régulier' },
+  { v: 'hors-plan-mobilite', l: "Résidence ou lieu de travail hors d'un plan de mobilité obligatoire" },
+  { v: 'horaires', l: 'Horaires particuliers empêchant le transport collectif' },
+  { v: 'aucune', l: 'Aucune de ces situations' }
+]
 const LIBELLE_VERDICT: Record<Verdict, string> = {
   favorable: 'Remboursement exonéré',
   encadre: 'Remboursement encadré',
   prudence: 'À faire confirmer',
-  exclu: 'Cumul interdit'
+  /* « Cumul interdit » ne décrivait qu'une des deux causes d'exclusion. L'autre
+     est l'inéligibilité pure — aucune situation de L. 3261-3 remplie — et le
+     titre annonçait alors un cumul dont il n'était pas question. Le libellé dit
+     la conséquence, le texte du verdict dit la cause. */
+  exclu: 'Remboursement exclu'
 }
 const nombre = (v: number) => nombreFr(v)
+
+/*
+ * Le même champ ne désigne pas les mêmes kilomètres selon la branche.
+ *
+ * Sur un véhicule personnel remboursé au barème, l'indemnité porte sur les
+ * kilomètres PROFESSIONNELS. Un salarié qui roule 15 000 km dont 4 000 pour son
+ * travail et qui saisit 15 000 obtient une indemnité presque quadruple — sans
+ * qu'aucune formule soit fausse. Le libellé lève l'ambiguïté à la source.
+ */
+const labelKm = computed(() => {
+  if (f.proprietaire === 'entreprise') return 'Kilométrage annuel du véhicule'
+  if (f.usageSalarie === 'professionnel') return 'Kilomètres professionnels par an'
+  if (f.usageSalarie === 'domicile-travail') return 'Kilomètres domicile-travail par an'
+  return 'Kilométrage annuel du véhicule'
+})
+const aideKm = computed(() => {
+  if (f.proprietaire === 'entreprise') return ''
+  if (f.usageSalarie === 'professionnel') return "Les seuls trajets professionnels, pas le kilométrage total du véhicule : c'est sur eux que porte le barème."
+  if (f.usageSalarie === 'domicile-travail') return 'Les trajets entre le domicile et le lieu de travail, aller-retour compris.'
+  return 'Usage mixte : les deux séries de kilomètres devront être ventilées avant tout remboursement.'
+})
 
 const f = reactive<EntreeRecharge>({
   proprietaire: 'entreprise', categorie: 'compacte', origineConso: 'wltp',
@@ -559,9 +605,14 @@ function sectionsLead() {
     ] },
     { titre: 'Résultat', lignes: [
       ['Coût mensuel', eurosExact(v.coutDomicileMois)],
-      ['Remboursement annuel', eurosExact(v.remboursementAn)],
-      ['Dont exonéré', eurosExact(v.remboursementExonereAn)],
-      ['Dont soumis', eurosExact(v.remboursementSoumisAn)],
+      /* Usage mixte : pas de montant défendable sans ventilation des kilomètres.
+         Le lead doit dire la même chose que l'écran, sans quoi le commercial
+         rappellerait avec un chiffre que le prospect n'a jamais vu. */
+      ...(v.montantChiffrable
+        ? [['Remboursement annuel', eurosExact(v.remboursementAn)],
+            ['Dont exonéré', eurosExact(v.remboursementExonereAn)],
+            ['Dont soumis', eurosExact(v.remboursementSoumisAn)]] as Array<[string, string]>
+        : [['Remboursement annuel', "Non calculable — usage mixte à ventiler"]] as Array<[string, string]>),
       ['Gain heures creuses', eurosExact(v.gainHeuresCreusesAn)]
     ] }
   ]
@@ -678,6 +729,9 @@ async function sendGate() {
 .rc-chiffre-l { display: block; font-family: var(--ff-mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .rc-chiffre-v { display: block; margin-top: 8px; font-family: var(--ff-display); font-size: clamp(21px, 2.4vw, 27px); line-height: 1.1; color: var(--ink); font-weight: 500; }
 .rc-chiffre-v em { font-style: normal; font-size: .5em; letter-spacing: 0; color: var(--muted); margin-left: 2px; }
+/* Absence de montant : plus petit et en retrait, pour ne pas se lire comme un
+   chiffre. La place reste occupée — un bloc qui disparaît passe inaperçu. */
+.rc-chiffre--nc .rc-chiffre-v { font-size: clamp(15px, 1.5vw, 17px); color: var(--muted); }
 .rc-hero-s { margin-top: 14px; color: var(--muted); font-size: 14px; }
 @media (max-width: 700px) {
   .rc-chiffres { grid-template-columns: 1fr; }

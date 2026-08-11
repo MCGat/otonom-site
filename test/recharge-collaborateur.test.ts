@@ -232,6 +232,58 @@ console.log('\n=== PRIME DE TRANSPORT : non-cumul avec les transports publics ==
   t('l’excédent est soumis', gros.remboursementSoumisAn > 0)
 }
 
+console.log('\n=== TRANSPORTS PUBLICS : le doute ne profite pas au verdict ===')
+{
+  /* Symétrique de la date de mise à disposition : « je ne sais pas » ne doit pas
+     ouvrir un droit. Le cumul est INTERDIT, pas plafonné — tant que l'abonnement
+     n'est pas écarté, le versement reste conditionnel. */
+  const dt: EntreeRecharge = {
+    ...BASE, proprietaire: 'salarie', usageSalarie: 'domicile-travail',
+    raisonVehiculePersonnel: 'non-desservi', kmAnnuels: 8000
+  }
+  const sur = calculerRecharge({ ...dt, abonnementTransportPublic: 'non' })
+  t('abonnement écarté → verdict encadré', sur.verdict === 'encadre')
+
+  const doute = calculerRecharge({ ...dt, abonnementTransportPublic: 'inconnu' })
+  t('abonnement inconnu → prudence', doute.verdict === 'prudence')
+  t('abonnement inconnu → le doute est écrit',
+    doute.avertissements.some(a => /L\. 3261-3/.test(a) && /non vérifiée/.test(a)))
+  t('abonnement inconnu → le montant reste affiché', doute.montantChiffrable)
+
+  // L'exclusion reste plus forte que le doute.
+  const exclu = calculerRecharge({ ...dt, abonnementTransportPublic: 'oui' })
+  t('abonnement confirmé → exclu, pas prudence', exclu.verdict === 'exclu')
+}
+
+console.log('\n=== USAGE MIXTE : aucun montant plutôt qu’un faux montant ===')
+{
+  /* La branche laissait passer le coût de recharge domicile en le présentant
+     comme intégralement exonéré : ni ventilation des kilomètres, ni indemnité
+     kilométrique, ni vérification de l'abonnement de transports publics. */
+  const mixte: EntreeRecharge = {
+    ...BASE, proprietaire: 'salarie', usageSalarie: 'les-deux',
+    modeRemboursement: 'kilometrique', puissanceFiscale: 5,
+    raisonVehiculePersonnel: 'non-desservi', abonnementTransportPublic: 'non',
+    kmAnnuels: 15000, partDomicile: 0.8
+  }
+  const r = calculerRecharge(mixte)
+  t('branche mixte', r.branche === 'perso-mixte')
+  t('aucun montant chiffrable', r.montantChiffrable === false)
+  t('verdict de prudence', r.verdict === 'prudence')
+  t('aucun remboursement annoncé', proche(r.remboursementAn, 0))
+  t('aucune exonération annoncée', proche(r.remboursementExonereAn, 0))
+  t('aucun plafond annoncé', r.plafondApplique === null)
+  t('le coût domicile reste calculé et affiché', r.coutDomicileAn > 0)
+  t('la marche à suivre est donnée',
+    r.avertissements.some(a => /une fois par usage/.test(a)))
+
+  // Toutes les autres branches restent chiffrables.
+  const dt = calculerRecharge({ ...mixte, usageSalarie: 'domicile-travail' })
+  const pro = calculerRecharge({ ...mixte, usageSalarie: 'professionnel' })
+  t('domicile-travail reste chiffrable', dt.montantChiffrable && dt.remboursementAn > 0)
+  t('professionnel reste chiffrable', pro.montantChiffrable && pro.remboursementAn > 0)
+}
+
 console.log('\n=== INDEMNITÉS KILOMÉTRIQUES : pas de cumul avec les kWh ===')
 {
   const p = PARAMETRES[ANNEE_COURANTE]!

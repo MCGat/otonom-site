@@ -280,6 +280,17 @@ export interface ResultatRecharge {
   remboursementSoumisAn: number
   plafondApplique: number | null
 
+  /**
+   * Un montant de remboursement a-t-il un sens dans cette situation ?
+   *
+   * Faux quand la saisie ne permet pas d'en calculer un défendable — aujourd'hui
+   * le seul cas est l'usage mixte, où deux dispositifs distincts s'appliquent à
+   * deux séries de kilomètres que le formulaire ne ventile pas. Afficher zéro
+   * serait faux, afficher le coût domicile le serait davantage : la page masque
+   * le chiffre et dit pourquoi.
+   */
+  montantChiffrable: boolean
+
   // Borne
   borne: { priseEnCharge: number; exonere: number; soumis: number; regle: string } | null
 
@@ -458,6 +469,8 @@ export function calculerRecharge(i: EntreeRecharge): ResultatRecharge {
   let plafond: number | null = null
   let verdict: Verdict = 'favorable'
   let texte = ''
+  /* Vrai par défaut : seule une branche sans ventilation possible le retire. */
+  let chiffrable = true
 
   switch (branche) {
     case 'entreprise-ve-eligible':
@@ -524,6 +537,15 @@ export function calculerRecharge(i: EntreeRecharge): ResultatRecharge {
       verdict = 'encadre'
       texte = `Prime de transport : la prise en charge des frais d'alimentation est exonérée `
         + `jusqu'à ${plafond} € par an et par salarié.`
+      /* Le doute ne profite pas au verdict — même principe que pour la date de
+         mise à disposition. Le cumul étant interdit et non plafonné, un
+         abonnement non vérifié rend le versement conditionnel, pas acquis. */
+      if (i.abonnementTransportPublic === 'inconnu') {
+        verdict = 'prudence'
+        avert.push("Prise en charge d'un abonnement de transports publics non vérifiée : "
+          + "l'article L. 3261-3 en interdit le cumul avec la prime de transport. "
+          + 'À écarter avant de verser.')
+      }
       const raison = i.raisonVehiculePersonnel || 'inconnu'
       /* Liste BLANCHE, pas liste noire. Écrite en « tout sauf aucune et inconnu »,
          la règle rendait éligible n'importe quelle valeur inattendue — un libellé
@@ -562,10 +584,28 @@ export function calculerRecharge(i: EntreeRecharge): ResultatRecharge {
     }
 
     case 'perso-mixte':
-      verdict = 'encadre'
-      plafond = p.primeTransport.plafondAlimentation
-      texte = 'Deux usages à traiter séparément : les trajets professionnels relèvent du barème '
-        + 'ou des frais réels, le trajet domicile-travail de la prime de transport.'
+      /* La branche annonçait « deux usages à traiter séparément » sans les
+         traiter : `remboursement` et `exonere` gardaient le coût domicile
+         initialisé plus haut, présenté comme intégralement exonéré. Le chiffre
+         ne voulait rien dire — il ignorait la ventilation des kilomètres, ne
+         calculait aucune indemnité kilométrique, et ne vérifiait même pas
+         l'abonnement de transports publics qui exclut la prime.
+
+         On ne le remplace pas par un autre chiffre : additionner barème et
+         prime de transport supposerait une règle de cumul que rien n'établit
+         dans les textes consultés. Deux calculs séparés sont exacts, leur
+         somme ne l'est pas. */
+      verdict = 'prudence'
+      chiffrable = false
+      remboursement = 0
+      exonere = 0
+      plafond = null
+      texte = 'Deux dispositifs distincts portent sur deux séries de kilomètres différentes : '
+        + 'le barème kilométrique ou les frais réels pour les trajets professionnels, la prime '
+        + "de transport pour le domicile-travail. Sans ventilation des kilomètres, aucun montant "
+        + "n'est défendable."
+      avert.push('Relancez le simulateur une fois par usage, avec les kilomètres correspondants : '
+        + "chaque cas donne un montant fiable, leur addition n'en est pas un.")
       avert.push('Ne remboursez jamais les mêmes kilomètres au titre des deux dispositifs.')
       break
   }
@@ -702,6 +742,7 @@ export function calculerRecharge(i: EntreeRecharge): ResultatRecharge {
     coutDomicileAn: e2(coutDomAn), coutDomicileMois: e2(coutDomAn / 12),
     remboursementAn: e2(remboursement),
     remboursementExonereAn: e2(exonere),
+    montantChiffrable: chiffrable,
     remboursementSoumisAn: e2(Math.max(0, remboursement - exonere)),
     plafondApplique: plafond,
     borne,
