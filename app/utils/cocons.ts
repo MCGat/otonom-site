@@ -20,6 +20,20 @@ export interface Cocon {
 
 export const COCONS: Cocon[] = [
   {
+    /*
+     * En tête du tableau à dessein : `devinerCocon()` retient la PREMIÈRE
+     * correspondance, et deux indices plus larges captureraient ces articles
+     * — « cout-recharge » (TCO) prendrait le pilier, « borne » (Recharge &
+     * IRVE) prendrait l'article sur la borne à domicile. Les indices ci-dessous
+     * sont assez spécifiques pour ne rien voler aux autres cocons.
+     */
+    cle: 'collaborateurs',
+    label: 'Recharge des collaborateurs',
+    pilier: 'cout-recharge-domicile-salarie',
+    indices: ['domicile-salarie', 'remboursement-recharge', 'justificatif-remboursement',
+      'politique-recharge', 'qui-paie', 'prime-transport', 'indemnite-kilometrique', 'collaborateur']
+  },
+  {
     cle: 'tco',
     label: 'TCO flotte électrique',
     pilier: 'tco-vehicule-electrique-entreprise',
