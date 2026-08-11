@@ -46,11 +46,12 @@
             <input id="sejour" v-model.number="f.dureeSejour" type="number" min="1" max="30" step="0.1" inputmode="decimal">
           </div>
           <div class="field">
-            <label for="etr">Part de clientèle étrangère</label>
+            <label for="etr">Part de clientèle néerlandaise, allemande ou belge</label>
             <select id="etr" v-model.number="f.partEtrangere">
               <option :value="0">Aucune ou marginale</option><option :value="0.25">Environ un quart</option>
               <option :value="0.5">Environ la moitié</option><option :value="0.75">Majoritaire</option>
             </select>
+            <span class="chr-aide">Ces trois parcs sont plus électrifiés que le parc français. Une clientèle étrangère venue d'ailleurs ne justifie aucune majoration&nbsp;: laissez «&nbsp;aucune&nbsp;».</span>
           </div>
           <div class="field">
             <label for="sais">Ouverture</label>
@@ -191,7 +192,7 @@
     </div>
 
     <p class="chr-prudence">
-      Estimation fondée sur votre capacité, votre taux d'occupation et la durée moyenne des séjours — <strong>pas sur une règle de pouce</strong>. Elle ne remplace ni un devis, ni l'étude électrique obligatoire au-delà de 50 places.
+      Estimation fondée sur votre capacité, votre taux d'occupation et la durée moyenne des séjours — <strong>pas sur une règle de pouce</strong>. Elle ne remplace ni un devis, ni l'étude électrique obligatoire dès 50 places.
     </p>
 
     <!-- ══ DÉTAIL, sous condition ══ -->
@@ -363,7 +364,7 @@
           <li>Le guichet ADVENIR « parking privé ouvert au public », qui couvrait hôtels et commerces, est <strong>fermé depuis le 30 juin 2023</strong>. En métropole, aucune prime nationale n'est identifiée pour ce cas au 05/08/2026.</li>
           <li>Se fonder sur les <strong>immatriculations neuves</strong> est l'erreur la plus coûteuse du marché&nbsp;: en 2025, les véhicules 100 % électriques y ont pesé près de 20 % et les hybrides rechargeables 6,6 %, soit environ 26,6 % de rechargeables. Mais ce qui roule et entre chez vous, c'est le <strong>parc en circulation</strong> — <strong>5,5 %</strong> au 01/01/2026, dont 3,5 % de 100 % électriques (SDES). Retenir 26,6 % au lieu de 5,5 % multiplierait la demande théorique par près de cinq.</li>
           <li>Une borne s'amortissant sur huit à dix ans, le calcul se fait sur le parc <strong>projeté</strong> à l'horizon retenu, pas sur celui d'aujourd'hui.</li>
-          <li>Au-delà de <strong>50 places</strong> de stationnement, une étude de conception électrique par un professionnel qualifié IRVE est obligatoire avant travaux.</li>
+          <li>Dès <strong>50 places</strong> de stationnement, une étude de conception électrique par un professionnel qualifié IRVE est obligatoire avant travaux.</li>
         </ul>
         <p>Règles vérifiées le 05/08/2026, indicatives et non contractuelles.</p>
       </div>
@@ -371,7 +372,7 @@
       <p>La question que se pose un gérant de camping ou d'hôtel n'est pas « faut-il des bornes&nbsp;? » — elle est <strong>combien</strong>, de quelle puissance, pour quel budget, et est-ce que ça se rembourse. Les réponses qui circulent sont des règles de pouce&nbsp;: « une à deux bornes en dessous de vingt chambres ». Elles ignorent le taux d'occupation, la durée des séjours et la puissance disponible, c'est-à-dire tout ce qui fait la différence entre deux établissements de même taille.</p>
 
       <h3>Le calcul part des arrivées, pas de la capacité</h3>
-      <p>C'est le point que la plupart des outils manquent. Le besoin de recharge naît d'un véhicule qui <strong>arrive</strong> après avoir roulé, pas d'un véhicule garé. Dans un camping où l'on reste sept nuits, un septième du parc se renouvelle chaque jour&nbsp;; dans un hôtel où l'on reste une nuit et demie, c'est presque la totalité.</p>
+      <p>C'est le point que la plupart des outils manquent. Le besoin de recharge naît d'un véhicule qui <strong>arrive</strong> après avoir roulé, pas d'un véhicule garé. Dans un camping où l'on reste sept nuits, un septième du parc se renouvelle chaque jour&nbsp;; dans un hôtel où le séjour moyen tourne autour d'une nuit et demie, c'est plus de la moitié.</p>
       <p>À capacité comparable, un hôtel génère donc <strong>plus de sessions de recharge</strong> qu'un camping, alors même qu'il compte moins de voitures sur son parking. À l'inverse, comparer un hôtel de quarante chambres à un camping de cent cinquante emplacements n'a aucun sens&nbsp;: le second reste très largement au-dessus.</p>
 
       <h3>Les postes qui font le dimensionnement</h3>
@@ -381,7 +382,7 @@
           <tr><td>Durée moyenne de séjour</td><td>Détermine le rythme des arrivées, donc le nombre de sessions par nuit</td></tr>
           <tr><td>Taux d'occupation en haute saison</td><td>Fixe le nombre de véhicules réellement présents</td></tr>
           <tr><td>Part du parc rechargeable</td><td>5,5 % au 01/01/2026, à projeter sur la durée d'amortissement de la borne</td></tr>
-          <tr><td>Clientèle étrangère</td><td>Les clientèles néerlandaise, allemande et belge sont plus électrifiées</td></tr>
+          <tr><td>Clientèle néerlandaise, allemande ou belge</td><td>Ces trois parcs sont plus électrifiés que le parc français. Coefficient neutre par défaut&nbsp;: le lien entre part d'étrangers et taux d'électrification n'est pas sourcé</td></tr>
           <tr><td>Puissance souscrite et pointe du site</td><td>Décide entre pilotage de charge et renforcement du raccordement</td></tr>
           <tr><td>Saisonnalité</td><td>Cinq mois d'exploitation allongent d'autant le retour sur investissement</td></tr>
         </tbody>
@@ -397,19 +398,19 @@
 
       <h3>Ce que la loi impose réellement</h3>
       <p>L'article <strong>L113-13</strong> du code de la construction et de l'habitation impose, depuis le 1ᵉʳ janvier 2025, au moins un point de recharge sur un emplacement accessible aux personnes à mobilité réduite pour un parc existant de plus de vingt places, puis un point par tranche de vingt places supplémentaires. L'article <strong>L113-12</strong> vise les bâtiments neufs et les rénovations importantes de plus de dix places, avec une place sur cinq pré-équipée.</p>
-      <p>Mais l'article <strong>L113-14</strong> écarte de ces deux obligations les parcs dépendant de bâtiments <strong>possédés et occupés par une PME</strong>. Une PME emploie moins de 250 personnes et respecte au moins l'un des deux plafonds financiers — 50 M€ de chiffre d'affaires ou 43 M€ de total de bilan —, en tenant compte des entreprises partenaires et liées. La majorité des hébergements indépendants sort donc du champ. Deux autres mécanismes existent&nbsp;: en rénovation importante, l'obligation tombe si les installations dépassent 7 % du coût des travaux&nbsp;; et des travaux importants sur le réseau en amont <em>limitent</em> le nombre de points exigés, sans supprimer l'obligation.</p>
+      <p>Mais l'article <strong>L113-14</strong> écarte de ces deux obligations les parcs dépendant de bâtiments <strong>possédés et occupés par une PME</strong>. Une PME emploie moins de 250 personnes et respecte au moins l'un des deux plafonds financiers — 50 M€ de chiffre d'affaires ou 43 M€ de total de bilan —, en tenant compte des entreprises partenaires et liées. De nombreux hébergements indépendants peuvent donc sortir du champ, à condition de remplir ces trois critères — propriété, occupation et taille. Deux autres mécanismes existent&nbsp;: en rénovation importante, l'obligation tombe si les installations dépassent 7 % du coût des travaux&nbsp;; et des travaux importants sur le réseau en amont <em>limitent</em> le nombre de points exigés, sans supprimer l'obligation.</p>
 
       <h3>Les aides&nbsp;: ce qui reste ouvert en 2026</h3>
       <p>Le guichet ADVENIR qui finançait les points de recharge ouverts au public sur parking privé — celui que citent encore beaucoup d'articles — a fermé le <strong>30 juin 2023</strong>. En France métropolitaine, un camping ou un hôtel ne dispose donc d'aucune prime nationale identifiée pour équiper son parking en points de recharge destinés à des véhicules légers. Des dispositifs régionaux existent, variables selon les territoires et les enveloppes, à vérifier avant d'engager la dépense. En <strong>Corse et Outre-mer</strong>, des guichets restent en revanche ouverts, avec pilotage par le signal EDF-SEI obligatoire.</p>
 
       <h3>Le vrai retour sur investissement</h3>
-      <p>Vendre l'électricité couvre les frais&nbsp;; ce n'est pas là que se joue la rentabilité. Les plateformes de réservation proposent désormais un filtre « borne de recharge »&nbsp;: un établissement non équipé disparaît simplement des résultats pour cette clientèle. Le gain se compte en réservations non perdues, pas en kilowattheures. Comme nous ne savons pas prévoir votre fréquentation, nous affichons le retour par la vente d'électricité, puis le <strong>nombre de nuitées supplémentaires par an</strong> nécessaires pour rembourser le solde — un chiffre qu'un gérant sait interpréter immédiatement.</p>
+      <p>Vendre l'électricité couvre une partie des charges, rarement la totalité&nbsp;: sur un établissement saisonnier ouvert cinq mois, nos hypothèses donnent même une marge légèrement négative. Ce n'est pas là que se joue la rentabilité. Les plateformes de réservation proposent désormais un filtre « borne de recharge »&nbsp;: un établissement non équipé disparaît simplement des résultats pour cette clientèle. Le gain se compte en réservations non perdues, pas en kilowattheures. Comme nous ne savons pas prévoir votre fréquentation, nous affichons le retour par la vente d'électricité, puis le <strong>nombre de nuitées supplémentaires par an</strong> nécessaires pour rembourser le solde — un chiffre qu'un gérant sait interpréter immédiatement.</p>
       <p>Pour l'hôtellerie, un point mérite d'être connu&nbsp;: la borne de recharge figure au référentiel de classement d'Atout France (critère n° 222 du tableau de classement des hôtels de tourisme), sous forme de critère optionnel à points. Elle doit être destinée à la clientèle de l'établissement — un point de recharge public dans la rue voisine ne vaut pas le critère. Aucun critère équivalent n'est identifié au référentiel Camping et parcs résidentiels de loisirs.</p>
 
       <h2>Questions fréquentes sur les bornes en camping et hôtel</h2>
       <div class="article-faq">
-        <details><summary>Combien de bornes de recharge faut-il dans un camping&nbsp;?</summary><div class="faq-a">Cela dépend des arrivées, pas du nombre d'emplacements. Pour un camping de 150 emplacements occupé à 80 % avec des séjours de sept nuits, notre calcul donne de l'ordre de huit points de recharge à l'horizon 2030, et deux seulement pour un camping de soixante emplacements au niveau de parc actuel. Le taux d'occupation, la durée des séjours et l'horizon retenu changent complètement le résultat.</div></details>
-        <details><summary>Un camping est-il obligé d'installer des bornes de recharge&nbsp;?</summary><div class="faq-a">Le plus souvent, non. L'article L113-14 du code de la construction et de l'habitation écarte de l'obligation les parcs dépendant de bâtiments possédés et occupés par une PME au sens de la recommandation européenne 2003/361/CE, ce qui couvre la majorité des campings et hôtels indépendants. L'obligation de l'article L113-13 — un point par tranche de vingt places depuis le 1ᵉʳ janvier 2025 — vise les autres.</div></details>
+        <details><summary>Combien de bornes de recharge faut-il dans un camping&nbsp;?</summary><div class="faq-a">Cela dépend des arrivées, pas du nombre d'emplacements. Pour un camping de 150 emplacements occupé à 80 % avec des séjours de sept nuits, notre calcul donne de l'ordre de sept points de recharge à l'horizon 2030, et deux seulement pour un camping de soixante emplacements au niveau de parc actuel. Le taux d'occupation, la durée des séjours et l'horizon retenu changent complètement le résultat.</div></details>
+        <details><summary>Un camping est-il obligé d'installer des bornes de recharge&nbsp;?</summary><div class="faq-a">Le plus souvent, non. L'article L113-14 du code de la construction et de l'habitation écarte de l'obligation les parcs dépendant de bâtiments possédés et occupés par une PME au sens de la recommandation européenne 2003/361/CE, ce dont de nombreux campings et hôtels indépendants peuvent bénéficier s'ils remplissent les conditions. L'obligation de l'article L113-13 — un point par tranche de vingt places depuis le 1ᵉʳ janvier 2025 — vise les autres.</div></details>
         <details><summary>Quelles aides pour installer des bornes dans un hôtel ou un camping en 2026&nbsp;?</summary><div class="faq-a">Le guichet ADVENIR « point de recharge ouvert à tout public sur parking privé » est fermé depuis le 30 juin 2023. Au 05/08/2026, aucune prime nationale n'est identifiée pour un parking d'hébergement touristique en métropole. Des aides régionales peuvent exister, et des guichets restent ouverts en Corse et Outre-mer. Toute éligibilité doit être confirmée avant d'engager la dépense.</div></details>
         <details><summary>Quelle puissance choisir&nbsp;: 7,4, 11 ou 22 kW&nbsp;?</summary><div class="faq-a">Pour un séjour, la durée de stationnement remplace la puissance&nbsp;: une nuit de douze heures à 7,4 kW représente jusqu'à 88,8 kWh appelés au réseau, soit environ 80 kWh rendus à la batterie — bien au-delà du besoin d'un client. Le 11 kW est le compromis courant, le 22 kW ne se justifie qu'en rotation soutenue et n'est de toute façon pas accepté par tous les véhicules en courant alternatif.</div></details>
         <details><summary>Faut-il une étude avant d'installer des bornes&nbsp;?</summary><div class="faq-a">Oui dès 50 places de stationnement&nbsp;: une étude de conception électrique est obligatoire avant travaux, et l'installation doit être réalisée par un professionnel qualifié IRVE. Notre simulateur est une estimation préalable destinée à cadrer le projet, en aucun cas une étude électrique.</div></details>
@@ -549,7 +550,7 @@ function sectionsLead() {
     { titre: 'Fréquentation', lignes: [
       ['Occupation en haute saison', `${Math.round((f.occupationHaute || 0) * 100)} %`],
       ['Durée moyenne de séjour', `${f.dureeSejour} nuits`],
-      ['Clientèle étrangère', `${Math.round((f.partEtrangere || 0) * 100)} %`],
+      ['Clientèle NL/DE/BE', `${Math.round((f.partEtrangere || 0) * 100)} %`],
       ['Ouverture', f.saisonnier === false ? "Toute l'année" : `Saisonnière — ${f.moisOuverts} mois`]
     ] },
     { titre: 'Service visé', lignes: [

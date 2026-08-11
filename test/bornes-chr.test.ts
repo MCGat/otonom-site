@@ -191,6 +191,27 @@ console.log('\n=== RÉGLEMENTAIRE ===')
   t('pas en dessous', !calculerBornes({ ...CAMPING, places: 49 }).etudeConceptionObligatoire)
 }
 
+console.log('\n=== CHIFFRES ANNONCÉS DANS LA PAGE ===')
+{
+  /* La FAQ cite deux résultats en toutes lettres. Ils avaient déjà divergé une
+     fois : la majoration « clientèle étrangère » est passée à 0 par défaut — le
+     lien entre part d'étrangers et électrification n'étant pas sourcé — et le
+     texte, lui, continuait d'annoncer les huit points obtenus avec 25 %.
+     Un lecteur qui refaisait le calcul avec les valeurs par défaut en trouvait
+     sept. Ces deux tests interdisent que le texte et le moteur se séparent
+     encore : si l'un bouge, l'autre doit suivre le jour même. */
+  const refFaq = calculerBornes({ ...CAMPING, partEtrangere: 0 })
+  t('FAQ — camping 150, 80 %, 7 nuits, 2030 → 7 points', refFaq.pointsCourt === 7,
+    String(refFaq.pointsCourt))
+
+  const petit = calculerBornes({ ...CAMPING, capacite: 60, horizonCourt: 2026, partEtrangere: 0 })
+  t('FAQ — camping 60 au parc actuel → 2 points', petit.pointsCourt === 2, String(petit.pointsCourt))
+
+  // La majoration ne doit jouer QUE si le gérant la saisit lui-même.
+  t('coefficient neutre à 0 % : aucune majoration',
+    calculerBornes({ ...CAMPING, partEtrangere: 0 }).partVeCourt <= calculerBornes({ ...CAMPING, partEtrangere: 0.25 }).partVeCourt)
+}
+
 console.log('\n=== COHÉRENCE D’ENSEMBLE ===')
 {
   const r = calculerBornes({ ...CAMPING, puissanceSouscrite: 250, pointeEtablissement: 150, distanceTableau: 60 })
