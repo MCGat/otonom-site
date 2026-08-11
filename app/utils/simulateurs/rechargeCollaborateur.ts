@@ -316,7 +316,19 @@ export interface ResultatRecharge {
    * fraction réintégrée ne génère des charges que l'année où elle est versée.
    */
   coutEmployeur: {
-    electriciteAn: number
+    /**
+     * Ce que l'employeur verse réellement au salarié, sur l'année.
+     *
+     * S'appelait `electriciteAn` et valait toujours le coût de recharge à
+     * domicile — ce qui n'est vrai que sur les branches où l'on rembourse
+     * précisément les kilowattheures. Au barème kilométrique, l'employeur verse
+     * une indemnité qui n'a rien à voir avec ce coût ; quand la prime est
+     * exclue, il ne verse rien du tout. Le poste suit donc le versement, et son
+     * libellé change avec lui.
+     */
+    versementAn: number
+    /** Nom du poste, propre à la branche : « Indemnités kilométriques », etc. */
+    libelleVersement: string
     supervisionAn: number
     /** Charges patronales sur la fraction réintégrée récurrente. */
     chargesRecurrentesAn: number
@@ -407,6 +419,24 @@ const LIBELLES: Record<Branche, string> = {
   'perso-professionnel-reels': 'Véhicule personnel, déplacements professionnels aux frais réels',
   'perso-domicile-travail': 'Véhicule personnel, trajet domicile-travail',
   'perso-mixte': 'Véhicule personnel, usage professionnel et domicile-travail'
+}
+
+/**
+ * Nom du poste de versement, dans le bloc « ce que ça vous coûte ».
+ *
+ * « Électricité remboursée » était écrit en dur : au barème, l'employeur ne
+ * rembourse pas d'électricité, il verse une indemnité kilométrique qui la
+ * comprend déjà. Nommer le poste d'après la branche évite de faire croire à un
+ * remboursement de kilowattheures là où il n'y en a pas.
+ */
+const LIBELLE_VERSEMENT: Record<Branche, string> = {
+  'entreprise-ve-eligible': 'Électricité remboursée',
+  'entreprise-hors-regime': 'Électricité remboursée',
+  'entreprise-service': 'Électricité remboursée',
+  'perso-professionnel-ik': 'Indemnités kilométriques',
+  'perso-professionnel-reels': 'Frais réels remboursés',
+  'perso-domicile-travail': 'Prime de transport',
+  'perso-mixte': 'Versement, à ventiler avant calcul'
 }
 
 /** Indemnités kilométriques, majorées pour un véhicule électrique. */
@@ -716,9 +746,17 @@ export function calculerRecharge(i: EntreeRecharge): ResultatRecharge {
   const chargesRecurrentes = soumisRecurrent * taux
   const borneUnique = borne ? borne.priseEnCharge : 0
   const chargesBorne = borne ? borne.soumis * taux : 0
-  const totalRecurrent = coutDomAn + supervisionAn + chargesRecurrentes
+  /* Le total partait du coût de recharge à domicile, jamais du montant versé.
+     Les deux coïncident sur les branches qui remboursent les kilowattheures, et
+     seulement sur celles-là : au barème, l'employeur versait 6 815 € pendant que
+     le bloc en annonçait 277 ; prime exclue ou usage mixte, il ne verse rien et
+     le bloc affichait quand même le coût domicile — le chiffre masqué en haut de
+     page réapparaissait plus bas. */
+  const versementRecurrent = chiffrable ? remboursement : 0
+  const totalRecurrent = versementRecurrent + supervisionAn + chargesRecurrentes
   const coutEmployeur = {
-    electriciteAn: e2(coutDomAn),
+    versementAn: e2(versementRecurrent),
+    libelleVersement: LIBELLE_VERSEMENT[branche],
     supervisionAn: e2(supervisionAn),
     chargesRecurrentesAn: e2(chargesRecurrentes),
     totalRecurrentAn: e2(totalRecurrent),

@@ -301,17 +301,32 @@
           <article class="sim-block sim-block--wide">
             <header><h3>Ce que ça vous coûte, tout compris</h3></header>
             <div class="sim-block-b">
-              <div class="sim-kv"><span>Électricité remboursée</span><b class="tabnum">{{ eurosExact(r.coutEmployeur.electriciteAn) }}</b></div>
+              <div class="sim-kv">
+                <span>{{ r.coutEmployeur.libelleVersement }}</span>
+                <b v-if="r.montantChiffrable" class="tabnum">{{ eurosExact(r.coutEmployeur.versementAn) }}</b>
+                <b v-else>Non chiffrable</b>
+              </div>
               <div v-if="r.coutEmployeur.supervisionAn" class="sim-kv"><span>Abonnement de supervision</span><b class="tabnum">{{ eurosExact(r.coutEmployeur.supervisionAn) }}</b></div>
               <div v-if="r.coutEmployeur.chargesRecurrentesAn" class="sim-kv">
                 <span>Charges patronales sur la fraction réintégrée <small>({{ Math.round(r.coutEmployeur.tauxCharges * 100) }} %)</small></span>
                 <b class="tabnum">{{ eurosExact(r.coutEmployeur.chargesRecurrentesAn) }}</b>
               </div>
-              <div class="sim-kv"><span>Coût récurrent, par an et par salarié</span><b class="tabnum is-strong">{{ eurosExact(r.coutEmployeur.totalRecurrentAn) }}</b></div>
+              <!-- Sans versement chiffrable, le total ne l'est pas non plus :
+                   afficher « 0 € » dirait que ça ne coûte rien, alors qu'on ne
+                   sait pas encore combien. -->
+              <div class="sim-kv">
+                <span>Coût récurrent, par an et par salarié</span>
+                <b v-if="r.montantChiffrable" class="tabnum is-strong">{{ eurosExact(r.coutEmployeur.totalRecurrentAn) }}</b>
+                <b v-else>Non chiffrable</b>
+              </div>
               <template v-if="r.coutEmployeur.borneUnique">
                 <div class="sim-kv"><span>Borne — dépense unique</span><b class="tabnum">{{ eurosExact(r.coutEmployeur.borneUnique) }}</b></div>
                 <div v-if="r.coutEmployeur.chargesBorneUnique" class="sim-kv"><span>Charges sur la part réintégrée de la borne</span><b class="tabnum">{{ eurosExact(r.coutEmployeur.chargesBorneUnique) }}</b></div>
-                <div class="sim-kv"><span>Total la première année</span><b class="tabnum is-strong">{{ eurosExact(r.coutEmployeur.totalPremiereAnnee) }}</b></div>
+                <div class="sim-kv">
+                  <span>Total la première année</span>
+                  <b v-if="r.montantChiffrable" class="tabnum is-strong">{{ eurosExact(r.coutEmployeur.totalPremiereAnnee) }}</b>
+                  <b v-else>Non chiffrable</b>
+                </div>
                 <div class="sim-kv"><span>Borne étalée sur 8 ans</span><b class="tabnum">{{ eurosExact(r.coutEmployeur.borneAnnualisee) }} par an</b></div>
               </template>
               <p class="rc-note">La fraction réintégrée coûte plus que son montant facial&nbsp;: elle entre dans l'assiette, donc elle supporte des charges patronales. Le taux réel dépend notamment du niveau de rémunération, des allègements applicables et de la situation de l'employeur. 42&nbsp;% est une hypothèse modifiable, pas un calcul de paie.</p>
@@ -632,11 +647,14 @@ function sectionsLead() {
     ] })
   }
   s.push({ titre: 'Coût employeur', lignes: [
-    ['Électricité remboursée', eurosExact(v.coutEmployeur.electriciteAn)],
+    [v.coutEmployeur.libelleVersement,
+      v.montantChiffrable ? eurosExact(v.coutEmployeur.versementAn) : 'Non chiffrable'],
     ['Supervision', eurosExact(v.coutEmployeur.supervisionAn)],
     ['Charges sur la fraction réintégrée', eurosExact(v.coutEmployeur.chargesRecurrentesAn)],
-    ['Coût récurrent par an', eurosExact(v.coutEmployeur.totalRecurrentAn)],
-    ['Total première année', eurosExact(v.coutEmployeur.totalPremiereAnnee)]
+    ['Coût récurrent par an',
+      v.montantChiffrable ? eurosExact(v.coutEmployeur.totalRecurrentAn) : 'Non chiffrable'],
+    ['Total première année',
+      v.montantChiffrable ? eurosExact(v.coutEmployeur.totalPremiereAnnee) : 'Non chiffrable']
   ] })
   s.push({ titre: 'Mesure et preuve', lignes: [
     ['Mode de mesure', String(f.mesureDomicile)],

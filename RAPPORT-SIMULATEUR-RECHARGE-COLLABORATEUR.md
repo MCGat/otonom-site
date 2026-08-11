@@ -12,7 +12,7 @@ affiché. Les listes des §2 et §5 sont **extraites du code**, pas rédigées d
 mémoire.
 
 Page : `/simulateurs/recharge-domicile-salarie`
-Moteur : `app/utils/simulateurs/rechargeCollaborateur.ts` · **130 tests** automatisés.
+Moteur : `app/utils/simulateurs/rechargeCollaborateur.ts` · **145 tests** automatisés.
 
 ---
 
@@ -265,11 +265,26 @@ Ajouté en dernier, parce que les postes vivaient dans trois blocs séparés que
 personne n'additionnait.
 
 ```
-récurrent (par an, par salarié) = électricité remboursée
+récurrent (par an, par salarié) = MONTANT VERSÉ AU SALARIÉ
                                 + abonnement de supervision
                                 + charges patronales × fraction réintégrée
 ponctuel (première année)       = borne + charges patronales × part réintégrée
 ```
+
+Le premier poste suit la branche, et son libellé aussi : « Électricité
+remboursée » sur un véhicule d'entreprise, « Indemnités kilométriques » au
+barème, « Frais réels remboursés », « Prime de transport ». Sur l'usage mixte,
+sans versement chiffrable, le bloc affiche « Non chiffrable » plutôt qu'un zéro
+qui se lirait « ça ne coûte rien ».
+
+> **Bug corrigé le 11/08/2026, trouvé au deuxième audit externe.** Ce premier
+> poste valait toujours le coût de recharge à domicile. Les deux coïncident sur
+> les branches qui remboursent les kilowattheures — et le test existant ne
+> couvrait que celles-là. Au barème, le bloc annonçait **277 €** quand
+> l'employeur versait **6 815 €** d'indemnités. Prime exclue ou usage mixte, il
+> affichait un coût alors qu'aucun versement n'a lieu : le chiffre masqué en haut
+> de page réapparaissait plus bas. Les huit branches sont désormais vérifiées une
+> par une, pas seulement le véhicule de fonction.
 
 **Le raisonnement à vérifier :** la fraction réintégrée entre dans l'assiette,
 donc elle supporte des charges patronales — elle coûte plus que son montant

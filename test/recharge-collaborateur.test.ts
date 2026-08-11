@@ -339,12 +339,13 @@ console.log('\n=== COÛT EMPLOYEUR : la fraction réintégrée coûte plus que s
   const sup = calculerRecharge({ ...BASE, mesureDomicile: 'supervision',
     supervisionPayeeParEmployeur: 'oui', coutSupervisionMois: 8 })
   const c = sup.coutEmployeur
-  t('électricité reportée', proche(c.electriciteAn, sup.coutDomicileAn))
+  t('versement reporté', proche(c.versementAn, sup.remboursementAn))
+  t('poste nommé d’après la branche', c.libelleVersement === 'Électricité remboursée')
   t('supervision reportée', proche(c.supervisionAn, 96))
   // 48 € réintégrés × 42 % = 20,16 € de charges patronales.
   t('charges sur la fraction réintégrée', proche(c.chargesRecurrentesAn, 48 * 0.42))
   t('total récurrent = somme des trois',
-    proche(c.totalRecurrentAn, c.electriciteAn + c.supervisionAn + c.chargesRecurrentesAn))
+    proche(c.totalRecurrentAn, c.versementAn + c.supervisionAn + c.chargesRecurrentesAn))
   t('le total dépasse le seul remboursement', c.totalRecurrentAn > sup.remboursementAn)
 
   // Sans rien de réintégré, aucune charge : le VE éligible sans supervision.
@@ -395,6 +396,53 @@ console.log('\n=== PREUVE : la méthode qualifie le remboursement ===')
   const tousTextes = ['supervision', 'sous-compteur', 'estimation', 'aucune']
     .map(o => calculerRecharge({ ...BASE, mesureDomicile: o as any }).preuve.texte).join(' ')
   t('aucune promesse de conformité', !/conforme\s+URSSAF|obligatoire/i.test(tousTextes))
+}
+
+console.log('\n=== COÛT EMPLOYEUR : le versement, pas le coût de l’électricité ===')
+{
+  /* Le total partait de `coutDomAn` sur TOUTES les branches. Vrai uniquement là
+     où l'on rembourse les kilowattheures — et l'ancien test ne couvrait que
+     celles-là. Au barème, le bloc annonçait 277 € quand l'employeur versait
+     6 815 € ; prime exclue ou usage mixte, il affichait un coût sans versement. */
+  const socle: EntreeRecharge = {
+    ...BASE, kmAnnuels: 12000, partDomicile: 0.8, optionTarif: 'hp-hc', partHeuresCreuses: 0.8
+  }
+  const cas: Array<[string, EntreeRecharge, string]> = [
+    ['VE de fonction', socle, 'Électricité remboursée'],
+    ['barème kilométrique', { ...socle, proprietaire: 'salarie', usageSalarie: 'professionnel',
+      modeRemboursement: 'kilometrique', puissanceFiscale: 5 }, 'Indemnités kilométriques'],
+    ['frais réels', { ...socle, proprietaire: 'salarie', usageSalarie: 'professionnel',
+      modeRemboursement: 'frais-reels' }, 'Frais réels remboursés'],
+    ['prime de transport', { ...socle, proprietaire: 'salarie', usageSalarie: 'domicile-travail',
+      raisonVehiculePersonnel: 'non-desservi', abonnementTransportPublic: 'non' }, 'Prime de transport']
+  ]
+  for (const [nom, e, libelle] of cas) {
+    const r = calculerRecharge(e)
+    t(`${nom} : le bloc reprend le montant versé`,
+      proche(r.coutEmployeur.versementAn, r.remboursementAn))
+    t(`${nom} : poste nommé « ${libelle} »`, r.coutEmployeur.libelleVersement === libelle)
+  }
+
+  // Le barème : c'est là que l'écart était énorme, et silencieux.
+  const ik = calculerRecharge(cas[1]![1])
+  t('barème : versement très supérieur au coût de recharge',
+    ik.coutEmployeur.versementAn > ik.coutDomicileAn * 10)
+  t('barème : le total récurrent part du versement',
+    proche(ik.coutEmployeur.totalRecurrentAn,
+      ik.coutEmployeur.versementAn + ik.coutEmployeur.supervisionAn + ik.coutEmployeur.chargesRecurrentesAn))
+
+  // Aucun versement : le bloc ne doit pas ressusciter le coût domicile.
+  const exclu = calculerRecharge({ ...socle, proprietaire: 'salarie', usageSalarie: 'domicile-travail',
+    raisonVehiculePersonnel: 'non-desservi', abonnementTransportPublic: 'oui' })
+  t('prime exclue : aucun versement au bloc coût', proche(exclu.coutEmployeur.versementAn, 0))
+  t('prime exclue : le coût domicile reste calculé par ailleurs', exclu.coutDomicileAn > 0)
+
+  const mixte = calculerRecharge({ ...socle, proprietaire: 'salarie', usageSalarie: 'les-deux',
+    modeRemboursement: 'kilometrique', puissanceFiscale: 5,
+    raisonVehiculePersonnel: 'non-desservi', abonnementTransportPublic: 'non' })
+  t('mixte : aucun versement au bloc coût', proche(mixte.coutEmployeur.versementAn, 0))
+  t('mixte : le chiffre masqué en haut ne revient pas en bas',
+    !proche(mixte.coutEmployeur.versementAn, mixte.coutDomicileAn))
 }
 
 console.log('\n=== PARAMÈTRES DATÉS ===')
