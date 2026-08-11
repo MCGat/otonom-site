@@ -1227,7 +1227,9 @@ function sectionsLead() {
       ['Points de charge calculés', nombreFr(v.nbPoints)],
       ['Investissement infrastructure', eurosExact(v.investInfraTotal)],
       // Non renseigné = la valeur par défaut du simulateur, pas « rien ».
-      ['Mise en service', String(i.moisDebut || moisCourant())]
+      // Et « 2026-08 » se lit mal dans un mail : la table des mois existe déjà.
+      ['Mise en service', moisOptions()[String(i.moisDebut || moisCourant())]
+        || String(i.moisDebut || moisCourant())]
     ] }
   ]
 

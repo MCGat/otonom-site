@@ -532,6 +532,29 @@ const LIBELLE_VERDICT: Record<Verdict, string> = {
      la conséquence, le texte du verdict dit la cause. */
   exclu: 'Remboursement exclu'
 }
+/* Le résumé envoyé en lead partait avec les codes internes — « hp-hc »,
+   « non-desservi », « domicile-travail ». Le commercial qui rappelle doit lire
+   ce que le prospect a vu à l'écran, pas nos identifiants. */
+const LIB: Record<string, string> = {
+  citadine: 'Citadine', compacte: 'Compacte', berline: 'Berline', vul: 'Utilitaire léger',
+  wltp: 'Consommation homologuée (WLTP)', releve: 'Relevé de borne ou de sous-compteur',
+  'tableau-de-bord': 'Consommation lue au tableau de bord',
+  base: 'Option base', 'hp-hc': 'Heures pleines / heures creuses', saisi: 'Prix du kWh saisi',
+  electrique: '100 % électrique', 'hybride-rechargeable': 'Hybride rechargeable', autre: 'Autre',
+  professionnel: 'Déplacements professionnels', 'domicile-travail': 'Trajet domicile-travail',
+  'les-deux': 'Les deux', kilometrique: 'Indemnités kilométriques',
+  'frais-reels': 'Frais réels sur justificatifs',
+  supervision: 'Borne communicante et supervision', 'sous-compteur': 'Sous-compteur dédié',
+  estimation: 'Estimation par les kilomètres', aucune: 'Aucune mesure',
+  'abonnement-salarie': 'Abonnement au nom du salarié',
+  'plateforme-employeur': "Plateforme au nom de l'employeur"
+}
+/* Les raisons légales vivent déjà dans RAISONS : une seule source de libellés. */
+const lib = (v: unknown) => {
+  const k = String(v ?? '')
+  return RAISONS.find((o) => o.v === k)?.l || LIB[k] || k
+}
+
 const nombre = (v: number) => nombreFr(v)
 
 /*
@@ -607,15 +630,15 @@ function sectionsLead() {
       ['Verdict', LIBELLE_VERDICT[v.verdict]]
     ] },
     { titre: 'Véhicule', lignes: [
-      ['Catégorie', String(f.categorie)],
-      ['Kilomètres par an', `${nombre(f.kmAnnuels)} km`],
-      ['Consommation retenue', `${v.consoRetenue} kWh/100 km au réseau`],
-      ['Origine de la consommation', String(f.origineConso)]
+      ['Catégorie', lib(f.categorie)],
+      [labelKm.value, `${nombre(f.kmAnnuels)} km`],
+      ['Consommation retenue', `${String(v.consoRetenue).replace('.', ',')} kWh/100 km au réseau`],
+      ['Origine de la consommation', lib(f.origineConso)]
     ] },
     { titre: 'Recharge', lignes: [
       ['Part au domicile', `${Math.round(f.partDomicile * 100)} %`],
-      ['Option tarifaire', String(f.optionTarif)],
-      ['Prix moyen du kWh', `${v.prixMoyenKwh} €`],
+      ['Option tarifaire', lib(f.optionTarif)],
+      ['Prix moyen du kWh', `${v.prixMoyenKwh.toFixed(4).replace('.', ',')} €`],
       ['Énergie au domicile', `${nombre(v.kWhDomicileAn)} kWh/an`]
     ] },
     { titre: 'Résultat', lignes: [
@@ -633,17 +656,17 @@ function sectionsLead() {
   ]
   if (f.proprietaire === 'entreprise') {
     s.splice(1, 0, { titre: 'Régime du véhicule', lignes: [
-      ['Motorisation', String(f.motorisation)],
+      ['Motorisation', lib(f.motorisation)],
       ['Usage privé autorisé', oui(f.usagePrive)],
       ['Mis à disposition après 01/02/2025', oui(f.miseADispoApres2025)],
       ['Éligible au score environnemental', oui(f.ecoScore)]
     ] })
   } else {
     s.splice(1, 0, { titre: 'Usage du véhicule personnel', lignes: [
-      ['Trajets', String(f.usageSalarie)],
-      ['Mode de remboursement', String(f.modeRemboursement)],
+      ['Trajets', lib(f.usageSalarie)],
+      ['Mode de remboursement', lib(f.modeRemboursement)],
       ['Abonnement transports publics pris en charge', oui(f.abonnementTransportPublic)],
-      ['Raison légale invoquée', String(f.raisonVehiculePersonnel)]
+      ['Raison légale invoquée', lib(f.raisonVehiculePersonnel)]
     ] })
   }
   s.push({ titre: 'Coût employeur', lignes: [
@@ -657,16 +680,18 @@ function sectionsLead() {
       v.montantChiffrable ? eurosExact(v.coutEmployeur.totalPremiereAnnee) : 'Non chiffrable']
   ] })
   s.push({ titre: 'Mesure et preuve', lignes: [
-    ['Mode de mesure', String(f.mesureDomicile)],
+    ['Mode de mesure', lib(f.mesureDomicile)],
     ['kWh relevés saisis', f.kWhMesuresAn ? nombre(f.kWhMesuresAn) + ' kWh' : 'non'],
     ['Niveau de preuve', v.preuve.niveau],
     ['Attribution des sessions', v.attributionSessions ? 'Possible' : 'Impossible']
   ] })
   if (v.supervision) {
     s.push({ titre: 'Supervision', lignes: [
+      ['Qui souscrit', lib(f.typeSupervision)],
       ['Abonnement annuel', eurosExact(v.supervision.coutAn)],
       ["Exclu de l'assiette", eurosExact(v.supervision.exonere)],
-      ['Soumis à cotisations', eurosExact(v.supervision.soumis)]
+      ['Soumis à cotisations', eurosExact(v.supervision.soumis)],
+      ['Règle appliquée', v.supervision.regle]
     ] })
   }
   if (v.borne) {
