@@ -63,9 +63,7 @@
               <div v-if="a.status === 'scheduled' && !isLive(a)" class="art-when">{{ formatDate(a.publishedAt) }}</div>
             </td>
             <td>
-              <span v-if="coconDe(a)" class="cocon" :class="{ 'is-guess': coconDe(a)!.devine }" :title="coconDe(a)!.devine ? 'Déduit du slug — ouvrez l’article pour figer son cocon' : 'Cocon déclaré dans l’article'">
-                {{ coconDe(a)!.label }}<span v-if="coconDe(a)!.devine" class="cocon-q">déduit</span>
-              </span>
+              <span v-if="coconDe(a)" class="cocon" title="Cocon déclaré dans l’article">{{ coconDe(a)!.label }}</span>
               <span v-else class="cocon cocon--none">Non classé</span>
               <div v-if="tagsDe(a).length" class="art-tags">
                 <button v-for="t in tagsDe(a)" :key="t" type="button" class="art-tag" @click="basculerTag(t)">{{ t }}</button>
@@ -237,12 +235,9 @@ const formatDate = (iso?: string) => {
 .badge--wait { color: var(--ink-soft); border-color: var(--ink-soft); border-style: dashed; }
 .art-when { font-family: var(--ff-mono); font-size: 10.5px; color: var(--muted-2); margin-top: 5px; }
 
-/* Cocon : plein s'il est déclaré, pointillé + « ? » s'il est seulement deviné. */
+/* Cocon : plein s'il est déclaré, pointillé s'il n'y en a pas. */
 .cocon { display: inline-block; font-family: var(--ff-mono); font-size: 10.5px; letter-spacing: .03em; color: var(--ink); border: 1px solid var(--ink-soft); border-radius: 6px; padding: 3px 9px; white-space: nowrap; }
-.cocon.is-guess { color: var(--muted); border-color: var(--line); border-style: dashed; }
 .cocon--none { color: var(--muted-2); border-color: var(--line); border-style: dashed; }
-/* Séparé du libellé par un filet : « déduit » qualifie le badge, il n'en fait pas partie. */
-.cocon-q { margin-left: 7px; padding-left: 7px; border-left: 1px solid currentColor; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; opacity: .7; }
 .art-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
 .art-tag { font-family: var(--ff-mono); font-size: 10px; color: var(--muted-2); background: none; border: 1px solid var(--line-soft); border-radius: 999px; padding: 2px 8px; cursor: pointer; }
 .art-tag:hover { color: var(--ink); border-color: var(--ink-soft); }

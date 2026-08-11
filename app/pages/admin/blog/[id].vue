@@ -62,7 +62,7 @@
           <option value="">— Non classé —</option>
           <option v-for="c in COCONS" :key="c.cle" :value="c.cle">{{ c.label }}</option>
         </select>
-        <p v-if="!form.cocon && coconDevine" class="ed-help">Deviné d'après le slug : <strong>{{ coconDevine }}</strong>. Choisissez-le pour figer le classement.</p>
+        <p v-if="coconInconnu" class="ed-help">Cet article déclare le cocon <strong>{{ form.cocon }}</strong>, qui n'existe pas dans <code>app/utils/cocons.ts</code>. Il s'affiche « Non classé » et son bloc « articles liés » ignore son pilier. Ajoutez-y l'entrée plutôt que de reclasser l'article ici.</p>
 
         <label class="ed-label">Tags <small>séparés par des virgules</small></label>
         <input v-model="form.tags" class="ed-input" placeholder="fiscalité, flotte, recharge" @input="markDirty">
@@ -137,7 +137,7 @@
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 useSeoMeta({ title: 'Éditeur — OTONOM Admin', robots: 'noindex, nofollow' })
 
-import { COCONS, devinerCocon, labelCocon } from '~/utils/cocons'
+import { COCONS, labelCocon } from '~/utils/cocons'
 
 const route = useRoute()
 const router = useRouter()
@@ -192,7 +192,8 @@ const estEnLigne = (a: any) =>
   a.status === 'published' || (a.status === 'scheduled' && !!a.publishedAt && a.publishedAt <= new Date().toISOString())
 
 /* ── Cocon & tags ── */
-const coconDevine = computed(() => labelCocon(devinerCocon(form.slug, form.title)))
+/* Clé stockée en base mais absente de COCONS : panne silencieuse, on la montre. */
+const coconInconnu = computed(() => !!form.cocon && !labelCocon(form.cocon))
 const tagsApercu = computed(() => form.tags.split(',').map((t) => t.trim()).filter(Boolean))
 
 const tagsConnus = computed(() => {
