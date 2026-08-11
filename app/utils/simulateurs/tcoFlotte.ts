@@ -473,6 +473,9 @@ function calculerScenario(i: TcoInput, motor: Motorisation): ScenarioTco {
 
   /* — Détention, selon les quatre modes — */
   let detention = 0
+  /* Loyer mensuel par véhicule, remonté à ce niveau : l'avantage en nature en
+     location s'assoit dessus, et il ne vivait que dans le bloc de la location. */
+  let loyerMensuelVehicule = 0
   let coutCapitalTotal = 0
   let vrFinale = 0
   let decaissementInitial = 0
@@ -516,6 +519,7 @@ function calculerScenario(i: TcoInput, motor: Motorisation): ScenarioTco {
     const loyer = i.loyerEstTTC ? loyerHT : prixPorte(loyerHT, catFisc)
     const surloyer = elec ? num(i.surloyerElec, 0) : num(i.surloyerTherm, 0)
 
+    loyerMensuelVehicule = loyer
     detention = (surloyer + loyer * dureeMois) * N
     decaissementInitial = (surloyer + loyer) * N
     echeanceMensuelle.fill(loyer * N)
@@ -629,8 +633,17 @@ function calculerScenario(i: TcoInput, motor: Motorisation): ScenarioTco {
     const taxesM = (taxesComprises || !q.taxesAnnuelles) ? 0
       : (taxeCO2(co2, motor, 'tourisme', annee) + taxePolluants(motor, 'tourisme', annee)) * N / 12
 
+    /* En location, l'assiette forfaitaire est le COÛT GLOBAL ANNUEL — loyer,
+       entretien, assurance — et non le prix du véhicule, que le locataire ne
+       paie jamais. On le reconstitue ici : la fonction fiscale n'a pas
+       connaissance des loyers. Montants par véhicule et par an. */
+    const coutGlobalAnnuel = enLocation
+      ? loyerMensuelVehicule * 12
+        + (skipEntretien ? 0 : entretienBase * (1 + cfg.usage.entretienCroissanceParAn * ageAns))
+        + (skipAssurance ? 0 : assuranceAn / N)
+      : undefined
     const aenAnnuel = partFonction > 0
-      ? avantageEnNature(prix, motor, annee, { loue: enLocation }) : 0
+      ? avantageEnNature(prix, motor, annee, { loue: enLocation, coutGlobalAnnuel }) : 0
     const aenM = aenAnnuel * num(i.chargesPatronales, cfg.entreprise.chargesPatronales) * N * partFonction / 12
 
     energie += energieM; entretien += entretienM; pneus += pneusM
@@ -846,7 +859,9 @@ export function calculerTco(input: TcoInput): TcoResult {
     infraCycleSuivant: Math.max(0, infraCycle2),
     avantagesNonModelises: [
       ...(cat === 'vul'
-        ? ['Le suramortissement des utilitaires électriques (art. 39 decies A) n\'est pas modélisé : le résultat ci-dessus est donc prudent pour un utilitaire.']
+        ? [(i.financement === 'lld' || i.financement === 'loa')
+            ? "Le suramortissement des utilitaires électriques (art. 39 decies A) n'est pas attribué au locataire en LLD : son effet éventuel se répercute par le loueur, dans son loyer."
+            : 'Le suramortissement des utilitaires électriques (art. 39 decies A) est intégré au résultat ci-dessus.']
         : []),
       ...(i.taiDonnees ? [] : ['La taxe annuelle incitative évitée n\'est pas chiffrée faute de données de renouvellement.'])
     ],

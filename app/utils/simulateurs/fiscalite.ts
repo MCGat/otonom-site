@@ -130,7 +130,7 @@ const MALUS_CO2_2026: Record<number, number> = {
   136: 1629, 137: 1761, 138: 1901, 139: 2049, 140: 2205, 141: 2370, 142: 2544,
   143: 2726, 144: 2918, 145: 3119, 146: 3331, 147: 3552, 148: 3784, 149: 4026,
   150: 4279, 151: 4543, 152: 4818, 153: 5105, 154: 5404, 155: 5715, 156: 6126,
-  157: 6537, 158: 7248, 159: 7959, 160: 8770, 161: 9681, 162: 10692, 163: 11803,
+  157: 6637, 158: 7248, 159: 7959, 160: 8770, 161: 9681, 162: 10692, 163: 11803,
   164: 13014, 165: 14325, 166: 15736, 167: 17247, 168: 18858, 169: 20569, 170: 22380,
   171: 24291, 172: 26302, 173: 28413, 174: 30624, 175: 32935, 176: 35346, 177: 37857,
   178: 40468, 179: 43179, 180: 45990, 181: 48901, 182: 51912, 183: 55023, 184: 58134,
@@ -144,6 +144,48 @@ const MALUS_POIDS_TRANCHES: Tranche[] = [
   { max: 1999, parGramme: 25 },
   { max: Infinity, parGramme: 30 }
 ]
+
+/**
+ * Barème OFFICIEL de la taxe annuelle CO₂ à compter du 01/01/2027.
+ * Source : art. L. 421-120 du CIBS, version en vigueur au 01/01/2027 (Légifrance).
+ * Vérifié le 12/08/2026. Contrôle : 128 g/km → 832 € (contre 583 € au barème 2026).
+ */
+const BAREME_CO2_2027: Tranche[] = [
+  { max: 40, parGramme: 1 },
+  { max: 48, parGramme: 2 },
+  { max: 80, parGramme: 3 },
+  { max: 100, parGramme: 4 },
+  { max: 120, parGramme: 10 },
+  { max: 140, parGramme: 50 },
+  { max: 160, parGramme: 60 },
+  { max: Infinity, parGramme: 65 }
+]
+
+/**
+ * Barème OFFICIEL du malus CO₂ à compter du 01/01/2027 (WLTP, réception UE).
+ * Source : art. L. 421-62 du CIBS (Légifrance), vérifié le 12/08/2026.
+ * Les 87 valeurs, gramme par gramme. Sous 103 g/km : 0 €. Au-delà de 189 : 90 000 €.
+ *
+ * Ce n'est PAS le barème 2026 décalé de cinq grammes, même si les deux coïncident
+ * jusqu'à 151 g/km : le plafond ne recule que de deux grammes (191 → 189), donc le
+ * haut du barème diverge. Reconduire 2026 en abaissant le seuil, comme on le
+ * faisait, produisait 90 000 € de malus sur un véhicule à 103 g/km.
+ */
+const MALUS_CO2_2027: Record<number, number> = {
+  103: 50, 104: 75, 105: 100, 106: 125, 107: 150, 108: 170, 109: 190,
+  110: 210, 111: 230, 112: 240, 113: 260, 114: 280, 115: 310, 116: 330,
+  117: 360, 118: 400, 119: 450, 120: 540, 121: 650, 122: 740, 123: 818,
+  124: 898, 125: 983, 126: 1074, 127: 1172, 128: 1276, 129: 1386, 130: 1504,
+  131: 1629, 132: 1761, 133: 1901, 134: 2049, 135: 2205, 136: 2370, 137: 2544,
+  138: 2726, 139: 2918, 140: 3119, 141: 3331, 142: 3552, 143: 3784, 144: 4026,
+  145: 4279, 146: 4543, 147: 4818, 148: 5105, 149: 5404, 150: 5715, 151: 6126,
+  152: 6637, 153: 7248, 154: 7959, 155: 8770, 156: 9681, 157: 10692, 158: 11803,
+  159: 13014, 160: 14325, 161: 15736, 162: 17247, 163: 18858, 164: 20569, 165: 22380,
+  166: 24291, 167: 26302, 168: 28413, 169: 30624, 170: 32935, 171: 35346, 172: 37857,
+  173: 40468, 174: 43179, 175: 45990, 176: 48901, 177: 51912, 178: 55023, 179: 58134,
+  180: 61245, 181: 64356, 182: 67467, 183: 70578, 184: 73689, 185: 76800, 186: 79911,
+  187: 83022, 188: 86133, 189: 89244
+}
 
 /**
  * Millésimes connus. Les années absentes reconduisent le dernier millésime
@@ -160,20 +202,22 @@ export const MILLESIMES: Record<number, AnneeFiscale> = {
     aen: { abattementForfait: 0.70, plafondForfait: 4641.60, finFenetre: '2027-12-31' }
   },
   2027: {
-    // Barème CO₂ détaillé 2027 non encore saisi (§15.10) → reconduit, signalé.
+    /* Barèmes CO₂ et malus 2027 saisis depuis Légifrance le 12/08/2026 : ceux-là
+       ne sont plus reconduits. Le drapeau reste posé pour la taxe sur les
+       polluants (160 € / 800 €), non revérifiée à cette date. */
     provisoire: true,
-    taxeCO2: BAREME_CO2_2026,
+    taxeCO2: BAREME_CO2_2027,
     taxePolluants: { electrique: 0, categorie1: 160, autres: 800 },
-    malusCO2: { seuil: 103, plafond: 90000, table: MALUS_CO2_2026 },
+    malusCO2: { seuil: 103, plafond: 90000, table: MALUS_CO2_2027 },
     malusPoids: { seuil: 1500, tranches: MALUS_POIDS_TRANCHES },
     taxeIncitative: { seuilFlotte: 100, quota: 0.25, tarifUnitaire: 5000 },
     aen: { abattementForfait: 0.70, plafondForfait: 4641.60, finFenetre: '2027-12-31' }
   },
   2028: {
     provisoire: true,
-    taxeCO2: BAREME_CO2_2026,
+    taxeCO2: BAREME_CO2_2027,
     taxePolluants: { electrique: 0, categorie1: 160, autres: 800 },
-    malusCO2: { seuil: 103, plafond: 90000, table: MALUS_CO2_2026 },
+    malusCO2: { seuil: 103, plafond: 90000, table: MALUS_CO2_2027 },
     malusPoids: { seuil: 1500, tranches: MALUS_POIDS_TRANCHES },
     taxeIncitative: { seuilFlotte: 100, quota: 0.30, tarifUnitaire: 5000 },
     // Hors fenêtre de l'abattement électrique (close au 31/12/2027).
@@ -181,18 +225,18 @@ export const MILLESIMES: Record<number, AnneeFiscale> = {
   },
   2029: {
     provisoire: true,
-    taxeCO2: BAREME_CO2_2026,
+    taxeCO2: BAREME_CO2_2027,
     taxePolluants: { electrique: 0, categorie1: 160, autres: 800 },
-    malusCO2: { seuil: 103, plafond: 90000, table: MALUS_CO2_2026 },
+    malusCO2: { seuil: 103, plafond: 90000, table: MALUS_CO2_2027 },
     malusPoids: { seuil: 1500, tranches: MALUS_POIDS_TRANCHES },
     taxeIncitative: { seuilFlotte: 100, quota: 0.35, tarifUnitaire: 5000 },
     aen: { abattementForfait: 0, plafondForfait: 0, finFenetre: '2027-12-31' }
   },
   2030: {
     provisoire: true,
-    taxeCO2: BAREME_CO2_2026,
+    taxeCO2: BAREME_CO2_2027,
     taxePolluants: { electrique: 0, categorie1: 160, autres: 800 },
-    malusCO2: { seuil: 103, plafond: 90000, table: MALUS_CO2_2026 },
+    malusCO2: { seuil: 103, plafond: 90000, table: MALUS_CO2_2027 },
     malusPoids: { seuil: 1500, tranches: MALUS_POIDS_TRANCHES },
     taxeIncitative: { seuilFlotte: 100, quota: 0.48, tarifUnitaire: 5000 },
     aen: { abattementForfait: 0, plafondForfait: 0, finFenetre: '2027-12-31' }
@@ -241,7 +285,20 @@ export function malusCO2(co2: number, m: Motorisation, cat: CategorieFiscale, an
   if (g < b.seuil) return 0
   // Lecture directe du barème : aucune interpolation.
   const exact = b.table[g]
-  return exact !== undefined ? exact : b.plafond
+  if (exact !== undefined) return exact
+  /* Le plafond ne vaut QUE par le haut. Écrit « absent de la table → plafond »,
+     ce repli renvoyait 90 000 € pour un véhicule à 103 g/km en 2027 : le seuil
+     avait été abaissé à 103 sans que la table suive, et les grammes 103 à 107
+     sortaient de la table par le BAS. Un montant fiscal aberrant vaut mieux
+     découvert ici qu'affiché à un client. */
+  const grammes = Object.keys(b.table).map(Number)
+  const haut = Math.max(...grammes)
+  if (g > haut) return b.plafond
+  const bas = Math.min(...grammes)
+  if (g < bas) return b.table[bas]!
+  /* Trou au milieu d'un barème : impossible sur une table complète. On rend la
+     valeur tabulée immédiatement inférieure plutôt que le plafond. */
+  return b.table[Math.max(...grammes.filter((x) => x <= g))]!
 }
 
 /**
@@ -302,10 +359,21 @@ export function avantageEnNature(
   prixTTC: number,
   m: Motorisation,
   annee: number,
-  opts: { loue?: boolean; ecoScore?: boolean } = {}
+  opts: { loue?: boolean; ecoScore?: boolean; coutGlobalAnnuel?: number } = {}
 ): number {
-  // Bases forfaitaires (arrêté du 25/02/2025) : 15 % à l'achat, 50 % en location.
-  const base = prixTTC * (opts.loue ? 0.50 : 0.15)
+  /* Bases forfaitaires de l'arrêté du 25/02/2025, sans carburant pris en charge.
+     ACHAT : 15 % du coût d'acquisition TTC.
+     LOCATION : 50 % du COÛT GLOBAL ANNUEL — loyer, entretien, assurance — et non
+     du prix du véhicule, que le locataire ne paie jamais. L'évaluation est
+     plafonnée à celle qu'aurait donnée l'achat.
+     Sans coût global fourni, on retombe sur l'ancien calcul plutôt que de rendre
+     zéro : un appelant qui n'a pas encore été mis à jour doit voir un ordre de
+     grandeur, pas une exonération imaginaire. */
+  const base = opts.loue
+    ? (opts.coutGlobalAnnuel !== undefined
+        ? Math.min(opts.coutGlobalAnnuel * 0.50, prixTTC * 0.15)
+        : prixTTC * 0.50)
+    : prixTTC * 0.15
   if (!EST_ELECTRIQUE(m)) return base
   const a = millesime(annee).aen
   if (!a.abattementForfait || opts.ecoScore === false) return base

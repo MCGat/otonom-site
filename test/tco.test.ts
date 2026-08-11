@@ -222,7 +222,7 @@ console.log(`\n=== ${ok} réussis, ${ko} échoués ===\n`)
 if (ko > 0) process.exit(1)
 
 console.log('\n=== GARDE-FOU MALUS (bug détecté puis corrigé) ===')
-import { malusCO2 as mc } from '../app/utils/simulateurs/fiscalite'
+import { malusCO2 as mc, taxeCO2 as tc } from '../app/utils/simulateurs/fiscalite'
 // Barème officiel relevé sur service-public.gouv.fr (14 points de contrôle)
 for (const [g, attendu] of [[108,50],[110,100],[115,210],[120,310],[125,540],[128,818],[130,983],[135,1504],[140,2205],[150,4279],[160,8770],[170,22380],[180,45990],[190,76800]] as [number,number][]) {
   t(`malus officiel ${g} g/km = ${attendu} €`, mc(g,'diesel','tourisme',2026) === attendu, String(mc(g,'diesel','tourisme',2026)))
@@ -380,7 +380,46 @@ t('camionnette 3 rangées : taxes dues MAIS hors champ du malus',
   calculerTco({...bV, financement:'achat', typeUtilitaire:'camionnette-3rangees'}).therm.postes.malus === 0)
 // Malus : barème discret, aucune interpolation
 t('malus 133 g = 1 276 € (valeur jamais utilisée comme ancrage)', mc(133,'diesel','tourisme',2026) === 1276, String(mc(133,'diesel','tourisme',2026)))
-t('malus 157 g = 6 537 €', mc(157,'diesel','tourisme',2026) === 6537, String(mc(157,'diesel','tourisme',2026)))
+/* Cette valeur a porté 6 537 € pendant des mois, un chiffre transposé.
+   Légifrance (art. L. 421-62 CIBS) donne 6 637 €, et la structure du barème le
+   confirme : les incréments progressent de +100 en +100 — 311, 411, 511, 611,
+   711, 811 — et seule la valeur 6 637 respecte cette suite. service-public.gouv.fr
+   affichait 6 537 € à la même date : on suit le texte de loi, pas la vulgarisation. */
+t('malus 157 g = 6 637 €', mc(157,'diesel','tourisme',2026) === 6637, String(mc(157,'diesel','tourisme',2026)))
+
+console.log('\n=== BARÈMES 2027 : saisis, plus reconduits ===')
+{
+  /* Le millésime 2027 reconduisait les barèmes 2026 en abaissant le seuil du
+     malus à 103 g. La table 2026 démarrant à 108 g, les grammes 103 à 107
+     sortaient de la table PAR LE BAS et tombaient sur le repli « hors table →
+     plafond » : 90 000 € de malus sur un véhicule ordinaire. */
+  t('2027 · 103 g = 50 € (et non 90 000 €)', mc(103,'diesel','tourisme',2027) === 50,
+    String(mc(103,'diesel','tourisme',2027)))
+  t('2027 · 107 g = 150 € (et non 90 000 €)', mc(107,'diesel','tourisme',2027) === 150,
+    String(mc(107,'diesel','tourisme',2027)))
+  t('2027 · 102 g = 0 €', mc(102,'diesel','tourisme',2027) === 0)
+  t('2027 · 128 g = 1 276 €', mc(128,'diesel','tourisme',2027) === 1276,
+    String(mc(128,'diesel','tourisme',2027)))
+  t('2027 · 189 g = 89 244 €', mc(189,'diesel','tourisme',2027) === 89244,
+    String(mc(189,'diesel','tourisme',2027)))
+  t('2027 · 190 g = plafond 90 000 €', mc(190,'diesel','tourisme',2027) === 90000,
+    String(mc(190,'diesel','tourisme',2027)))
+  t('2030 hérite du barème 2027', mc(128,'diesel','tourisme',2030) === 1276)
+
+  // Aucun gramme ne doit plus pouvoir atteindre le plafond par le bas.
+  let aberrants = 0
+  for (const an of [2026, 2027, 2028, 2029, 2030])
+    for (let g = 0; g <= 400; g++)
+      if (mc(g,'diesel','tourisme',an) >= 80000 && g < 185) aberrants++
+  t('balayage 0→400 g × 5 millésimes : aucun plafond par le bas', aberrants === 0,
+    String(aberrants))
+
+  // Taxe annuelle : le barème 2027 est plus lourd, à émissions égales.
+  t('taxe annuelle 2026 · 128 g = 583 €', tc(128,'diesel','tourisme',2026) === 583,
+    String(tc(128,'diesel','tourisme',2026)))
+  t('taxe annuelle 2027 · 128 g = 832 €', tc(128,'diesel','tourisme',2027) === 832,
+    String(tc(128,'diesel','tourisme',2027)))
+}
 t('malus 189 g = 73 689 €', mc(189,'diesel','tourisme',2026) === 73689, String(mc(189,'diesel','tourisme',2026)))
 console.log(`\n=== TOTAL ${ok} réussis, ${ko} échoués ===\n`)
 if (ko > 0) process.exit(1)
