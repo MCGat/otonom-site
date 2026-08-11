@@ -136,9 +136,11 @@ registre pour être **datées et tracées**, mais aucun script ne peut dire qu'e
   simulateurs. ⚠️ Le piège demeure pour toute base **neuve** : `seedPages.ts` crée `/blog` et
   `/simulateurs` **désindexés** par défaut. Si la base est un jour reconstruite, tout le blog
   repart en noindex sans aucun signal. À revoir si l'on migre vers MySQL N0C.
-- **`FORCER_MAJ_TOUS`** (`server/utils/seedArticles.ts`) est encore à `true` : tant qu'il y
-  reste, **toute modification faite dans l'admin en ligne est écrasée au redémarrage**. À
-  repasser à `false` une fois le déploiement du 11/08 vérifié.
+- **`FORCER_MAJ_TOUS`** (`server/utils/seedArticles.ts`) : repassé à `false` le 11/08/2026,
+  déploiement vérifié. Régime normal rétabli — un article absent est inséré, un article déjà
+  en ligne n'est plus retouché, donc les corrections faites dans l'admin survivent. Pour
+  corriger un article en ligne **depuis le dépôt**, régénérer le seed puis remettre le drapeau
+  à `true` le temps d'un déploiement, jamais plus.
 - **Métadonnées de confiance** sur les articles : auteur, `dateModified`, date de dernière
   vérification réglementaire, prochaine échéance de révision.
 - Images Open Graph par page, polices auto-hébergées, sauvegardes de la base, analytique,

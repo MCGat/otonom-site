@@ -1,24 +1,32 @@
 // Articles de blog embarqués (seed). Insérés au démarrage s'ils n'existent pas encore
 // en base — c'est le SEUL chemin vers la production, la BDD étant gitignorée.
-// Généré depuis la BDD locale le 11/08/2026. Pour modifier un article déjà en ligne,
-// passer par l'admin — sauf à l'inscrire dans FORCER_MAJ ci-dessous.
+// Généré depuis la BDD locale le 11/08/2026. Pour modifier un article DÉJÀ en ligne,
+// passer par l'admin : le seed ne le retouchera pas. Si la correction doit venir du
+// dépôt, régénérer le seed puis basculer FORCER_MAJ_TOUS le temps d'un déploiement.
 import { getArticleBySlug, listArticles, upsertArticle, type Article } from './db'
 
 /**
  * REPRISE PONCTUELLE — le seed écrase l'existant au lieu de le préserver.
  *
- * Contexte du 05/08/2026 : la production portait encore SIX articles insérés par
- * un seed antérieur — cinq restés en brouillon et l'article fiscalité dans sa
- * version d'avant l'audit factuel. Le seed ne touchant jamais à un article déjà
- * présent, ils y seraient restés figés : ancien contenu, ancien statut, ni tags
- * ni cocon. Ce drapeau force la reprise de TOUS les articles, ce qui garantit que
- * la production reflète exactement la base locale, quel que soit son état de départ.
+ * Régime normal : `false`. Un article absent est inséré, un article déjà présent
+ * n'est jamais retouché — donc les corrections faites dans l'admin en ligne
+ * survivent aux redéploiements. C'est ce qu'on veut le reste du temps.
  *
- * ⚠️ À REPASSER À `false` UNE FOIS LE DÉPLOIEMENT VÉRIFIÉ. Tant qu'il vaut `true`,
- * toute modification faite dans l'admin en ligne est écrasée au redémarrage du
- * serveur. C'est acceptable pour une reprise, jamais comme régime permanent.
+ * Passé à `true` du 05/08 au 11/08/2026, pour deux reprises. D'abord six articles
+ * figés en production par un seed antérieur — cinq en brouillon, l'article
+ * fiscalité dans sa version d'avant l'audit factuel — que le seed n'aurait jamais
+ * touchés. Puis l'étalement des dates de publication et la mise en ligne du cocon
+ * Collaborateurs, qui exigeaient de réécrire des articles déjà présents.
+ *
+ * Repassé à `false` le 11/08/2026, déploiement vérifié : les huit articles du
+ * cocon sont programmés du 15 au 22/08 et n'ont plus besoin d'être réécrits à
+ * chaque démarrage. Le laisser à `true` aurait effacé, au premier redémarrage,
+ * toute retouche faite dans l'admin — et il y a eu six déploiements ce jour-là.
+ *
+ * ⚠️ Ne le remettre à `true` que le temps d'un déploiement, jamais en régime
+ * permanent : tant qu'il y est, l'admin en ligne ne sert plus à rien.
  */
-const FORCER_MAJ_TOUS = true
+const FORCER_MAJ_TOUS = false
 
 const SEED_ARTICLES: Article[] = [
   {
