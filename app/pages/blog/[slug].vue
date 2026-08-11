@@ -101,6 +101,12 @@ const SIMULATEUR_PAR_COCON: Record<string, { url: string; titre: string; pitch: 
     titre: 'Chiffrez votre infrastructure de recharge',
     pitch: 'Points de charge, travaux et raccordement, replacés dans le coût complet de la flotte qu’ils desservent.',
     cta: 'Calculer mon TCO'
+  },
+  collaborateurs: {
+    url: '/simulateurs/recharge-domicile-salarie',
+    titre: 'Combien rembourser à votre collaborateur ?',
+    pitch: "Le coût réel de sa recharge à domicile, le montant à lui rembourser et le traitement social de ce remboursement, selon votre situation exacte.",
+    cta: 'Calculer le remboursement'
   }
 }
 /* Repli : le diagnostic large convient à tout article sans cocon dédié. */

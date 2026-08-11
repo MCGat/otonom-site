@@ -44,3 +44,4 @@ logs
 
 # Export de travail des articles (régénéré, ne pas versionner)
 ARTICLES-A-VERIFIER*.md
+COCON-*-A-VERIFIER.md
