@@ -505,16 +505,26 @@ a.persona .more svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-
    CURSEUR PERSONNALISÉ (desktop) — mix-blend pour rester
    visible sur fond clair comme sur fond sombre.
    ============================================================ */
-.cursor-ring{position:fixed;top:0;left:0;pointer-events:none;z-index:2000;border-radius:50%;mix-blend-mode:difference;will-change:transform;opacity:0;
-  width:30px;height:30px;margin:-15px 0 0 -15px;background:#fff;
-  transition:width .22s ease,height .22s ease,margin .22s ease,opacity .25s}
+/* Le disque est porté par un enfant : le parent ne fait que suivre la souris
+   (transform réécrit à chaque image, sans transition), l'enfant ne fait que
+   changer de taille (transition, jamais réécrite par le script). Séparer les
+   deux évite qu'une transition sur transform ne freine le suivi du curseur.
+   Auparavant width, height et margin étaient animés — trois propriétés qui
+   forcent un recalcul de mise en page à chaque image. Une mise à l'échelle rend
+   exactement le même disque : il est plein, sans bordure, et centré. */
+.cursor-ring{position:fixed;top:0;left:0;pointer-events:none;z-index:2000;will-change:transform;opacity:0;
+  width:0;height:0;transition:opacity .25s}
+.cursor-ring::after{content:"";position:absolute;left:-15px;top:-15px;width:30px;height:30px;
+  border-radius:50%;background:#fff;mix-blend-mode:difference;
+  transform:scale(var(--cs,1));transition:transform .22s ease}
 .cursor-ready .cursor-ring{opacity:1}
 .cursor-dot{position:fixed;top:0;left:0;pointer-events:none;z-index:2001;border-radius:50%;mix-blend-mode:difference;will-change:transform;opacity:0;width:6px;height:6px;margin:-3px 0 0 -3px;background:#fff;transition:opacity .25s}
 .cursor-ready .cursor-dot{opacity:1}
-.cursor-hover .cursor-ring{width:42px;height:42px;margin:-21px 0 0 -21px}
-.cursor-media .cursor-ring{width:58px;height:58px;margin:-29px 0 0 -29px}
-.cursor-btn .cursor-ring{width:14px;height:14px;margin:-7px 0 0 -7px}
-.cursor-down .cursor-ring{width:22px;height:22px;margin:-11px 0 0 -11px}
+/* Diamètres d'origine rapportés au disque de 30 px : 42, 58, 14 et 22 px. */
+.cursor-hover .cursor-ring{--cs:1.4}
+.cursor-media .cursor-ring{--cs:1.9333333}
+.cursor-btn .cursor-ring{--cs:.4666667}
+.cursor-down .cursor-ring{--cs:.7333333}
 /* réaction tactile au survol (token-aware, sans décalage de mise en page) */
 .card,.tile,.persona,.lever{transition:background .25s ease,box-shadow .25s ease}
 .card:hover,.persona:hover,.tile:hover,.lever:hover{box-shadow:inset 0 0 0 1px var(--line)}
@@ -718,7 +728,7 @@ a.persona .more svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-
    BLOG — cartes de liste + corps d'article stylé (callouts, tableaux, FAQ)
    ============================================================ */
 .blog-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:26px;margin-top:clamp(32px,5vw,52px)}
-.blog-card{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--bg-1);transition:border-color .25s ease;position:relative;isolation:isolate}
+.blog-card{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--bg-1);transition:border-color .25s ease;position:relative;isolation:isolate;contain:paint}
 /* Inversion au survol, propagée depuis le curseur.
    Un voile blanc en `difference` inverse TOUT ce qu'il recouvre — fond, titre,
    date, tags — sans qu'on ait à dupliquer le contenu de la carte ni à déclarer

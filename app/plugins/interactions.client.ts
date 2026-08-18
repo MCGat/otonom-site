@@ -179,20 +179,58 @@ export default defineNuxtPlugin((nuxtApp) => {
     docEl.classList.add('has-customcursor')
     let dx = innerWidth / 2, dy = innerHeight / 2, rx = dx, ry = dy, px = dx, py = dy, started = false
     const kind = (t: any) => !t?.closest ? null : t.closest('.btn,.nav-toggle') ? 'btn' : t.closest('.persona,.card,.tile,.lever') ? 'media' : t.closest('a,button,label,summary,input,select,textarea') ? 'link' : null
-    window.addEventListener('pointermove', (e) => { dx = e.clientX; dy = e.clientY; if (!started) { started = true; rx = dx; ry = dy; docEl.classList.add('cursor-ready') } }, { passive: true })
-    ;(function loop() {
+    window.addEventListener('pointermove', (e) => { dx = e.clientX; dy = e.clientY; if (!started) { started = true; rx = dx; ry = dy; docEl.classList.add('cursor-ready') } reveiller() }, { passive: true })
+    /* La boucle tournait sans fin, y compris souris immobile : deux écritures de
+       style par image, indéfiniment. Elle s'arrête désormais dès que le curseur a
+       rejoint le pointeur — moins d'un dixième de pixel d'écart — et redémarre au
+       premier mouvement. À cet instant rien ne bouge : le rendu est identique,
+       seule la dépense disparaît. */
+    let anime = false
+    function loop() {
       rx += (dx - rx) * 0.32; ry += (dy - ry) * 0.32; px += (dx - px) * 0.6; py += (dy - py) * 0.6
       ring.style.transform = 'translate(' + rx + 'px,' + ry + 'px)'; dot.style.transform = 'translate(' + px + 'px,' + py + 'px)'
+      if (Math.abs(dx - rx) < 0.1 && Math.abs(dy - ry) < 0.1
+        && Math.abs(dx - px) < 0.1 && Math.abs(dy - py) < 0.1) { anime = false; return }
       requestAnimationFrame(loop)
-    })()
+    }
+    function reveiller() { if (!anime) { anime = true; requestAnimationFrame(loop) } }
+    reveiller()
     document.addEventListener('pointerover', (e) => { const k = kind(e.target); docEl.classList.toggle('cursor-btn', k === 'btn'); docEl.classList.toggle('cursor-media', k === 'media'); docEl.classList.toggle('cursor-hover', k === 'link') })
     // boutons magnétiques (délégation → survit aux changements de page)
+    /* `getBoundingClientRect()` était appelé à CHAQUE pointermove, juste après une
+       écriture de style : le navigateur devait recalculer la mise en page sur-le-
+       champ, dans le fil des événements d'entrée. Mesuré sur cette page, 200
+       écritures seules coûtent 0 ms ; les mêmes suivies d'une lecture forcée en
+       coûtent 12. Le rectangle est maintenant lu UNE fois à l'entrée sur le bouton
+       — il ne bouge pas pendant le survol — et l'écriture est calée sur l'image
+       suivante. Le déplacement rendu est le même. */
+    let btnActif: HTMLElement | null = null
+    let btnRect: DOMRect | null = null
+    let mx = 0, my = 0, planifie = false
+    const poser = () => {
+      planifie = false
+      if (!btnActif || !btnRect) return
+      btnActif.style.transform = 'translate(' + ((mx - (btnRect.left + btnRect.width / 2)) * 0.25).toFixed(1)
+        + 'px,' + ((my - (btnRect.top + btnRect.height / 2)) * 0.4).toFixed(1) + 'px)'
+    }
     document.addEventListener('pointermove', (e) => {
-      const b = (e.target as HTMLElement)?.closest?.('.btn') as HTMLElement | null; if (!b) return
-      const r = b.getBoundingClientRect()
-      b.style.transform = 'translate(' + ((e.clientX - (r.left + r.width / 2)) * 0.25).toFixed(1) + 'px,' + ((e.clientY - (r.top + r.height / 2)) * 0.4).toFixed(1) + 'px)'
+      const b = (e.target as HTMLElement)?.closest?.('.btn') as HTMLElement | null
+      if (!b) return
+      if (b !== btnActif) { btnActif = b; btnRect = b.getBoundingClientRect() }
+      mx = e.clientX; my = e.clientY
+      if (!planifie) { planifie = true; requestAnimationFrame(poser) }
+    }, { passive: true })
+    document.addEventListener('pointerout', (e) => {
+      const b = (e.target as HTMLElement)?.closest?.('.btn') as HTMLElement | null
+      if (!b) return
+      b.style.transform = ''
+      if (b === btnActif) { btnActif = null; btnRect = null }
     })
-    document.addEventListener('pointerout', (e) => { const b = (e.target as HTMLElement)?.closest?.('.btn') as HTMLElement | null; if (b) b.style.transform = '' })
+    /* Un défilement ou un redimensionnement déplace le bouton sous le curseur : le
+       rectangle mémorisé deviendrait faux. On le redemandera à la prochaine entrée. */
+    const oublierRect = () => { btnActif = null; btnRect = null }
+    window.addEventListener('scroll', oublierRect, { passive: true })
+    window.addEventListener('resize', oublierRect, { passive: true })
     window.addEventListener('pointerdown', () => docEl.classList.add('cursor-down'))
     window.addEventListener('pointerup', () => docEl.classList.remove('cursor-down'))
     document.addEventListener('mouseleave', () => docEl.classList.remove('cursor-ready'))
